@@ -73,3 +73,28 @@ void Disk::getInfo(){
   long total = platters*tracksPerPlatter*sectorsPerTrack*sectorSize;
   printf("Capacidad del disco %ld bytes", total);
 }
+
+RC Disk::readSector(int platter, int track, int sector, char* buffer){
+  string path = diskName+"/platter_"+to_string(platter)+"/track_"+to_string(track)+"/sector_"+to_string(sector);
+  ifstream file(path, ios::binary);
+  if (!file) {
+    cerr<<"No se pudo abrir sector para lectura"<<endl;
+    return -1;
+  }
+
+  file.read(buffer, sectorSize);
+  file.close();
+
+}
+
+RC Disk::writeSector(int platter, int track, int sector, const char* data){
+  string path = diskName+"/platter_"+to_string(platter)+"/track_"+to_string(track)+"/sector_"+to_string(sector);
+  ofstream file(path, ios::binary);
+  if (!file) {
+    cerr<<"No se pudo abrir sector para escritura"<<endl;
+    return -1;
+  }
+
+  file.write(data, sectorSize);
+  file.close();
+}

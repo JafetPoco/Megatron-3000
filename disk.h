@@ -32,11 +32,9 @@ public:
   Disk();
   
   // Operaciones básicas de disco
-  //RC readSector(int platter, int track, int sector, char* buffer);
-  //RC writeSector(int platter, int track, int sector, const char* data);
-
+  RC readSector(int platter, int track, int sector, char* buffer);
+  RC writeSector(int platter, int track, int sector, const char* data);
   RC format();
-  //RC getInfo(int& totalSectors, int& sectorSize) const;
   void getInfo();
 
   //std::string getDiskPath() const { return diskName; }
