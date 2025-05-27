@@ -10,9 +10,9 @@ void clearInputBuffer() {
   cin.ignore(numeric_limits<streamsize>::max(), '\n');
 }
 
-char getValidatedInput() {
+char getValidatedInput(string console) {
   char option;
-  cout<<"\n->$ ";
+  cout<<console;
   cin >> option;
   clearInputBuffer();
   return tolower(option);
@@ -31,19 +31,35 @@ void printMenu(){
 }
 
 void DBSMMenu(){
-  cout<<"hola mundo"<<endl;
+  cout<<"\n+=======================================+"<<endl;
+  cout<<"|\tGestor de Base de Datos\t\t|"<<endl;
+  cout<<"+=======================================+"<<endl;
+
+  cout<<"\n(1) SELECT * FROM Table: "<<endl;
+  cout<<"(2) SELECT * FROM Table WHERE Condition"<<endl;
+  cout<<"(x) Exit"<<endl;
 }
 
 void initStorage(bool newDisk){
   StorageManager sm;
   sm.initDisckController(newDisk);
+  DBSMMenu();
+  while(true){
+    char option = getValidatedInput("\nDB/->$ ");
+    switch (option){
+    case '1': cout<<"Select"<<endl; break;
+    case '2': cout<<"Where"<<endl; break;
+    case 'x': cout<<"Saliendo del DBSM...\n"; return; break;    
+    default: cout<<"Opción incorrecta, vuelva a intentar\n";
+    }
+  }
 }
 
 void console(){
   printHeader();
   printMenu();
   while(true){
-    char option = getValidatedInput();
+    char option = getValidatedInput("\n->$ ");
     switch (option){
       case '1': initStorage(true); break;
       case '2': initStorage(false); break;
