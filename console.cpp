@@ -1,6 +1,7 @@
 #include<iostream>
 #include<limits>
 #include "console.h"
+#include "disk.h"
 
 using namespace std;
 
@@ -29,6 +30,19 @@ void printMenu(){
   cout<<"(x) Exit"<<endl;
 }
 
+void newDisk(){
+  int numPlatters, numTracks, numSectores, sizeSector;
+  string name;
+  cout<<"Ingrese Nombre del disco: "; cin>>name;
+  cout<<"Ingrese número de plato: "; cin>>numPlatters;
+  cout<<"Ingrese número de pistas por plato: "; cin>>numTracks;
+  cout<<"Ingrese número de sectores por pista: "; cin>>numSectores;
+  cout<<"Ingrese tamaño en bytes del sector: "; cin>>sizeSector;
+  Disk disco(name, numPlatters, numTracks, numSectores, sizeSector);
+  disco.format();
+  cout<<"\nDisco creado correctamente...\n";
+}
+
 void diskMenu(){
   cout<<"   (1) Crear Disco"<<endl;
   cout<<"   (2) Cargar Disco"<<endl;
@@ -37,8 +51,8 @@ void diskMenu(){
   while(true){
     char option = getValidatedInput();
     switch (option){
-      case '1': cout<<"Creae disco nuevo\n"; option = 'x'; break;
-      case '2': cout<<"Cargar disco\n"; option = 'x'; break;
+      case '1': newDisk(); break;
+      case '2': cout<<"Cargar disco\n"; break;
       case 'x': return; break;
       default: cout<<"Opción incorrecta, vuelva a intentar\n";
     }

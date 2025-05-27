@@ -7,11 +7,7 @@
 using namespace std;
 
 Disk::Disk(const string& diskName, int platters, int tracksPerPlatter, int sectorsPerTrack, int sectorSize)
-  : diskName(diskName), platters(platters), tracksPerPlatter(tracksPerPlatter), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize), formatted(false) {
-    
-  // Crear directorio raíz si no existe
-  fs::create_directories(diskName);
-}
+  : diskName(diskName), platters(platters), tracksPerPlatter(tracksPerPlatter), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize), formatted(false) { }
 
 RC Disk::format(){
   fs::remove_all(diskName);

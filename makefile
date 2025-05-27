@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++17 -Wall
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp
+SRCS = main.cpp disk.cpp console.cpp
 
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)
