@@ -1,7 +1,7 @@
 #ifndef STORAGE_MANAGER_H
 #define STORAGE_MANAGER_H
 
-#include "disk.h"
+#include "diskController.h"
 
 typedef struct FileHandle {
   char *fileName;
@@ -13,10 +13,11 @@ typedef char* SM_PageHandle;
 
 class StorageManager {
   private:
-    Disk* disco;
+    DiskController* diskController;
     int sizeBlock;
   public:
-    StorageManager(Disk &disco, int sizeBlock = 4);
+    StorageManager();
+    void initDisckController(bool newDisk);
     int createBlockFile(char *fileName); //Crea un ainthivo con un solo bloque;
     int openBlockFile();
     int closePageFile (FileHandle *fHandle);

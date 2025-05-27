@@ -1,7 +1,6 @@
 #include<iostream>
 #include<limits>
 #include "console.h"
-#include "disk.h"
 #include "storageManager.h"
 
 using namespace std;
@@ -26,49 +25,18 @@ void printHeader(){
 }
 
 void printMenu(){
-  cout<<"(1) Seleccionar Disco"<<endl;
-  cout<<"(2) Megatron DBSM"<<endl;
+  cout<<"(1) Crear un nuevo Disco"<<endl;
+  cout<<"(2) Disco predefinido (Megatron)"<<endl;
   cout<<"(x) Exit"<<endl;
-}
-
-void newDisk(){
-  int numPlatters, numTracks, numSectores, sizeSector, sizeBlock;
-  string name;
-  cout<<"Ingrese Nombre del disco: "; cin>>name;
-  cout<<"Ingrese número de plato: "; cin>>numPlatters;
-  cout<<"Ingrese número de pistas por plato: "; cin>>numTracks;
-  cout<<"Ingrese número de sectores por pista: "; cin>>numSectores;
-  cout<<"Ingrese tamaño en bytes del sector: "; cin>>sizeSector;
-  cout<<"Ingrese número de sectores por bloque: "; cin>>sizeBlock;
-  Disk disco(name, numPlatters, numTracks, numSectores, sizeSector);
-  disco.format();
-  StorageManager sm(disco, sizeBlock);
-  cout<<"\nDisco creado correctamente...\n";
-}
-
-void loadDisk(){
-  Disk disco;
-  StorageManager sm(disco);
-}
-
-void diskMenu(){
-  cout<<"   (1) Nuevo Disco"<<endl;
-  cout<<"   (2) Cargar Disco"<<endl;
-  cout<<"   (x) Exit"<<endl;
-
-  while(true){
-    char option = getValidatedInput();
-    switch (option){
-      case '1': newDisk(); break;
-      case '2': loadDisk(); break;
-      case 'x': return; break;
-      default: cout<<"Opción incorrecta, vuelva a intentar\n";
-    }
-  }
 }
 
 void DBSMMenu(){
   cout<<"hola mundo"<<endl;
+}
+
+void initStorage(bool newDisk){
+  StorageManager sm;
+  sm.initDisckController(newDisk);
 }
 
 void console(){
@@ -76,10 +44,9 @@ void console(){
   printMenu();
   while(true){
     char option = getValidatedInput();
-
     switch (option){
-      case '1': diskMenu(); printMenu(); break;
-      case '2': DBSMMenu(); printMenu(); break;
+      case '1': initStorage(true); break;
+      case '2': initStorage(false); break;
       case 'x': cout << "\nSaliendo del sistema...\n"; return; break;
       default: cout<<"Opción incorrecta, vuelva a intentar\n";
     }

@@ -3,7 +3,15 @@
 
 using namespace std;
 
-StorageManager::StorageManager(Disk &disco, int sizeBlock){
-  this->disco = &disco;
-  this->sizeBlock = sizeBlock;
+StorageManager::StorageManager(){
+  diskController = new DiskController();
+}
+
+void StorageManager::initDisckController(bool newDisk){
+  diskController->initDisk(newDisk);
+  if(newDisk == true){
+    cout<<"Ingrese numero de sectores por Bloque: "; cin>>sizeBlock; 
+  } else {
+    sizeBlock = 4;
+  }
 }
