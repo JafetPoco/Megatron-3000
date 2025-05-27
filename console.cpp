@@ -2,6 +2,7 @@
 #include<limits>
 #include "console.h"
 #include "disk.h"
+#include "storageManager.h"
 
 using namespace std;
 
@@ -31,20 +32,23 @@ void printMenu(){
 }
 
 void newDisk(){
-  int numPlatters, numTracks, numSectores, sizeSector;
+  int numPlatters, numTracks, numSectores, sizeSector, sizeBlock;
   string name;
   cout<<"Ingrese Nombre del disco: "; cin>>name;
   cout<<"Ingrese número de plato: "; cin>>numPlatters;
   cout<<"Ingrese número de pistas por plato: "; cin>>numTracks;
   cout<<"Ingrese número de sectores por pista: "; cin>>numSectores;
   cout<<"Ingrese tamaño en bytes del sector: "; cin>>sizeSector;
+  cout<<"Ingrese número de sectores por bloque: "; cin>>sizeBlock;
   Disk disco(name, numPlatters, numTracks, numSectores, sizeSector);
   disco.format();
+  StorageManager sm(disco, sizeBlock);
   cout<<"\nDisco creado correctamente...\n";
 }
 
 void loadDisk(){
   Disk disco;
+  StorageManager sm(disco);
 }
 
 void diskMenu(){
