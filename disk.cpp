@@ -7,7 +7,9 @@
 using namespace std;
 
 Disk::Disk(const string& diskName, int platters, int tracksPerPlatter, int sectorsPerTrack, int sectorSize)
-  : diskName(diskName), platters(platters), tracksPerPlatter(tracksPerPlatter), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize), formatted(false) { }
+  : diskName(diskName), platters(platters), tracksPerPlatter(tracksPerPlatter), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize){
+    capacity = platters*tracksPerPlatter*sectorsPerTrack*sectorSize;
+  }
 
 Disk::Disk(){
   diskName = "Megatron";
@@ -15,6 +17,34 @@ Disk::Disk(){
   tracksPerPlatter = 32;
   sectorsPerTrack = 32;
   sectorSize = 512;
+  capacity = platters*tracksPerPlatter*sectorsPerTrack*sectorSize;
+  readMetadata();
+}
+
+void Disk::writeMetadata(){
+  if(sizeof(long) > sectorSize){
+    cerr<<"Los sectores son muy pequeños"<<endl;
+    return;
+  }
+
+  availableSpace = capacity - sizeof(long);
+  string path = diskName + "/platter_0/track_0/sector_0";
+  ofstream meta(path, ios::binary);
+  meta.write(reinterpret_cast<const char*>(&availableSpace), sizeof(long));
+  meta.close();
+  printf("Capacidad del disco:\t%ld B\nEspacio disponible:\t%ld B\n", capacity, availableSpace);
+}
+
+void Disk::readMetadata(){
+  string path = diskName + "/platter_0/track_0/sector_0";
+  ifstream meta(path, ios::binary);
+  if(!meta){
+    cerr<<"No existe archivo"<<endl;
+    return;
+  }
+  meta.read(reinterpret_cast<char*>(&availableSpace), sizeof(long));
+  meta.close();
+  printf("Capacidad del disco:\t%ld B\nEspacio disponible:\t%ld B\n", capacity, availableSpace);
 }
 
 RC Disk::format(){
@@ -35,6 +65,7 @@ RC Disk::format(){
       }
     }
   }
+  writeMetadata();
   return 0;
 }
 

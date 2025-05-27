@@ -41,12 +41,10 @@ void newDisk(){
   Disk disco(name, numPlatters, numTracks, numSectores, sizeSector);
   disco.format();
   cout<<"\nDisco creado correctamente...\n";
-  disco.getInfo();
 }
 
 void loadDisk(){
   Disk disco;
-  disco.getInfo();
 }
 
 void diskMenu(){

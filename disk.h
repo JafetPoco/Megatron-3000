@@ -15,8 +15,12 @@ private:
   int tracksPerPlatter;
   int sectorsPerTrack;
   int sectorSize;
-  bool formatted;
-    
+
+  long availableSpace;
+  long capacity;
+  
+  void writeMetadata();
+  void readMetadata();
   // Métodos auxiliares
   //RC ensureDirectoryStructure();
   //std::string getSectorPath(int platter, int track, int sector) const;
@@ -30,14 +34,11 @@ public:
   // Operaciones básicas de disco
   //RC readSector(int platter, int track, int sector, char* buffer);
   //RC writeSector(int platter, int track, int sector, const char* data);
-   
-  // Operaciones de mantenimiento
+
   RC format();
   //RC getInfo(int& totalSectors, int& sectorSize) const;
   void getInfo();
-    
-  // Estado del disco
-  //bool isFormatted() const { return formatted; }
+
   //std::string getDiskPath() const { return diskName; }
 };
 
