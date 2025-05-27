@@ -1,11 +1,9 @@
 #include<iostream>
-#include "disk.h"
+#include "console.h"
 
 using namespace std;
 
 int main(){
-  Disk disco("Megatron", 4, 32, 32, 512);
-  int num = disco.format();
-  disco.getInfo();
+  console();
   return 0;
 }
