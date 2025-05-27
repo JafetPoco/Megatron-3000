@@ -41,10 +41,16 @@ void newDisk(){
   Disk disco(name, numPlatters, numTracks, numSectores, sizeSector);
   disco.format();
   cout<<"\nDisco creado correctamente...\n";
+  disco.getInfo();
+}
+
+void loadDisk(){
+  Disk disco;
+  disco.getInfo();
 }
 
 void diskMenu(){
-  cout<<"   (1) Crear Disco"<<endl;
+  cout<<"   (1) Nuevo Disco"<<endl;
   cout<<"   (2) Cargar Disco"<<endl;
   cout<<"   (x) Exit"<<endl;
 
@@ -52,7 +58,7 @@ void diskMenu(){
     char option = getValidatedInput();
     switch (option){
       case '1': newDisk(); break;
-      case '2': cout<<"Cargar disco\n"; break;
+      case '2': loadDisk(); break;
       case 'x': return; break;
       default: cout<<"Opción incorrecta, vuelva a intentar\n";
     }

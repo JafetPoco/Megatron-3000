@@ -9,6 +9,14 @@ using namespace std;
 Disk::Disk(const string& diskName, int platters, int tracksPerPlatter, int sectorsPerTrack, int sectorSize)
   : diskName(diskName), platters(platters), tracksPerPlatter(tracksPerPlatter), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize), formatted(false) { }
 
+Disk::Disk(){
+  diskName = "Megatron";
+  platters = 4;
+  tracksPerPlatter = 32;
+  sectorsPerTrack = 32;
+  sectorSize = 512;
+}
+
 RC Disk::format(){
   fs::remove_all(diskName);
   fs::create_directories(diskName);
@@ -31,6 +39,6 @@ RC Disk::format(){
 }
 
 void Disk::getInfo(){
-  double total = platters*tracksPerPlatter*sectorsPerTrack*sectorSize;
-  cout<<"Capacidad del disco "<<total<<" bytes"<<endl;
+  long total = platters*tracksPerPlatter*sectorsPerTrack*sectorSize;
+  printf("Capacidad del disco %ld bytes", total);
 }
