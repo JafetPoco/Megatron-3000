@@ -4,6 +4,7 @@
 #include "disk.h"
 #include "block.h"
 #include "tableFiles.h"
+#include "bufPool.h"
 
 using namespace std;
 
@@ -16,10 +17,20 @@ int main(){
   //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
   freeBlock = new FreeBlockManager("Megatron", 40);
 
-  freeBlock->allocateBlock();
+  
+  BufPool bp(4);
 
-  cout<<"Bitmap: "<<disk->readSector(1)<<endl;
+  bp.requestPage(2, 'r');
+  bp.pinFrame(2);
+  bp.requestPage(3, 'r');
+  bp.pinFrame(3);
+  bp.requestPage(5, 'r');
+  bp.requestPage(5, 'r');
+  bp.pinFrame(5);
+  bp.requestPage(6, 'r');
+  bp.pinFrame(6);
+  bp.requestPage(1, 'r');
 
-
+  bp.printEstadistic();
   return 0;
 }
