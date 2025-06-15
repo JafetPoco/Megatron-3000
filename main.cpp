@@ -3,19 +3,19 @@
 #include "globals.h"
 #include "disk.h"
 #include "block.h"
+#include "tableFiles.h"
 
 using namespace std;
 
 Disk *disk = nullptr;
+TableFiles *tableFile = nullptr;
 
 int main(){
   disk = new Disk("Megatron");
-
-  cout<<disk->readSector(0)<<endl;
-
-  Block b;
-  b.openBlock(1);
-  cout<<"Bloque 1: "<<b.getData()<<endl;
+  //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
+  tableFile = new TableFiles;
+  
+  tableFile->showTable();
 
 
 
