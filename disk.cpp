@@ -1,70 +1,139 @@
-#include<iostream>
-#include<filesystem>
-#include<fstream>
-#include <unistd.h> 
 #include "disk.h"
+#include "globals.h"
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <unistd.h>
+#include <cstring>
+#include <sstream>
 
+// #define DEBUG 
 using namespace std;
 
-Disk::Disk(const string& diskName, int platters, int tracksPerSurface, int sectorsPerTrack, int sectorSize)
-  : diskName(diskName), platters(platters), tracksPerSurface(tracksPerSurface), sectorsPerTrack(sectorsPerTrack), sectorSize(sectorSize){
-    capacity = platters*tracksPerSurface*sectorsPerTrack*sectorSize;
+Disk::Disk(string diskName, size_t platters, size_t tracksPerSurface,
+           size_t sectorsPerTrack, size_t sectorSize, size_t sectorsPerBlock)
+    : diskRoot(diskName), platters(platters),
+      tracks(tracksPerSurface), sectors(sectorsPerTrack),
+      sectorSize(sectorSize), blockLength(sectorsPerBlock) {
+  capacity = platters * 2 * tracksPerSurface * sectorsPerTrack * sectorSize;
+  freeSpace = capacity - 40;
+  if (freeSpace < 0) {
+    cerr << "DISCO: El disco es demasiado pequeño" << endl;
   }
+  format();
+  //  getInfo();
+}
 
-Disk::Disk(){
-  diskName = "Megatron";
-  platters = 4;
-  tracksPerSurface = 32;
-  sectorsPerTrack = 32;
-  sectorSize = 512;
-  capacity = platters*tracksPerSurface*sectorsPerTrack*sectorSize;
+Disk::Disk(string nameDisk) {
+  diskRoot = nameDisk;
+  if (!fs::exists(diskRoot) && !fs::is_directory(diskRoot)) {
+    return;
+  }
+  cout << "DISCO: Cargando disco " << diskRoot << "..." << endl;
   readMetadata();
+  // getInfo();
 }
 
-void Disk::writeMetadata(){
-  if(sizeof(long) > sectorSize){
-    cerr<<"Los sectores son muy pequeños"<<endl;
+void Disk::updateMetadata(){
+  fstream metadata(diskRoot + "/platter_0/surface_0/track_0/sector_0", ios::in | ios::out | ios::binary);
+  if (!metadata.is_open()) {
+    cerr << "DISCO: Error: No se pudo abrir el sector Metadata" << endl;
     return;
   }
 
-  availableSpace = capacity - sizeof(long);
-  string path = diskName + "/platter_0/surface_0/track_0/sector_0";
-  ofstream meta(path, ios::binary);
-  meta.write(reinterpret_cast<const char*>(&availableSpace), sizeof(long));
-  meta.close();
-  printf("Capacidad del disco:\t%ld B\nEspacio disponible:\t%ld B\n", capacity, availableSpace);
+  stringstream free;
+  free << setfill('0') << setw(10) << freeSpace;
+  metadata.seekp(10);
+  metadata.write(free.str().c_str(), 10);
+  metadata.close();
 }
 
-void Disk::readMetadata(){
-  string path = diskName + "/platter_0/surface_0/track_0/sector_0";
-  ifstream meta(path, ios::binary);
-  if(!meta){
-    cerr<<"No existe archivo"<<endl;
+void Disk::writeMetadata() {
+  totalSectors = platters * 2 * tracks * sectors;
+  ofstream metadata(diskRoot + "/platter_0/surface_0/track_0/sector_0");
+  if (!metadata.is_open()) {
+    cerr << "DISCO: Error: No se pudo abrir el sector Metadata" << endl;
     return;
   }
-  meta.read(reinterpret_cast<char*>(&availableSpace), sizeof(long));
-  meta.close();
-  printf("Capacidad del disco:\t%ld B\nEspacio disponible:\t%ld B\n", capacity, availableSpace);
+
+  metadata << setfill('0') << setw(10)
+           << capacity; // 10 primero digitos son la capacidad del disco
+  metadata << setfill('0') << setw(10)
+           << freeSpace; // 10 primeros digitos son el espacio libre
+  metadata << setfill('0') << setw(4)
+           << platters; // 4 siguientes numero de platos
+  metadata << setfill('0') << setw(4)
+           << tracks; // 4 siguientes pistas por sector
+  metadata << setfill('0') << setw(4)
+           << sectors; // 4 siguientes sectores por pista
+  metadata << setfill('0') << setw(6)
+           << sectorSize; // 6 siguientes tamaño del sector
+  metadata << setfill('0') << setw(2)
+           << blockLength; // 2 siguientes sectores por bloque
+  cout << "DISCO: Metadata escrita correctamente" << endl;
 }
 
-void Disk::format(){
-  fs::remove_all(diskName);
-  fs::create_directories(diskName);
+void Disk::readMetadata() {
+  ifstream metadata(diskRoot + "/platter_0/surface_0/track_0/sector_0");
+  if (!metadata.is_open()) {
+    cerr << "DISCO: Error: No se pudo abrir el sector Metadata" << endl;
+    return;
+  }
 
-  for(int i=0; i<platters; i++){
-    string platterPath = diskName + "/platter_" + to_string(i);
+  char buffer[11];
+
+  // Lee capacidad
+  metadata.read(buffer, 10);
+  buffer[10] = '\0';
+  capacity = atol(buffer);
+
+  metadata.read(buffer, 10);
+  buffer[10] = '\0';
+  freeSpace = atol(buffer);
+
+  metadata.read(buffer, 4);
+  buffer[4] = '\0';
+  platters = atoi(buffer);
+
+  metadata.read(buffer, 4);
+  buffer[4] = '\0';
+  tracks = atoi(buffer);
+
+  metadata.read(buffer, 4);
+  buffer[4] = '\0';
+  sectors = atoi(buffer);
+
+  metadata.read(buffer, 6);
+  buffer[6] = '\0';
+  sectorSize = atoi(buffer);
+
+  metadata.read(buffer, 2);
+  buffer[2] = '\0';
+  blockLength = atoi(buffer);
+
+  totalSectors = platters * 2 * tracks * sectors;
+
+  cout << "DISCO: Metadata leida correctamente..." << endl;
+}
+
+void Disk::format() {
+  fs::remove_all(diskRoot);
+  fs::create_directories(diskRoot);
+  cout << "DISCO: Creando disco " << diskRoot << endl;
+
+  for (size_t i = 0; i < platters; i++) { // platos
+    string platterPath = diskRoot + "/platter_" + to_string(i);
     fs::create_directories(platterPath);
-    for(int l=0; l<2; l++){
+    for (size_t l = 0; l < 2; l++) { // superficies
       string surfacePath = platterPath + "/surface_" + to_string(l);
       fs::create_directories(surfacePath);
-      for(int j=0; j<tracksPerSurface; j++){
+      for (size_t j = 0; j < tracks; j++) { // pistas
         string trackPath = surfacePath + "/track_" + to_string(j);
         fs::create_directories(trackPath);
-        for(int k=0; k<sectorsPerTrack; k++){
-          ofstream file(trackPath+"/sector"+to_string(k), ios::binary);
-          file.seekp(sectorSize-1);
-          file.put('\0');
-          file.close();
+        for (size_t k = 0; k < sectors; k++) { // sectores
+          ofstream file(trackPath + "/sector_" + to_string(k));
         }
       }
     }
@@ -73,31 +142,176 @@ void Disk::format(){
   return;
 }
 
-void Disk::getInfo(){
-  long total = platters*tracksPerSurface*sectorsPerTrack*sectorSize;
-  printf("Capacidad del disco %ld bytes", total);
+string Disk::readSector(size_t sector_id) {
+  fstream file = openNthSector(sector_id);
+  if (!file.is_open()) {
+    cerr << "DISCO: ERROR: No se pudo abrir sector para lectura" << endl;
+    return "";
+  }
+  stringstream buf;
+  buf << file.rdbuf();
+
+  string data = buf.str();
+  // if (data.size() != 0 && data[data.size()-1])
+  //   data.pop_back();
+  data = data.substr(0, disk->info().sectorSize);
+  return data;
 }
 
-void Disk::readSector(int platter, int track, int sector, char* buffer){
-  string path = diskName+"/platter_"+to_string(platter)+"/track_"+to_string(track)+"/sector_"+to_string(sector);
-  ifstream file(path, ios::binary);
-  if (!file) {
-    cerr<<"No se pudo abrir sector para lectura"<<endl;
+void Disk::writeSector(size_t sector_id, std::string data) {
+#ifdef DEBUG
+  cout<<"DISCO: data a escribir a sector: "<<sector_id<<", cont: "<<data<<endl;
+#endif
+  string filePath = getSectorPath(sector_id);
+#ifdef DEBUG
+  cout<<"DISCO: path sector: "<<sector_id<<", "<<filePath<<endl;
+#endif
+  //size_t sizeSectorInit = fs::file_size(filePath);
+  ofstream file(filePath, ios::trunc);
+  if (!file.is_open()) {
+    cerr << "DISCO: ERROR: No se pudo abrir sector para escritura" << endl;
     return;
   }
 
-  file.read(buffer, sectorSize);
+  if (data.size() > sectorSize) {
+    cout<<"DISCO: ERROR: la escritura en bytes excede al tamaño del sector\n";
+  }
+
+  file << data;
   file.close();
 }
 
-void Disk::writeSector(int platter, int track, int sector, const char* data){
-  string path = diskName+"/platter_"+to_string(platter)+"/track_"+to_string(track)+"/sector_"+to_string(sector);
-  ofstream file(path, ios::binary);
-  if (!file) {
-    cerr<<"No se pudo abrir sector para escritura"<<endl;
-    return;
+fstream Disk::openNthSector(size_t sector_id) const{
+  if (!doesSectorExist(sector_id)) {
+    cerr << "DISCO: ERROR: Sector ID fuera de rango" << endl;
+    return fstream();
+  }
+  pos sector_pos = getNthSector(sector_id);
+  string filePath = diskRoot + "/platter_" + to_string(sector_pos.platter) +
+                    "/surface_" + to_string(sector_pos.surface) +
+                    "/track_" + to_string(sector_pos.track) +
+                    "/sector_" + to_string(sector_pos.sector);
+  fstream file(filePath, ios::in | ios::out);
+  if (!file.is_open()) {
+    cerr << "DISCO: ERROR: No se pudo abrir el sector " << sector_id
+         << " en la ruta: " << filePath << endl;
+    return fstream();
+  }
+  return file;
+}
+
+string Disk::getSectorPath(size_t sector_id) const { 
+  pos sector_pos = getNthSector(sector_id);
+  string filePath = diskRoot + "/platter_" + to_string(sector_pos.platter) +
+                    "/surface_" + to_string(sector_pos.surface) +
+                    "/track_" + to_string(sector_pos.track) +
+                    "/sector_" + to_string(sector_pos.sector);
+  return filePath;
+}
+
+pos Disk::getNthSector(size_t sector_id)const {
+  if (/*sector_id == 0 || */sector_id >= totalSectors) {
+    cerr << "DISCO: ERROR: Sector ID fuera de rango" << endl;
+    return {0, 0, 0, 0};
   }
 
-  file.write(data, sectorSize);
-  file.close();
+  // cout<<(sector_id/2 % platters)
+  //   <<(sector_id % 2)
+  //   <<(sector_id / (platters * 2 * tracks) % sectors)
+  //   <<(sector_id / (platters * 2) % tracks)<<'\n';
+  return {
+      sector_id /2 %(platters), // platter
+      sector_id % 2,                                           // surface
+      sector_id / (platters * 2 * tracks) % sectors, // sector
+      sector_id / (platters * 2) % tracks                    // track
+  };
+}
+
+size_t Disk::getNthSector(pos sector_pos) const{
+  if (!doesSectorExist(sector_pos)) {
+    cerr << "DISCO: ERROR: Sector pos fuera de rango" << endl;
+    return 0;
+  }
+  return sector_pos.platter * 2 * tracks * sectors +
+         sector_pos.surface * tracks * sectors + sector_pos.track * sectors +
+         sector_pos.sector;
+}
+
+size_t Disk::getSectorFreeSpace(size_t sector_id) const {
+  fstream file = openNthSector(sector_id);
+  if (!file.is_open()) {
+    return 0;
+  }
+  file.seekg(0, ios::end);
+  size_t fileSize = file.tellg();
+  return sectorSize - fileSize;
+}
+
+void Disk::printDiskTree() {
+  for (size_t i = 1; i <= platters; i++) {
+    cout << "Plato " << i << endl;
+    cout << "├── Superficie 1" << endl;
+    cout << "|   └── Pistas: " << tracks << endl;
+    cout << "|       └── Sectores: " << sectors << endl;
+    cout << "└── Superficie 2" << endl;
+    cout << "    └── Pistas: " << tracks << endl;
+    cout << "        └── Sectores: " << sectors << endl;
+  }
+  cout << "================================================\n";
+}
+
+void Disk::printDiskInfo() {
+  printf("===================Disk info=======================\n");
+  printf("Nombre del disco:\t\t%s\n", diskRoot.c_str());
+  printf("Platos:\t\t\t\t%zd\n", platters);
+  printf("Superficies por plato:\t\t%d\n", 2);
+  printf("Pistas por superficie:\t\t%zd\n", tracks);
+  printf("Sectores por pista:\t\t%zd\n", sectors);
+  printf("Tamaño del sector:\t\t%zd bytes\n", sectorSize);
+  printf("Capacidad del disco:\t\t%ld bytes (%.2F MB)\n", capacity,
+         (double)capacity / (1024.f * 1024.f));
+  printf("Sectores por bloque: \t\t%zd sectores.\n", blockLength);
+  printf("------------------------------------------------\n");
+}
+
+void Disk::printSectorPos(size_t sectorId) {
+  pos p = getNthSector(sectorId);
+  cout<<p.platter << " "
+      << p.surface << " "
+      << p.track << " "
+      << p.sector << endl; 
+}
+
+void Disk::printSectorCont(size_t sector_id) {
+  fstream file = openNthSector(sector_id);
+  if (!file.is_open()) {
+    cerr << "DISCO: ERROR: No se pudo abrir el sector para imprimir" << endl;
+    return;
+  }
+  cout << "Contenido del sector " << sector_id << ": ";
+  char buffer[this->sectorSize + 1];
+  file.read(buffer, this->sectorSize);
+  buffer[this->sectorSize] = '\0';
+  printf("%s\n", buffer);
+}
+
+bool Disk::doesSectorExist(pos sector_pos) const{
+  if (sector_pos.platter >= platters || sector_pos.surface > 1 ||
+      sector_pos.track >= tracks || sector_pos.sector >= sectors) {
+    return false;
+  }
+  return true;
+}
+
+bool Disk::doesSectorExist(size_t sector_id) const{
+  pos sector_pos = getNthSector(sector_id);
+  // cout<<sector_pos.platter << " "
+  //     << sector_pos.surface << " "
+  //     << sector_pos.track << " "
+  //     << sector_pos.sector << endl;
+  return doesSectorExist(sector_pos);
+}
+
+bool Disk::isDiskOpen() {
+  return fs::exists(diskRoot) && fs::is_directory(diskRoot);
 }

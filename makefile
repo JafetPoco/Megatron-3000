@@ -1,5 +1,5 @@
 # Nombre del ejecutable
-TARGET = programa
+TARGET = megatron
 
 # Compilador
 CXX = g++
@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++17 -Wall
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp console.cpp storageManager.cpp diskController.cpp
+SRCS = main.cpp disk.cpp block.cpp
 
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)

@@ -1,48 +1,77 @@
-#ifndef DISCO_H
-#define DISCO_H
+#ifndef DISK_H
+#define DISK_H
 
-#include "dberror.h"
 #include <string>
 #include <filesystem>
 #include <fstream>
 
 namespace fs = std::filesystem;
 
-class Disk {
-private:
-  std::string diskName;
-  int platters;
-  int tracksPerSurface;
-  int sectorsPerTrack;
-  int sectorSize;
-
-  long availableSpace;
-  long capacity;
-  
-  void writeMetadata();
-  void readMetadata();
-  // Métodos auxiliares
-  //RC ensureDirectoryStructure();
-  //std::string getSectorPath(int platter, int track, int sector) const;
-  //RC validateAddress(int platter, int track, int sector) const;
-
-public:
-  // Constructor con parámetros configurables
-  Disk(const std::string& diskName, int platters, int tracksPerSurface, int sectorsPerTrack, int sectorSize);
-  Disk();
-  
-  // Operaciones básicas de disco
-  void readSector(int platter, int track, int sector, char* buffer);
-  void writeSector(int platter, int track, int sector, const char* data);
-  void format();
-  void getInfo();
-
-  int getPlatters(){ return platters; }
-  int getTracksPerSurface(){ return tracksPerSurface; }
-  int getSectorPerTrack(){ return sectorsPerTrack; }
-  int getSectorSize(){ return sectorSize; }
-
-  //std::string getDiskPath() const { return diskName; }
+struct pos {
+  size_t platter, surface, track, sector;
 };
 
-#endif // DISCO_H
+typedef struct __disk_info__ {
+  std::string diskName;
+  size_t platters, tracks, sectors, sectorSize, blockLength;
+} DiskInfo;
+
+class Disk {
+private:
+  std::string diskRoot;
+  size_t platters, tracks, sectors, sectorSize, capacity, freeSpace, totalSectors, blockLength;
+  void readMetadata();
+  void writeMetadata();
+public:
+  //Crear
+  Disk(std::string diskName, size_t platters, size_t tracksPerSurface, size_t sectorsPerTrack, size_t sectorSize, size_t sectorsPerBlock);
+  //leer
+  Disk(std::string nameDisk);
+
+  // Formatear el disco (accion destructiva)
+  void format();
+
+  //operaciones E/S
+  std::string readSector(size_t sector_id);
+  void writeSector(size_t sector_id, std::string data);
+
+  const DiskInfo info() const {
+    return {
+      diskRoot,
+      platters,
+      tracks,
+      sectors,
+      sectorSize,
+      blockLength
+    };
+  };
+
+  //Sector numerado en cilindros
+  std::fstream openNthSector(size_t sector_id) const;
+  pos getNthSector(size_t sector_id) const;
+  size_t getNthSector(pos sector_pos)const ;
+  size_t getSectorFreeSpace(size_t sector_id) const;
+  std::string getSectorPath(size_t sector_id) const;
+
+  //operaciones debug
+  void printDiskInfo();
+  void printDiskTree();
+  void printSectorCont(size_t sector_id);
+  bool doesSectorExist(pos sector_pos) const;
+  bool doesSectorExist(size_t sector_id)const;
+  void printSectorPos(size_t sectorId);
+
+  //assertions
+  void assertOnRange(pos sector_pos);
+
+  size_t getTotalSectors() const {
+    return totalSectors;
+  }
+  std::string getDiskRoot() const {
+    return diskRoot;
+  }
+
+  bool isDiskOpen();
+  void updateMetadata();
+};
+#endif // DISK_H
