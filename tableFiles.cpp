@@ -7,8 +7,9 @@
 TableFiles::TableFiles() {
   Block headerDisk(0);
   std::string buffer = headerDisk.getData();
+
   if(buffer.size() <= 40) return;
-  for(size_t offset = 40; offset <= buffer.size(); offset += 34){
+  for(size_t offset = 40; buffer[offset] != '\0'; offset += 34){
     std::string rawName = buffer.substr(offset, 30);
     size_t endName = rawName.find('_');
     std::string name = (endName != std::string::npos)
@@ -42,7 +43,7 @@ void TableFiles::showTable(){
   std::cout<<"--------------------------------\n";
   std::cout<<"Nombre\t\tBloque\n";
   for(const auto &par: table){
-    printf("%s\t\t%d\n", par.first.c_str(), par.second);
+    printf("%s\t\t%ld\n", par.first.c_str(), par.second);
   }
   std::cout<<"================================\n";
 }
