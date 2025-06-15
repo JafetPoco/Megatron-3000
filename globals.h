@@ -2,8 +2,8 @@
 #define GLOBALS_H
 #include "disk.h"
 #include "tableFiles.h"
-//#include "freeBlockMan.h"
+#include "freeBlockMan.h"
 extern Disk *disk;
 extern TableFiles *tableFile;
-//extern FreeBlockManager *freeBlock;
+extern FreeBlockManager *freeBlock;
 #endif

@@ -9,16 +9,16 @@ using namespace std;
 
 Disk *disk = nullptr;
 TableFiles *tableFile = nullptr;
+FreeBlockManager *freeBlock = nullptr;
 
 int main(){
   disk = new Disk("Megatron");
   //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
-  tableFile = new TableFiles;
+  freeBlock = new FreeBlockManager("Megatron", 40);
 
-  tableFile->addFile("Nuevo File", 32);
-  
-  tableFile->showTable();
+  freeBlock->allocateBlock();
 
+  cout<<"Bitmap: "<<disk->readSector(1)<<endl;
 
 
   return 0;

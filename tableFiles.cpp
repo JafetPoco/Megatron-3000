@@ -4,9 +4,8 @@
 #include <sstream>
 #include <iomanip>
 
-TableFiles::TableFiles() {
-  Block headerDisk(0);
-  std::string buffer = headerDisk.getData();
+TableFiles::TableFiles(Disk *&disk) {
+  std::string buffer = disk->readSector(0);
 
   if(buffer.size() <= 40) return;
   for(size_t offset = 40; buffer[offset] != '\0'; offset += 34){
@@ -48,9 +47,7 @@ void TableFiles::showTable(){
   std::cout<<"================================\n";
 }
 
-void TableFiles::saveChanges(){
-  Block diskHeader(0);
-
+void TableFiles::saveChanges(Disk *&disk){
   std::stringstream directory;
   for(auto file: table){
     directory << std::left << std::setfill('_') << std::setw(30) << file.first;
@@ -58,9 +55,9 @@ void TableFiles::saveChanges(){
   }
   std::string directoryStr = directory.str();
 
-  std::string *dataBlock = &diskHeader.getData();
-  dataBlock->replace(40, directoryStr.length(), directoryStr);
-  diskHeader.saveBlock();
+  std::string dataBlock = disk->readSector(0);
+  dataBlock.replace(40, directoryStr.length(), directoryStr);
+  disk->writeSector(0, dataBlock);
 }
 
 void TableFiles::addFile(std::string nameFile, size_t id){
