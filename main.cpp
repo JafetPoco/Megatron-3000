@@ -13,24 +13,21 @@ TableFiles *tableFile = nullptr;
 FreeBlockManager *freeBlock = nullptr;
 
 int main(){
+  BufPool *bufferPool = nullptr;
   disk = new Disk("Megatron");
   //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
   freeBlock = new FreeBlockManager("Megatron", 40);
 
   
-  BufPool bp(4);
+  bufferPool = new BufPool(2);
 
-  bp.requestPage(2, 'r');
-  bp.pinFrame(2);
-  bp.requestPage(3, 'r');
-  bp.pinFrame(3);
-  bp.requestPage(5, 'r');
-  bp.requestPage(5, 'r');
-  bp.pinFrame(5);
-  bp.requestPage(6, 'r');
-  bp.pinFrame(6);
-  bp.requestPage(1, 'r');
+  std::string *st = &bufferPool->requestPage(2, 'r');
+  cout<<*st<<endl;
 
-  bp.printEstadistic();
+  *st = "Hola mundo";
+  cout<<*st<<endl;
+  bufferPool->clearBuffer();
+
+  bufferPool->printEstadistic();
   return 0;
 }
