@@ -58,7 +58,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
   nrequests++;
 
   if(frames.find(id) == frames.end()){
-    if(framesKey.size() >= nframe){ //pregunta si hay espacio para agregar una page
+    if(framesKey.size() >= (size_t) nframe){ //pregunta si hay espacio para agregar una page
       //no hay espacio
       auto posFreeFrame = freeFrame();
       if(posFreeFrame == framesKey.rend()){
@@ -68,7 +68,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
       frames.erase(lastValue);
       delete blocks[lastValue];
       blocks.erase(lastValue);
-      auto it = framesKey.erase(--posFreeFrame.base());
+      framesKey.erase(--posFreeFrame.base());
     }
     framesKey.push_front(id);
     blocks[id] = new Block(id);
