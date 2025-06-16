@@ -28,6 +28,7 @@ std::list<int>::reverse_iterator BufPool::freeFrame(){
   if(firstDirty != framesKey.rend()){
     int pos = *firstDirty;
     saveChanges(pos);
+    blocks[pos]->saveBlock();
     frames[pos].first.dirty = 0;
     return firstDirty;
   }
@@ -73,7 +74,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
     blocks[id] = new Block(id);
     std::string dataBlock = blocks[id]->getData();
 
-    bool mode = tipe == 'r' ? 0 : 1;
+    bool mode = tipe == 'r' ? READ : WRITE;
     bool dirty = tipe == 'r' ? 0 : 1;
     Frame f = {id, dirty, dataBlock, 1, false, mode};
     frames[id] = std::make_pair(f ,framesKey.begin());
