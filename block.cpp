@@ -18,6 +18,7 @@ void Block::openBlock(BlockID id) {
   if (!disk || !disk->isDiskOpen()) {
     std::cerr << "BLOCK: El disco no se inicio\n" ;
     data = "";
+    header = "";
     return;
   }
   size_t sector = id*4;
@@ -28,6 +29,9 @@ void Block::openBlock(BlockID id) {
     // cout<<sectorData;
     data += sectorData;
   }
+
+  header = data.substr(0, 8);
+  data = data.substr(8);
 }
 
 void Block::saveBlock() {
@@ -35,6 +39,7 @@ void Block::saveBlock() {
   if (!disk || !disk->isDiskOpen()) {
     std::cerr << "BLOCK: El disco no se inició\n";
     data = "";
+    header = "";
     return;
   }
 
@@ -42,7 +47,15 @@ void Block::saveBlock() {
   size_t blockLength = disk->info().blockLength;
   size_t totalCapacity = sectorSize * blockLength;
 
-  if (data.size() > totalCapacity) {
+  size_t totalLen = strlen(data.c_str()) + header.size();
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(4) << (totalLen > totalCapacity ? totalCapacity : totalLen);
+  header.replace(4, 4, ss.str());
+  string allText = header + data;
+
+  std::cout<<"|||"<<ss.str()<<std::endl;
+
+  if (allText.size() > totalCapacity) {
     std::cerr << "BLOCK: WARN: La data a escribir excede la capacidad de bloque, se truncará.\n";
   }
 
@@ -52,9 +65,9 @@ void Block::saveBlock() {
     size_t offset = i * sectorSize;
     string sectorData;
 
-    if (offset < data.size()) {
+    if (offset < allText.size()) {
       // Copia los datos si quedan datos disponibles
-      sectorData = data.substr(offset, sectorSize);
+      sectorData = allText.substr(offset, sectorSize);
       if (sectorData.size() < sectorSize) {
         sectorData.append(sectorSize - sectorData.size(), '\0');  // Padding
       }

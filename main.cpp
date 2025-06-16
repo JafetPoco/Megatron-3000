@@ -23,7 +23,9 @@ int main(){
 
   File archivo("Jafet");
 
-  archivo.write("Hola como estass!!!");
+  //archivo.write("Hola como estass!!!");
+  //archivo.write(" Sigue el texto");
+  cout<<archivo.read(4)<<endl;
 
   bufferPool->clearBuffer();
 

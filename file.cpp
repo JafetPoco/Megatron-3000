@@ -63,6 +63,7 @@ void File::write(std::string data){
   size_t blockPos = currentByte / blockSize;
   size_t dataPos = currentByte % blockSize;
   size_t size = data.length();
+  currentByte += size;
   if(dataPos + size > blockSize) {
     std::cerr<<"No hay espacio en el bloque, creando uno nuevo\n";
     size_t newBlockPos = freeBlock->allocateBlock();
@@ -87,7 +88,6 @@ void File::write(std::string data){
       updateOrderBlocks(blockPos);
     }
     
-    std::cout<<"Llego?\n"<<blockPos<<std::endl;
     std::cout<<orderBlockList[blockPos]<<std::endl;
     size_t idBlock = orderBlockList[blockPos];
     std::string *blockData = &bufferPool->requestPage(idBlock, 'w');
