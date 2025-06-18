@@ -23,15 +23,20 @@ void Block::openBlock(BlockID id) {
   }
   size_t sector = id*4;
   data = "";
+  header = "";
   for (size_t i = 0; i<disk->info().blockLength; i++) {
     size_t sector_offs = sector + i;
     string sectorData = disk->readSector(sector_offs);
     // cout<<sectorData;
     data += sectorData;
   }
+  if(data != ""){
+    header = data.substr(0, 8);
+    data = data.substr(8);
+  } else {
+    header = "00000008";
+  }
 
-  header = data.substr(0, 8);
-  data = data.substr(8);
 }
 
 void Block::saveBlock() {
@@ -52,8 +57,6 @@ void Block::saveBlock() {
   ss << std::setfill('0') << std::setw(4) << (totalLen > totalCapacity ? totalCapacity : totalLen);
   header.replace(4, 4, ss.str());
   string allText = header + data;
-
-  std::cout<<"|||"<<ss.str()<<std::endl;
 
   if (allText.size() > totalCapacity) {
     std::cerr << "BLOCK: WARN: La data a escribir excede la capacidad de bloque, se truncará.\n";

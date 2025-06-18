@@ -6,6 +6,7 @@
 #include "freeBlockMan.h"
 #include "tableFiles.h"
 #include "bufPool.h"
+#include "recordManager.h"
 
 using namespace std;
 
@@ -21,14 +22,11 @@ int main(){
   tableFile = new TableFiles(disk);
   bufferPool = new BufPool(2);
 
-  File archivo("Jafet");
-
-  //archivo.write("Hola como estass!!!");
-  //archivo.write(" Sigue el texto");
-  cout<<archivo.read(4)<<endl;
+  RecordManager *rm = new RecordManagerFixed;
+  rm->readCSV("p1.csv");
+  
 
   bufferPool->clearBuffer();
-
 
 
 

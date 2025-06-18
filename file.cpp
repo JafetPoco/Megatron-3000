@@ -21,9 +21,6 @@ File::File(std::string name) : nameFile(name), currentByte(0) {
 
   orderBlock.insert(posFreeBlock);
   orderBlockList.push_back(posFreeBlock);
-
-  std::string *header = &bufferPool->requestPage(posFreeBlock, 'w');
-  *header = "00000008";
 }
 
 void File::open(size_t position){
