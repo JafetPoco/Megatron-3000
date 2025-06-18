@@ -21,6 +21,7 @@ public:
   void addToSchema(std::string firstsRow, std::string tableName);
   void readCSV(std::string file) override;
   ~RecordManagerFixed() = default;
+  void printHeader(std::string file);
 };
 
 #endif //RECORD_MAN_H

@@ -18,17 +18,14 @@ BufPool *bufferPool = nullptr;
 int main(){
   disk = new Disk("Megatron");
   //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
+  
   freeBlock = new FreeBlockManager("Megatron", 40);
   tableFile = new TableFiles(disk);
-  bufferPool = new BufPool(2);
+  bufferPool = new BufPool(4);
 
   RecordManager *rm = new RecordManagerFixed;
-  rm->readCSV("p1.csv");
-  
+  rm->readCSV("titanic.csv");
 
   bufferPool->clearBuffer();
-
-
-
   return 0;
 }

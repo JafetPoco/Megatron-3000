@@ -95,3 +95,14 @@ void File::write(std::string data){
 void File::seek(size_t numByte){
   currentByte = numByte;
 }
+
+std::string File::readAll(){
+  size_t sectorSize = disk->info().sectorSize;
+  size_t blockSize = disk->info().blockLength * sectorSize;
+
+  std::string data = "";
+  for(auto block: orderBlockList){
+    data += bufferPool->requestPage(block, 'r');
+  }
+  return data;
+}

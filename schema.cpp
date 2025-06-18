@@ -1,5 +1,6 @@
 #include "schem.h"
 #include <sstream>
+#include "file.h"
 Schema::Schema() {}
 
 size_t Schema::getNumFields() { return fields.size(); }
@@ -64,14 +65,18 @@ bool Schema::loadFromSchemaLine(const std::string &line) {
 }
 
 bool Schema::loadFromFile(const std::string &filename, std::string &tableName) {
-  std::ifstream in(filename);
+  File in(filename);
+  //std::ifstream in(filename);
+  /*
   if (!in) {
     std::cerr << "No se pudo abrir el archivo: " << filename << std::endl;
     return false;
   }
+  */
 
   std::string line;
-  while (std::getline(in, line)) {
+  std::stringstream inS(in.readAll());
+  while (std::getline(inS, line)) {
     std::stringstream ss(line);
     std::string name;
     getline(ss, name, '#');
