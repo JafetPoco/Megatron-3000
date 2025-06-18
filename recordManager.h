@@ -23,4 +23,12 @@ public:
   ~RecordManagerFixed() = default;
 };
 
+class RecordManagerVariable : public RecordManager{
+public:
+  RecordManagerVariable();
+  void addToSchema(std::string firstsRow, std::string tableName) override;
+  void readCSV(std::string file) override;
+  ~RecordManagerVariable() = default;
+};
+
 #endif //RECORD_MAN_H
