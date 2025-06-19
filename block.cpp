@@ -13,6 +13,12 @@ Block::Block(BlockID id) : id(id) {
   openBlock(id);
 }
 
+/*
+INPUT: Id del bloque
+Carga la información de un bloque existente
+Autor: Jafet Poco
+*/
+
 void Block::openBlock(BlockID id) { 
   this->id = id;
   if (!disk || !disk->isDiskOpen()) {
@@ -38,6 +44,12 @@ void Block::openBlock(BlockID id) {
   }
 
 }
+
+/*
+Guarda la información del bloque en el disco, fracmentandolo
+en los sectores correcpondientes
+Autor: Berly Dueñas
+*/
 
 void Block::saveBlock() {
   // std::cout<<"BLOCK: datos a escribir: "<<data<<std::endl;

@@ -276,7 +276,6 @@ void RecordManagerFixed::readCSV(std::string file) {
   addToSchema(headerTable, tableName);
 
   sh->loadFromFile("schema", tableName);
-  // size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
   size_t sizeRegister = sh->getRecordSize();
 
   File table(tableName);
@@ -305,4 +304,18 @@ void RecordManagerFixed::printHeader(std::string tableName) {
 
 void RecordManagerFixed::select(std::string tableName) {
   printHeader(tableName);
+  File table(tableName);
+  //size_t recordLen = stoi(table.read(3));
+  size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
+
+  table.seek(7);
+
+  while(table.get() != '&'){
+    for(size_t j=0; j<sh->getNumFields(); j++){
+      size_t len = sh->getField(j).size;
+      std::cout<<table.read(len)<<"|";
+    }
+    std::cout<<"\n";
+  }
+
 }

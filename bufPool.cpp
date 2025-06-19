@@ -56,7 +56,7 @@ void BufPool::saveChanges(ssize_t id){
 }
 
 std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
-  printf("Request Page: %d\n", id);
+  //printf("Request Page: %d\n", id);
   nrequests++;
 
   if(frames.find(id) == frames.end()){
@@ -81,7 +81,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
     Frame f = {id, dirty, dataBlock, 1, false, mode};
     frames[id] = std::make_pair(f ,framesKey.begin());
     nmiss++;
-    // print();
+    //print();
     return frames[id].first.data;
   } else {
 
@@ -98,7 +98,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
       frames[id].first.dirty = tipe == 'r' ? 0 : 1;
       frames[id].first.tipe = tipe == 'r' ? READ : WRITE;
     }
-    // print();
+    //print();
     return frames[id].first.data;
   }
 }

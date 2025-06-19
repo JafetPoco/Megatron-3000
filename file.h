@@ -30,6 +30,7 @@ public:
   void write(std::string data);
   std::string read(size_t size);
   std::string readAll();
+  char get();
 
   size_t getCurrentByte() const { return currentByte; }
 };

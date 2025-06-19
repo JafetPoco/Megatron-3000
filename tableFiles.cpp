@@ -4,6 +4,13 @@
 #include <sstream>
 #include <iomanip>
 
+/*
+INPUT: el Disco
+Lee el directorio del disco, y crea un mapa con el nombre
+de un archivo y el ID del bloque donde empieza
+Autor: Jafet Poco
+*/
+
 TableFiles::TableFiles(Disk *&disk) {
   std::string buffer = disk->readSector(0);
 
@@ -21,6 +28,12 @@ TableFiles::TableFiles(Disk *&disk) {
   }
 }
 
+/*
+INPUT: Nombre del archivo
+OUTPUT: Verdadero si el archivo existe o Falso de lo contrario
+Busca un archivo por el nombre dentro del mapa (directorio)
+Autor: Jafet Poco
+*/
 
 bool TableFiles::findFile(std::string name, size_t *position){
   auto iterador = table.find(name);
@@ -47,6 +60,12 @@ void TableFiles::showTable(){
   std::cout<<"================================\n";
 }
 
+/*
+INPUT: Disco
+Escribe los cambios realizados en el disco
+Autor: Jafet Poco
+*/
+
 void TableFiles::saveChanges(Disk *&disk){
   std::stringstream directory;
   for(auto file: table){
@@ -59,6 +78,12 @@ void TableFiles::saveChanges(Disk *&disk){
   dataBlock.replace(40, directoryStr.length(), directoryStr);
   disk->writeSector(0, dataBlock);
 }
+
+/*
+INPUT: Nombre del archivo y el ID del bloque donde empieza
+Agrega un archivo al mapa (directorio)
+Autor: Jafet Poco
+*/
 
 void TableFiles::addFile(std::string nameFile, size_t id){
   table.insert({nameFile, id});
