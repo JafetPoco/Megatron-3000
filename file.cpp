@@ -14,7 +14,7 @@ File::File(std::string name) : nameFile(name), currentByte(0) {
     return; 
   }
   
-  printf("Creando archivo...\n");
+  printf("Creando archivo %s...\n", name.c_str());
   ssize_t posFreeBlock = freeBlock->allocateBlock();
   tableFile->addFile(name, posFreeBlock);
   tableFile->saveChanges(disk);
@@ -102,6 +102,7 @@ std::string File::readAll(){
 
   std::string data = "";
   for(auto block: orderBlockList){
+    std::cout<<"data: "<<data<<' '<<block<<'\n'; 
     data += bufferPool->requestPage(block, 'r');
   }
   return data;

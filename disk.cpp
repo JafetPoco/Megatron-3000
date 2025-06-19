@@ -172,7 +172,7 @@ void Disk::writeSector(size_t sector_id, std::string data) {
   //size_t sizeSectorInit = fs::file_size(filePath);
   ofstream file(filePath, ios::trunc);
   if (!file.is_open()) {
-    cerr << "DISCO: ERROR: No se pudo abrir sector para escritura" << endl;
+    cerr << "DISCO: ERROR: No se pudo abrir sector para escritura, path: "<<filePath << endl;
     return;
   }
 
@@ -225,8 +225,8 @@ pos Disk::getNthSector(size_t sector_id)const {
   return {
       sector_id /2 %(platters), // platter
       sector_id % 2,                                           // surface
-      sector_id / (platters * 2 * tracks) % sectors, // sector
-      sector_id / (platters * 2) % tracks                    // track
+      sector_id / (platters * 2) % tracks,                    // track
+      sector_id / (platters * 2 * tracks) % sectors // sector
   };
 }
 
