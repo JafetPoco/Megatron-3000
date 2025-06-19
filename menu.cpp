@@ -30,6 +30,8 @@ void AuxMenu() {
   printf("4. Ver Bloque\n");
   printf("5. Subir CSV\n");
   printf("6. Select\n");
+  printf("7. Subir CSV Variable\n");
+  printf("8. Select Variable\n");
   printf("0. Exit\n");
   printf("----------------------------------------\n");
   printf("Ingrese su opcion: ");
@@ -73,6 +75,19 @@ void AuxMenu() {
     rm.select(name);
     break;
   }
+  case 7: {
+    RecordManagerVariable rmv;
+    string name;
+    printf("Nombre del .CSV: \n"); std::cin>>name;
+    rmv.readCSV(name);
+    break;
+  }
+  case 8: {
+    RecordManagerVariable rm;
+    std::string name;
+    printf("Nombre de la tabla: \n"); std::cin>>name;
+    rm.select(name);
+          }
   case 0:
     printf("Saliendo del sistema Megatron 3000...\n");
     exit(0);
@@ -127,7 +142,7 @@ void menu_buffer(){
 
 void menu() {
   disk = new Disk("Megatron");
-  freeBlock = new FreeBlockManager("Megatron", 40);
+  freeBlock = new FreeBlockManager("Megatron", 128);
   tableFile = new TableFiles(disk);
   bufferPool = new BufPool(20);
   while (true) {
