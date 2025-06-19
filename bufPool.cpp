@@ -81,7 +81,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
     Frame f = {id, dirty, dataBlock, 1, false, mode};
     frames[id] = std::make_pair(f ,framesKey.begin());
     nmiss++;
-    print();
+    // print();
     return frames[id].first.data;
   } else {
 
@@ -98,7 +98,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
       frames[id].first.dirty = tipe == 'r' ? 0 : 1;
       frames[id].first.tipe = tipe == 'r' ? READ : WRITE;
     }
-    print();
+    // print();
     return frames[id].first.data;
   }
 }
@@ -114,7 +114,7 @@ void BufPool::pinFrame(int id){
   Frame &f = posFrame->second.first;
 
   f.pin = true;
-  print();
+  // print();
 }
 
 void BufPool::unPinFrame(int id){
@@ -128,7 +128,7 @@ void BufPool::unPinFrame(int id){
   Frame &f = posFrame->second.first;
 
   f.pin = false;
-  print();
+  // print();
 }
 
 void BufPool::print(){
@@ -172,5 +172,5 @@ void BufPool::clearBuffer(){
     blocks.erase(*it);
     frames.erase(*it);
   }
-  print();
+  // print();
 }

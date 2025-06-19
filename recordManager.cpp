@@ -202,6 +202,7 @@ std::string RecordManagerVariable::formatRow(std::string row) {
       std::exit(EXIT_FAILURE);
     }
   }
+  std::cout<<result<<std::endl;
 
   return result;
 }

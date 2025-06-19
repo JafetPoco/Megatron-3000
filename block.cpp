@@ -40,7 +40,7 @@ void Block::openBlock(BlockID id) {
 }
 
 void Block::saveBlock() {
-  std::cout<<"BLOCK: datos a escribir: "<<data<<std::endl;
+  // std::cout<<"BLOCK: datos a escribir: "<<data<<std::endl;
   if (!disk || !disk->isDiskOpen()) {
     std::cerr << "BLOCK: El disco no se inició\n";
     data = "";
@@ -79,7 +79,7 @@ void Block::saveBlock() {
       sectorData = string(sectorSize, '\0');
     }
 
-    std::cout<<"BLOCK: sectorData -> block: "<<sectorData<<std::endl;
+    // std::cout<<"BLOCK: sectorData -> block: "<<sectorData<<std::endl;
     disk->writeSector(sectorStart + i, sectorData);
   }
 }
