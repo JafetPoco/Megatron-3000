@@ -33,6 +33,31 @@ void RecordManagerFixed::addToSchema(std::string firstRow, std::string tableName
   std::cout<<"==========================================\n";
 }
 
+std::string RecordManagerFixed::formatRow(std::string row) {
+  std::stringstream output;
+  std::string value;
+  size_t numField = 0;
+
+  bool inQuotes = false;
+  std::string token;
+
+  for (size_t i = 0; i <= row.size(); ++i) {
+    char c = (i < row.size()) ? row[i] : ',';  // Al final, fuerza separación
+
+    if (c == '"') {
+      inQuotes = !inQuotes; // Entrar/salir de comillas
+    } else if (c == ',' && !inQuotes) {
+      // Campo completo
+      Field f = sh->getField(numField++);
+      output << std::left << std::setfill(' ') << std::setw(f.size) << token;
+      token.clear();
+    } else {
+      token += c;
+    }
+  }
+  return output.str();
+}
+
 void RecordManagerFixed::readCSV(std::string file){
   sh = new Schema;
   size_t dotPos = file.find('.');
@@ -42,6 +67,13 @@ void RecordManagerFixed::readCSV(std::string file){
   std::string headerTable;
   getline(csv, headerTable);
   addToSchema(headerTable, tableName);
+
+  sh->loadFromFile("schema", tableName);
+  size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
+  size_t sizeRegister = sh->getRecordSize();
+
+  File table(tableName);
+  std::string row, dataBlock;
 }
 
 void RecordManagerFixed::printHeader(std::string file){

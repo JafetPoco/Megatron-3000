@@ -8,6 +8,7 @@ protected:
   Schema *sh;
 public:
   virtual void addToSchema(std::string firstsRow, std::string tableName) = 0;
+  virtual void uploadBlockData() = 0;
   //virtual void select() = 0;
   //virtual void where() = 0;
   //virtual void insert() = 0;
@@ -16,6 +17,8 @@ public:
 };
 
 class RecordManagerFixed : public RecordManager{
+private:
+  std::string formatRow(std::string row);
 public:
   RecordManagerFixed();
   void addToSchema(std::string firstsRow, std::string tableName);
