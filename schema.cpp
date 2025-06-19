@@ -5,7 +5,19 @@ Schema::Schema() {}
 
 size_t Schema::getNumFields() { return fields.size(); }
 
+/*
+INPUT: indice de un vector
+OUTPUT: datos de un campo
+Me devuelve el i-esimo campo de una tabla
+Autor: Berly Dueñas
+*/
+
 const Field &Schema::getField(size_t index) { return fields.at(index); }
+
+/*
+OUTPUT: Tamaño de un registro
+Devuelve el tamaño de un registro
+*/
 
 size_t Schema::getRecordSize() {
   size_t total = 0;
@@ -14,6 +26,13 @@ size_t Schema::getRecordSize() {
   }
   return total;
 }
+
+/*
+INPUT: cabecera de una tabla
+Me crea datos tipo Field con los datos de cada campo
+(nombre del campo, tipo de dato y tamaño)
+Autor: Berly Dueñas
+*/
 
 bool Schema::loadFromSchemaLine(const std::string &line) {
   fields.clear();
@@ -63,6 +82,12 @@ bool Schema::loadFromSchemaLine(const std::string &line) {
   // std::cerr << "SCHEMA: field size: " << fields.size() << std::endl;
   return true;
 }
+
+/*
+INPUT: Nombre del archivo y Nombre de la tabla
+Busca en schema la cabecera de la tabla indicada
+Autor: Berly Dueñas 
+*/
 
 bool Schema::loadFromFile(const std::string &filename, std::string &tableName) {
   File in(filename);
