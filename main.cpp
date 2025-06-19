@@ -24,8 +24,8 @@ int main(){
   bufferPool = new BufPool(4);
 
   RecordManager *rm = new RecordManagerFixed;
-  //rm->readCSV("p1.csv");
-  rm->select("p1");
+  //rm->readCSV("titanic.csv");
+  rm->select("titanic");
   bufferPool->clearBuffer();
 
   return 0;

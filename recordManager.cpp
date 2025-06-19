@@ -98,20 +98,14 @@ void RecordManagerFixed::select(std::string tableName){
   printHeader(tableName);
   File table(tableName);
   //size_t recordLen = stoi(table.read(3));
-  size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength - 8;
+  size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
 
   table.seek(7);
 
   while(table.get() != '&'){
-    if(table.get() == '|') {
-      size_t a = table.getCurrentByte();
-      a += sizeBlock - table.getCurrentByte();
-      table.seek(a+9);
-      std::cout<<": "<<table.getCurrentByte()<<std::endl;
-    }
     for(size_t j=0; j<sh->getNumFields(); j++){
       size_t len = sh->getField(j).size;
-      std::cout << table.read(len) << "|";
+      std::cout<<table.read(len)<<"|";
     }
     std::cout<<"\n";
   }

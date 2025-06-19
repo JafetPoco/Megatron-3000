@@ -46,7 +46,7 @@ std::string File::read(size_t size){
   size_t dataPos = currentByte % blockSize;
   currentByte += size;
 
-  if(orderBlockList.size() < blockPos){
+  if(orderBlockList.size() <= blockPos){
     updateOrderBlocks(blockPos);
   }
   size_t idBlock = orderBlockList[blockPos];
@@ -105,4 +105,15 @@ std::string File::readAll(){
     data += bufferPool->requestPage(block, 'r');
   }
   return data;
+}
+
+char File::get(){
+  size_t sectorSize = disk->info().sectorSize;
+  size_t blockSize = disk->info().blockLength * sectorSize;
+  size_t blockPos = currentByte / blockSize;
+  size_t dataPos = currentByte % blockSize;
+
+  size_t idBlock = orderBlockList[blockPos];
+  std::string data = bufferPool->requestPage(idBlock, 'r');
+  return data[dataPos];
 }

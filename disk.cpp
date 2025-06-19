@@ -11,6 +11,12 @@
 // #define DEBUG 
 using namespace std;
 
+/*
+INPUT: Parametros del Disco
+Permite crear un disco con los parametros Dados
+Autor: Jafet Poco
+*/
+
 Disk::Disk(string diskName, size_t platters, size_t tracksPerSurface,
            size_t sectorsPerTrack, size_t sectorSize, size_t sectorsPerBlock)
     : diskRoot(diskName), platters(platters),
@@ -25,6 +31,12 @@ Disk::Disk(string diskName, size_t platters, size_t tracksPerSurface,
   //  getInfo();
 }
 
+/*
+INPUT: Nombre Disco
+Abre un disco ya creado
+Autor: Jafet Poco
+*/
+
 Disk::Disk(string nameDisk) {
   diskRoot = nameDisk;
   if (!fs::exists(diskRoot) && !fs::is_directory(diskRoot)) {
@@ -34,6 +46,11 @@ Disk::Disk(string nameDisk) {
   readMetadata();
   // getInfo();
 }
+
+/*
+Actualiza la metadata del disco (almacenamiento usado, etc)
+Autor: Jafet Poco
+*/
 
 void Disk::updateMetadata(){
   fstream metadata(diskRoot + "/platter_0/surface_0/track_0/sector_0", ios::in | ios::out | ios::binary);
@@ -48,6 +65,11 @@ void Disk::updateMetadata(){
   metadata.write(free.str().c_str(), 10);
   metadata.close();
 }
+
+/*
+Escribe la metadata almacenada en la clase al disco
+Autor: Jafet Poco
+*/
 
 void Disk::writeMetadata() {
   totalSectors = platters * 2 * tracks * sectors;
@@ -73,6 +95,11 @@ void Disk::writeMetadata() {
            << blockLength; // 2 siguientes sectores por bloque
   cout << "DISCO: Metadata escrita correctamente" << endl;
 }
+
+/*
+Al abrir un disco, lee la metadata escrita
+Autor: Jafet Poco
+*/
 
 void Disk::readMetadata() {
   ifstream metadata(diskRoot + "/platter_0/surface_0/track_0/sector_0");
@@ -117,6 +144,11 @@ void Disk::readMetadata() {
   cout << "DISCO: Metadata leida correctamente..." << endl;
 }
 
+/*
+Formatea un disco
+Autor: Jafet Poco
+*/
+
 void Disk::format() {
   fs::remove_all(diskRoot);
   fs::create_directories(diskRoot);
@@ -141,6 +173,13 @@ void Disk::format() {
   return;
 }
 
+/*
+INPUT: Id del Sector
+OUTPUT: data del sector
+Lee la información de un sector
+Autor: Jafet Poco
+*/
+
 string Disk::readSector(size_t sector_id) {
   fstream file = openNthSector(sector_id);
   if (!file.is_open()) {
@@ -160,6 +199,11 @@ string Disk::readSector(size_t sector_id) {
   return data;
 }
 
+/*
+INPUT: id del Sector y la data que se va a escribir
+Escribe información dentro de un sector
+Autor: Jafet Poco
+*/
 
 void Disk::writeSector(size_t sector_id, std::string data) {
 #ifdef DEBUG
@@ -184,6 +228,12 @@ void Disk::writeSector(size_t sector_id, std::string data) {
   file.close();
 }
 
+/*
+INPUT: Id del sector
+Permite abrir un sector con una cuenta vertical
+Autor: Berly Dueñas
+*/
+
 fstream Disk::openNthSector(size_t sector_id) const{
   if (!doesSectorExist(sector_id)) {
     cerr << "DISCO: ERROR: Sector ID fuera de rango" << endl;
@@ -203,6 +253,12 @@ fstream Disk::openNthSector(size_t sector_id) const{
   return file;
 }
 
+/*
+INPUT: Id del sector
+Permite abrir un sector con una cuenta vertical
+Autor: Berly Dueñas
+*/
+
 string Disk::getSectorPath(size_t sector_id) const { 
   pos sector_pos = getNthSector(sector_id);
   string filePath = diskRoot + "/platter_" + to_string(sector_pos.platter) +
@@ -211,6 +267,12 @@ string Disk::getSectorPath(size_t sector_id) const {
                     "/sector_" + to_string(sector_pos.sector);
   return filePath;
 }
+
+/*
+INPUT: Id del sector
+Permite abrir un sector con una cuenta vertical
+Autor: Berly Dueñas
+*/
 
 pos Disk::getNthSector(size_t sector_id)const {
   if (/*sector_id == 0 || */sector_id >= totalSectors) {
@@ -229,6 +291,12 @@ pos Disk::getNthSector(size_t sector_id)const {
       sector_id / (platters * 2) % tracks                    // track
   };
 }
+
+/*
+INPUT: Id del sector
+Permite abrir un sector con una cuenta vertical
+Autor: Berly Dueñas
+*/
 
 size_t Disk::getNthSector(pos sector_pos) const{
   if (!doesSectorExist(sector_pos)) {
