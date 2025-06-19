@@ -69,17 +69,32 @@ void RecordManagerFixed::readCSV(std::string file){
   addToSchema(headerTable, tableName);
 
   sh->loadFromFile("schema", tableName);
-  size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
+  //size_t sizeBlock = disk->info().sectorSize * disk->info().blockLength;
   size_t sizeRegister = sh->getRecordSize();
 
   File table(tableName);
-  std::string row, dataBlock;
+  std::stringstream ss;
+  ss << std::setfill('0') << std::setw(3) << sizeRegister;
+  ss << std::setfill('0') << std::setw(4) << -1;
+  table.write(ss.str());
+  std::string row;
+  while(getline(csv, row)){
+    table.write(formatRow(row));
+  }
 }
 
-void RecordManagerFixed::printHeader(std::string file){
-  file = "schema";
-  std::string table = "p1";
-  sh->loadFromFile(file, table);
-  sh->printSchema();
+void RecordManagerFixed::printHeader(std::string tableName){
+  sh = new Schema;
+  sh->loadFromFile("schema", tableName);
 
+  for(size_t i=0; i<sh->getNumFields(); i++){
+    Field f = sh->getField(i);
+    size_t lenField = f.size > f.name.size() ? f.size : f.name.size();
+    std::cout << std::left << std::setfill(' ') << std::setw(lenField) << f.name << "|";
+  }
+  std::cout<<"\n";
+}
+
+void RecordManagerFixed::select(std::string tableName){
+  printHeader(tableName);
 }

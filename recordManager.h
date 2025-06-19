@@ -8,8 +8,7 @@ protected:
   Schema *sh;
 public:
   virtual void addToSchema(std::string firstsRow, std::string tableName) = 0;
-  virtual void uploadBlockData() = 0;
-  //virtual void select() = 0;
+  virtual void select(std::string tableName) = 0;
   //virtual void where() = 0;
   //virtual void insert() = 0;
   virtual void readCSV(std::string file) = 0; 
@@ -19,12 +18,13 @@ public:
 class RecordManagerFixed : public RecordManager{
 private:
   std::string formatRow(std::string row);
+  void printHeader(std::string file);
 public:
   RecordManagerFixed();
   void addToSchema(std::string firstsRow, std::string tableName);
   void readCSV(std::string file) override;
   ~RecordManagerFixed() = default;
-  void printHeader(std::string file);
+  void select(std::string tableName) override;
 };
 
 #endif //RECORD_MAN_H
