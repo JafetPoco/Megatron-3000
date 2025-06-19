@@ -147,15 +147,19 @@ string Disk::readSector(size_t sector_id) {
     cerr << "DISCO: ERROR: No se pudo abrir sector para lectura" << endl;
     return "";
   }
-  stringstream buf;
-  buf << file.rdbuf();
 
-  string data = buf.str();
-  // if (data.size() != 0 && data[data.size()-1])
-  //   data.pop_back();
-  data = data.substr(0, disk->info().sectorSize);
+  size_t size = disk->info().sectorSize;
+  string data(size, '\0');
+  file.read(&data[0], size);
+
+  // Elimina los '\0' del final
+  size_t end = data.find('\0');
+  if (end != string::npos)
+    data = data.substr(0, end);
+
   return data;
 }
+
 
 void Disk::writeSector(size_t sector_id, std::string data) {
 #ifdef DEBUG

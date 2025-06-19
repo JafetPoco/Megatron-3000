@@ -27,10 +27,7 @@ int main(){
   RecordManager *rm = new RecordManagerVariable;
   rm->readCSV("titanic.csv");
   
-
   bufferPool->clearBuffer();
-
-
 
   return 0;
 }
