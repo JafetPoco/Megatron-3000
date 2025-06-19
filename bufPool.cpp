@@ -42,7 +42,8 @@ void BufPool::saveChanges(ssize_t id){
   std::string *originalDataBlock = &blocks[id]->getData();
   
   char op;
-  std::cin>>op;
+  op='y';
+  // std::cin>>op;
   if(op == 'Y' || op == 'y'){
     *originalDataBlock = frames[id].first.data;
     //blocks[id]->saveBlock();

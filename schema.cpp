@@ -1,4 +1,5 @@
 #include "schem.h"
+#include <iostream>
 #include <sstream>
 #include "file.h"
 Schema::Schema() {}
@@ -78,6 +79,7 @@ bool Schema::loadFromFile(const std::string &filename, std::string &tableName) {
   std::stringstream inS(in.readAll());
   while (std::getline(inS, line)) {
     std::stringstream ss(line);
+    std::cout<<line<<std::endl;
     std::string name;
     getline(ss, name, '#');
     if(name == tableName){

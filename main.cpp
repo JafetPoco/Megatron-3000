@@ -16,18 +16,19 @@ FreeBlockManager *freeBlock = nullptr;
 BufPool *bufferPool = nullptr;
 
 int main(){
-  // disk = new Disk("Megatron");
-  disk = new Disk("Megatron", 2, 4, 4, 512, 4);
+  disk = new Disk("Megatron");
+  // disk = new Disk("Megatron", 2, 4, 4, 512, 4);
   disk->printDiskInfo();
   freeBlock = new FreeBlockManager("Megatron", 40);
   tableFile = new TableFiles(disk);
   tableFile->showTable();
-  bufferPool = new BufPool(2);
+  bufferPool = new BufPool(3);
 
   RecordManager *rm = new RecordManagerVariable;
   rm->readCSV("titanic.csv");
   
   bufferPool->clearBuffer();
+
 
   return 0;
 }

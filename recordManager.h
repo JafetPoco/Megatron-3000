@@ -2,6 +2,7 @@
 #define RECORD_MAN_H
 
 #include "schem.h"
+#include <string>
 
 class RecordManager {
 protected:
@@ -29,7 +30,9 @@ public:
 
 class RecordManagerVariable : public RecordManager{
 public:
+  std::string formatRow(std::string row);
   RecordManagerVariable();
+  void select(std::string tableName) override;
   void addToSchema(std::string firstsRow, std::string tableName) override;
   void readCSV(std::string file) override;
   ~RecordManagerVariable() = default;
