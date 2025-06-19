@@ -7,26 +7,12 @@
 #include "tableFiles.h"
 #include "bufPool.h"
 #include "recordManager.h"
+#include "menu.h"
 
 using namespace std;
 
-Disk *disk = nullptr;
-TableFiles *tableFile = nullptr;
-FreeBlockManager *freeBlock = nullptr;
-BufPool *bufferPool = nullptr;
-
 int main(){
-  disk = new Disk("Megatron");
-  //disk = new Disk("Megatron", 2, 4, 4, 512, 4);
-
-  freeBlock = new FreeBlockManager("Megatron", 40);
-  tableFile = new TableFiles(disk);
-  bufferPool = new BufPool(4);
-
-  RecordManager *rm = new RecordManagerFixed;
-  //rm->readCSV("titanic.csv");
-  rm->select("titanic");
+  menu();
   bufferPool->clearBuffer();
-
   return 0;
 }
