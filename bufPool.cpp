@@ -38,12 +38,12 @@ std::list<int>::reverse_iterator BufPool::freeFrame(){
 }
 
 void BufPool::saveChanges(ssize_t id){
-  std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
+  std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar): ";
   std::string *originalDataBlock = &blocks[id]->getData();
   
   char op;
-  op='y';
-  // std::cin>>op;
+  // op='y';
+  std::cin>>op;
   if(op == 'Y' || op == 'y'){
     std::cout<<"Guardando...\n";
     *originalDataBlock = frames[id].first.data;

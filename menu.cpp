@@ -142,9 +142,9 @@ void menu_buffer(){
 
 void menu() {
   disk = new Disk("Megatron");
-  freeBlock = new FreeBlockManager("Megatron", 128);
+  freeBlock = new FreeBlockManager("Megatron", disk->info().sectorSize);
   tableFile = new TableFiles(disk);
-  bufferPool = new BufPool(20);
+  bufferPool = new BufPool(3);
   while (true) {
     AuxMenu();
   }
