@@ -12,25 +12,23 @@ BufPool::BufPool(int numBuf){
 
 std::list<int>::reverse_iterator BufPool::freeFrame(){
   std::list<int>::reverse_iterator it = framesKey.rbegin();
-  std::list<int>::reverse_iterator firstDirty = framesKey.rend();
+  //std::list<int>::reverse_iterator firstDirty = framesKey.rend();
 
-  for(; it != framesKey.rend(); ++it){
-    Frame aux = frames[*it].first;
-    if(!aux.pin && !aux.dirty){
-      return it;
+  while(true){
+    Frame &aux = frames[*it].first;
+    if(aux.count > 1){
+      aux.count--;
+    } else {
+      if(aux.pin == false){
+        if(aux.dirty == true)
+          saveChanges(aux.id);
+        return it;
+      }
     }
 
-    if(!aux.pin && aux.dirty && firstDirty == framesKey.rend()){
-      firstDirty = it;
-    }
-  }
-
-  if(firstDirty != framesKey.rend()){
-    int pos = *firstDirty;
-    saveChanges(pos);
-    blocks[pos]->saveBlock();
-    frames[pos].first.dirty = 0;
-    return firstDirty;
+    it++;
+    if(it == framesKey.rend())
+      it = framesKey.rbegin();
   }
 
   std::cerr<<"ERROR: No es posible agregar una pagina\n";
@@ -45,7 +43,7 @@ void BufPool::saveChanges(ssize_t id){
   std::cin>>op;
   if(op == 'Y' || op == 'y'){
     *originalDataBlock = frames[id].first.data;
-    //blocks[id]->saveBlock();
+    blocks[id]->saveBlock();
   } else {
     std::cout<<"Eliminando cambios en el bloque "<<id<<"...\n";
     frames[id].first.data = *originalDataBlock;
@@ -77,12 +75,12 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
     bool mode = tipe == 'r' ? READ : WRITE;
     bool dirty = tipe == 'r' ? 0 : 1;
     Frame f = {id, dirty, dataBlock, 1, false, mode};
+    printf("--------%d\n", f.count);
     frames[id] = std::make_pair(f ,framesKey.begin());
     nmiss++;
     //print();
     return frames[id].first.data;
   } else {
-
     nhits++;
     framesKey.erase(frames[id].second);
     framesKey.push_front(id);
@@ -91,10 +89,10 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
 
     if(frames[id].first.tipe == WRITE){
       saveChanges(frames[id].first.id);
-      if(tipe == 'w') frames[id].first.dirty = 1;
+      //if(tipe == 'w') frames[id].first.dirty = 1; //OJITO AQUI
     } else {
-      frames[id].first.dirty = tipe == 'r' ? 0 : 1;
       frames[id].first.tipe = tipe == 'r' ? READ : WRITE;
+      frames[id].first.dirty = tipe == 'r' ? false : true;
     }
     //print();
     return frames[id].first.data;

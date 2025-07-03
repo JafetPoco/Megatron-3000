@@ -64,6 +64,7 @@ void AuxMenu() {
     std::string name;
     printf("Nombre del .CSV: \n"); std::cin>>name;
     rm.readCSV(name);
+    bufferPool->clearBuffer();
     break;
   }
   case 6:{
@@ -94,14 +95,23 @@ void menu_buffer(){
     ssize_t option;
     scanf("%zu", &option);
     switch (option) {
-    case 1:
+    case 1:{
       size_t idBlock;
       char mode;
       printf("Id bloque: "); std::cin>>idBlock;
       printf("r/w: "); std::cin>>mode;
-      bufferPool->requestPage(idBlock, mode);
+      std::string *data = &bufferPool->requestPage(idBlock, mode);
+      std::string frase;
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      if(mode == 'w'){
+        std::cout<<"Ingrese texto: "; getline(std::cin, frase);
+        *data = frase;
+      } else if(mode == 'r'){
+        std::cout<<"Información del bloque: \n"<<*data<<"\n";
+      }
       bufferPool->print();
       break;
+    }
     case 2:
       size_t block;
       printf("ID del bloque: "); std::cin>>block;
@@ -116,6 +126,7 @@ void menu_buffer(){
       break;
     case 0:
       printf("Saliendo del buffer...\n");
+      bufferPool->clearBuffer();
       bufferPool->printEstadistic();
       return;
     default:
@@ -127,9 +138,9 @@ void menu_buffer(){
 
 void menu() {
   disk = new Disk("Megatron");
-  freeBlock = new FreeBlockManager("Megatron", 40);
+  freeBlock = new FreeBlockManager("Megatron", 100);
   tableFile = new TableFiles(disk);
-  bufferPool = new BufPool(20);
+  bufferPool = new BufPool(4);
   while (true) {
     AuxMenu();
   }
