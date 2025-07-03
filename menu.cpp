@@ -8,6 +8,7 @@
 #include "freeBlockMan.h"
 #include "file.h"
 #include "bufPool.h"
+#include "bufPoolClock.h"
 #include "recordManager.h"
 #include "globals.h"
 
@@ -16,6 +17,7 @@
 Disk *disk = nullptr;
 TableFiles *tableFile = nullptr;
 FreeBlockManager *freeBlock = nullptr;
+BufPoolC*bufferPoolClock = nullptr;
 BufPool*bufferPool = nullptr;
 size_t sectorPerBlock;
 size_t numBlock;
@@ -30,6 +32,7 @@ void AuxMenu() {
   printf("4. Ver Bloque\n");
   printf("5. Subir CSV\n");
   printf("6. Select\n");
+  printf("7. Buffer Pool Clock\n");
   printf("0. Exit\n");
   printf("----------------------------------------\n");
   printf("Ingrese su opcion: ");
@@ -72,6 +75,10 @@ void AuxMenu() {
     std::string name;
     printf("Nombre de la tabla: \n"); std::cin>>name;
     rm.select(name);
+    break;
+  }
+  case 7:{
+    menu_clock();
     break;
   }
   case 0:
@@ -136,11 +143,64 @@ void menu_buffer(){
   }
 }
 
+void menu_clock(){
+  bufferPool->print();
+  while(true){
+    printf("1. Request Page\n");
+    printf("2. Pin Frame\n");
+    printf("3. Unpin Frame\n");
+    printf("0. Exit\n");
+    printf("----------------------------------------\n");
+    printf("Ingrese su opcion: ");
+    ssize_t option;
+    scanf("%zu", &option);
+    switch (option) {
+    case 1:{
+      size_t idBlock;
+      char mode;
+      printf("Id bloque: "); std::cin>>idBlock;
+      printf("r/w: "); std::cin>>mode;
+      std::string *data = &bufferPoolClock->requestPage(idBlock, mode);
+      std::string frase;
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      if(mode == 'w'){
+        std::cout<<"Ingrese texto: "; getline(std::cin, frase);
+        *data = frase;
+      } else if(mode == 'r'){
+        std::cout<<"Información del bloque: \n"<<*data<<"\n";
+      }
+      bufferPoolClock->print(idBlock, 'g');
+      break;
+    }
+    case 2:
+      size_t block;
+      printf("ID del bloque: "); std::cin>>block;
+      bufferPoolClock->pinFrame(block);
+      bufferPoolClock->print(block, 'y');
+      break;
+    case 3:
+      size_t Idblock;
+      printf("ID del bloque: "); std::cin>>Idblock;
+      bufferPoolClock->unPinFrame(Idblock);
+      bufferPoolClock->print(Idblock, 'y');
+      break;
+    case 0:
+      printf("Saliendo del buffer...\n");
+      bufferPoolClock->printEstadistic();
+      return;
+    default:
+      printf("Opcion invalida. Intente de nuevo.\n");
+      break;
+    }
+  }
+}
+
 void menu() {
   disk = new Disk("Megatron");
   freeBlock = new FreeBlockManager("Megatron", 100);
   tableFile = new TableFiles(disk);
   bufferPool = new BufPool(4);
+  bufferPoolClock = new BufPoolC(4);
   while (true) {
     AuxMenu();
   }

@@ -6,6 +6,7 @@
 void menu();
 void menu_disk();
 void menu_buffer();
+void menu_clock();
 Disk* menu_disk_create();
 Disk* menu_disk_open();
 

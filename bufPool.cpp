@@ -75,7 +75,6 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
     bool mode = tipe == 'r' ? READ : WRITE;
     bool dirty = tipe == 'r' ? 0 : 1;
     Frame f = {id, dirty, dataBlock, 1, false, mode};
-    printf("--------%d\n", f.count);
     frames[id] = std::make_pair(f ,framesKey.begin());
     nmiss++;
     //print();
