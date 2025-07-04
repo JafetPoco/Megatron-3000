@@ -2,7 +2,8 @@
 #include <list>
 #include "bufPool.h"
 
-BufPool::BufPool(int numBuf){
+LRU::LRU(int numBuf){
+  printf(BLUE "== INICIANDO BUFFER CON LRU ==\n" RESET);
   nframe = numBuf;
   nrequests = 0; 
   nhits = 0;
@@ -10,12 +11,12 @@ BufPool::BufPool(int numBuf){
   nwrites = 0;
 }
 
-std::list<int>::reverse_iterator BufPool::freeFrame(){
+std::list<int>::reverse_iterator LRU::freeFrame(){
   std::list<int>::reverse_iterator it = framesKey.rbegin();
   //std::list<int>::reverse_iterator firstDirty = framesKey.rend();
 
   while(true){
-    Frame &aux = frames[*it].first;
+    FrameLRU &aux = frames[*it].first;
     if(aux.count > 1){
       aux.count--;
     } else {
@@ -35,7 +36,7 @@ std::list<int>::reverse_iterator BufPool::freeFrame(){
   return framesKey.rend(); 
 }
 
-void BufPool::saveChanges(ssize_t id){
+void LRU::saveChanges(ssize_t id){
   std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
   std::string *originalDataBlock = &blocks[id]->getData();
   
@@ -51,7 +52,7 @@ void BufPool::saveChanges(ssize_t id){
   }
 }
 
-std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
+std::string& LRU::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
   //printf("Request Page: %d\n", id);
   nrequests++;
 
@@ -74,7 +75,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
 
     bool mode = tipe == 'r' ? READ : WRITE;
     bool dirty = tipe == 'r' ? 0 : 1;
-    Frame f = {id, dirty, dataBlock, 1, false, mode};
+    FrameLRU f = {id, dirty, dataBlock, 1, false, mode};
     frames[id] = std::make_pair(f ,framesKey.begin());
     nmiss++;
     //print();
@@ -98,7 +99,7 @@ std::string& BufPool::requestPage(int id, char tipe){ //En megatron, debe de dev
   }
 }
 
-void BufPool::pinFrame(int id){
+void LRU::pinFrame(int id){
   printf("Pin page: %d\n", id);
   auto posFrame = frames.find(id);
   if(posFrame == frames.end()){
@@ -106,13 +107,12 @@ void BufPool::pinFrame(int id){
     return;
   }
   
-  Frame &f = posFrame->second.first;
+  FrameLRU &f = posFrame->second.first;
 
   f.pin = true;
-  print();
 }
 
-void BufPool::unPinFrame(int id){
+void LRU::unPinFrame(int id){
   printf("Unpin page: %d\n", id);
   auto posFrame = frames.find(id);
   if(posFrame == frames.end()){
@@ -120,13 +120,12 @@ void BufPool::unPinFrame(int id){
     return;
   }
   
-  Frame &f = posFrame->second.first;
+  FrameLRU &f = posFrame->second.first;
 
   f.pin = false;
-  print();
 }
 
-void BufPool::print(){
+void LRU::print(int id, char color){
   printf("FrameID\t|PageID\t|Mode\t|Dirty\t|Count\t|Pin\n");
   printf("---------------------------------------------\n");
   int i=0;
@@ -135,7 +134,15 @@ void BufPool::print(){
     char tipe = frame.tipe ? 'W' : 'R';
     char dirty = frame.dirty ? 'T' : 'F';
     char pin = frame.pin ? 'T' : 'F';
-    printf("%d\t|%d\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
+    if(id == *it){
+      if(color == 'y'){
+        printf(YELLOW "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+      } else {
+        printf(GREEN "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+      }
+    } else {
+      printf("%d\t|%d\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
+    }
   }
   if(i < nframe){
     for(; i<nframe; i++){
@@ -145,7 +152,7 @@ void BufPool::print(){
   printf("\n\n");
 }
 
-void BufPool::printEstadistic(){
+void LRU::printEstadistic(){
   printf("=============================================\n");
   printf("Estadisticas\n");
   printf("=============================================\n");
@@ -156,7 +163,7 @@ void BufPool::printEstadistic(){
   //printf("Hit Rate:\t%.2f %%\n", (float)nreads * 100.0 / nrequests);
 }
 
-void BufPool::clearBuffer(){
+void LRU::clearBuffer(){
   for(std::list<int>::iterator it = framesKey.begin(); it != framesKey.end(); it++){
     if(frames[*it].first.dirty == 1){
       std::string *originalData = &blocks[*it]->getData();
@@ -167,5 +174,169 @@ void BufPool::clearBuffer(){
     blocks.erase(*it);
     frames.erase(*it);
   }
-  print();
+}
+
+// Clock
+
+Clock::Clock(int numBuf) : nframe(numBuf) {
+  printf(BLUE "== INICIANDO BUFFER CON CLOCK ==\n" RESET);
+  nrequests = 0; 
+  nhits = 0;
+  nmiss = 0;
+}
+
+std::list<int>::iterator Clock::clockAlgorithm(){
+  while(true){
+    int id = *currentPos;
+    FrameClock& f = frames[id].first;
+    if(f.state){
+      f.count--;
+      if(f.count <= 0){
+        if(f.pin){
+          f.count = 0;
+        } else {
+          f.state = false;
+        }
+      }
+    } else {
+      if(f.dirty){
+        saveChange(f.id);
+        //printf("Guardando Bloque %d...\n", f.id);
+      }
+      auto victim = currentPos;
+      ++currentPos;
+      if(currentPos == framesKey.end()) currentPos = framesKey.begin();
+      return victim;
+    }
+
+    ++currentPos;
+    if(currentPos == framesKey.end())
+      currentPos = framesKey.begin();    
+  }
+}
+
+void Clock::saveChange(ssize_t id){
+  std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
+  std::string *originalDataBlock = &blocks[id]->getData();
+  
+  char op;
+  std::cin>>op;
+  if(op == 'Y' || op == 'y'){
+    *originalDataBlock = frames[id].first.data;
+    blocks[id]->saveBlock();
+  } else {
+    std::cout<<"Eliminando cambios en el bloque "<<id<<"...\n";
+    frames[id].first.data = *originalDataBlock;
+  }
+}
+
+std::string& Clock::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
+  nrequests++;
+  if(frames.find(id) == frames.end()){
+    bool defineTipe = tipe == 'w' ? true : false;
+    bool isDirty = defineTipe;
+    FrameClock f = {id, isDirty, "", 1, false, defineTipe, true};
+    if(framesKey.size() >= nframe){
+      auto it = clockAlgorithm();
+      int blockId = *it;
+      frames.erase(blockId);
+      delete blocks[blockId];
+      blocks.erase(blockId);
+      blocks[id] = new Block(id);
+      f.data = blocks[id]->getData();
+      frames[id] = std::make_pair(f, it);
+      *it = id; 
+    } else {
+      framesKey.push_back(id);
+      auto it = std::prev(framesKey.end());
+      blocks[id] = new Block(id);
+      f.data = blocks[id]->getData();
+      frames[id] = std::make_pair(f, it);
+    }
+    nmiss++;
+  } else {
+    FrameClock& f = frames[id].first;
+    f.count++;
+    if(f.tipe == true){
+      saveChange(id);
+    }
+
+    if(f.count > 0) f.state = true;
+    f.tipe = tipe == 'w' ? true : false;
+
+    if(f.dirty == false && f.tipe == true) f.dirty = true;
+    nhits++;
+  }
+  
+  if(frames.size() == 1){
+    currentPos = framesKey.begin();
+  }
+  
+  return frames[id].first.data;
+}
+
+void Clock::pinFrame(int id){
+  if(frames.find(id) == frames.end()){
+    printf(RED "ERROR: El FrameClock no está cargado\n\n" RESET);
+    return;
+  }
+  frames[id].first.pin = true;
+}
+
+void Clock::unPinFrame(int id){
+  if(frames.find(id) == frames.end()){
+    printf(RED "ERROR: El FrameClock no está cargado\n\n" RESET);
+    return;
+  }
+  frames[id].first.pin = false;
+}
+
+void Clock::print(int id, char color){
+  printf("FrameID\t│PageID\t│Mode\t│Dirty\t│Count\t│Pin\t│ClockBit\n");
+  printf("────────┼───────┼───────┼───────┼───────┼───────┼──────\n");
+  int i=0;
+  for(std::list<int>::iterator it = framesKey.begin(); it != framesKey.end(); it++){
+    auto FrameClock = frames[*it].first;
+    char tipe = FrameClock.tipe ? 'W' : 'R';
+    char dirty = FrameClock.dirty ? 'T' : 'F';
+    char pin = FrameClock.pin ? 'T' : 'F';
+    if(id == *it){
+      if(color == 'y'){
+        printf(YELLOW "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+      } else {
+        printf(GREEN "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+      }
+    } else {
+      printf("%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n", i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+    }
+  }
+  if(i < nframe){
+    for(; i<nframe; i++){
+      printf("%d\t│-\t│-\t│-\t│-\t│-\t│-\n", i);
+    }
+  }
+  printf("\n\n");
+}
+
+void Clock::printEstadistic(){
+  printf(GREEN "=============================================\n");
+  printf("Estadisticas\n");
+  printf("=============================================\n" RESET);
+  printf("N° Hits:\t%d\n", nhits);
+  printf("N° Miss:\t%d\n", nmiss);
+  printf("Hit Rate:\t%.2f %%\n", (float)nhits * 100.0 / nrequests);
+  printf("Miss Rate:\t%.2f %%\n", (float)nmiss * 100.0 / nrequests);
+}
+
+void Clock::clearBuffer(){
+  for(std::list<int>::iterator it = framesKey.begin(); it != framesKey.end(); it++){
+    if(frames[*it].first.dirty == 1){
+      std::string *originalData = &blocks[*it]->getData();
+      *originalData = frames[*it].first.data;
+      blocks[*it]->saveBlock();
+    }
+    delete blocks[*it];
+    blocks.erase(*it);
+    frames.erase(*it);
+  }
 }

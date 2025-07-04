@@ -17,7 +17,6 @@
 Disk *disk = nullptr;
 TableFiles *tableFile = nullptr;
 FreeBlockManager *freeBlock = nullptr;
-BufPoolC*bufferPoolClock = nullptr;
 BufPool*bufferPool = nullptr;
 size_t sectorPerBlock;
 size_t numBlock;
@@ -32,7 +31,6 @@ void AuxMenu() {
   printf("4. Ver Bloque\n");
   printf("5. Subir CSV\n");
   printf("6. Select\n");
-  printf("7. Buffer Pool Clock\n");
   printf("0. Exit\n");
   printf("----------------------------------------\n");
   printf("Ingrese su opcion: ");
@@ -44,9 +42,29 @@ void AuxMenu() {
     disk = new Disk("Megatron", 8, 4, 4, 512, 4);
     printf("Disco Formateado...\n");
     break;
-  case 2:
-    menu_buffer();
+  case 2:{
+    int op, nFrame;
+    printf("1) LRU\n");
+    printf("2) Clock\n");
+    printf("-> "); std::cin>>op;
+    printf("Numero de frames: "); std::cin>>nFrame;
+    switch (op){
+    case 1:
+      delete bufferPool;
+      bufferPool = new LRU(nFrame);
+      menu_buffer();
+      break;
+    case 2:
+      delete bufferPool;
+      bufferPool = new Clock(nFrame);
+      menu_buffer();
+      break;
+    default:
+      printf("Opción inválida, regresando a menu...\n");
+      break;
+    }
     break;
+  }
   case 3:{
     size_t sector_id;
     printf("Ingrese el ID del sector a leer: ");
@@ -77,10 +95,6 @@ void AuxMenu() {
     rm.select(name);
     break;
   }
-  case 7:{
-    menu_clock();
-    break;
-  }
   case 0:
     printf("Saliendo del sistema Megatron 3000...\n");
     exit(0);
@@ -91,7 +105,6 @@ void AuxMenu() {
 }
 
 void menu_buffer(){
-  bufferPool->print();
   while(true){
     printf("1. Request Page\n");
     printf("2. Pin Frame\n");
@@ -116,20 +129,20 @@ void menu_buffer(){
       } else if(mode == 'r'){
         std::cout<<"Información del bloque: \n"<<*data<<"\n";
       }
-      bufferPool->print();
+      bufferPool->print(idBlock, 'g');
       break;
     }
     case 2:
       size_t block;
       printf("ID del bloque: "); std::cin>>block;
       bufferPool->pinFrame(block);
-      bufferPool->print();
+      bufferPool->print(block, 'y');
       break;
     case 3:
       size_t Idblock;
       printf("ID del bloque: "); std::cin>>Idblock;
       bufferPool->unPinFrame(Idblock);
-      bufferPool->print();
+      bufferPool->print(Idblock, 'y');
       break;
     case 0:
       printf("Saliendo del buffer...\n");
@@ -143,64 +156,11 @@ void menu_buffer(){
   }
 }
 
-void menu_clock(){
-  bufferPool->print();
-  while(true){
-    printf("1. Request Page\n");
-    printf("2. Pin Frame\n");
-    printf("3. Unpin Frame\n");
-    printf("0. Exit\n");
-    printf("----------------------------------------\n");
-    printf("Ingrese su opcion: ");
-    ssize_t option;
-    scanf("%zu", &option);
-    switch (option) {
-    case 1:{
-      size_t idBlock;
-      char mode;
-      printf("Id bloque: "); std::cin>>idBlock;
-      printf("r/w: "); std::cin>>mode;
-      std::string *data = &bufferPoolClock->requestPage(idBlock, mode);
-      std::string frase;
-      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      if(mode == 'w'){
-        std::cout<<"Ingrese texto: "; getline(std::cin, frase);
-        *data = frase;
-      } else if(mode == 'r'){
-        std::cout<<"Información del bloque: \n"<<*data<<"\n";
-      }
-      bufferPoolClock->print(idBlock, 'g');
-      break;
-    }
-    case 2:
-      size_t block;
-      printf("ID del bloque: "); std::cin>>block;
-      bufferPoolClock->pinFrame(block);
-      bufferPoolClock->print(block, 'y');
-      break;
-    case 3:
-      size_t Idblock;
-      printf("ID del bloque: "); std::cin>>Idblock;
-      bufferPoolClock->unPinFrame(Idblock);
-      bufferPoolClock->print(Idblock, 'y');
-      break;
-    case 0:
-      printf("Saliendo del buffer...\n");
-      bufferPoolClock->printEstadistic();
-      return;
-    default:
-      printf("Opcion invalida. Intente de nuevo.\n");
-      break;
-    }
-  }
-}
-
 void menu() {
   disk = new Disk("Megatron");
   freeBlock = new FreeBlockManager("Megatron", 100);
   tableFile = new TableFiles(disk);
-  bufferPool = new BufPool(4);
-  bufferPoolClock = new BufPoolC(4);
+  bufferPool = new LRU(4);
   while (true) {
     AuxMenu();
   }
