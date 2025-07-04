@@ -17,7 +17,7 @@ File::File(std::string name) : nameFile(name), currentByte(0) {
   printf("Creando archivo...\n");
   ssize_t posFreeBlock = freeBlock->allocateBlock();
   tableFile->addFile(name, posFreeBlock);
-  tableFile->saveChanges(disk);
+  tableFile->saveChanges();
 
   orderBlock.insert(posFreeBlock);
   orderBlockList.push_back(posFreeBlock);

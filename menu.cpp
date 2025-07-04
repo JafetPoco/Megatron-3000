@@ -41,7 +41,7 @@ void AuxMenu() {
   switch (option) {
   case 1:
     delete disk;
-    disk = new Disk("Megatron", 8, 4, 4, 16, 512);
+    disk = new Disk("Megatron", 8, 4, 4, 512, 4);
     printf("Disco Formateado...\n");
     break;
   case 2:

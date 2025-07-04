@@ -66,7 +66,7 @@ Escribe los cambios realizados en el disco
 Autor: Jafet Poco
 */
 
-void TableFiles::saveChanges(Disk *&disk){
+void TableFiles::saveChanges(){
   std::stringstream directory;
   for(auto file: table){
     directory << std::left << std::setfill('_') << std::setw(30) << file.first;

@@ -12,7 +12,7 @@ public:
   TableFiles(Disk *&disk);
   bool findFile(std::string file, size_t *capacity);
   void showTable();
-  void saveChanges(Disk *&disk);
+  void saveChanges();
   void addFile(std::string nameFile, size_t id);
 };
 
