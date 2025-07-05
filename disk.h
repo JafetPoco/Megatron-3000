@@ -31,8 +31,13 @@ public:
   // Formatear el disco (accion destructiva)
   void format();
 
-  //operaciones E/S
+  //string readSector
+  //@param ID del sector
   std::string readSector(size_t sector_id);
+
+  //void writeSector
+  //@param ID del sector
+  //@param string de dato
   void writeSector(size_t sector_id, std::string data);
 
   const DiskInfo info() const {

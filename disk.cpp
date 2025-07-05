@@ -186,18 +186,19 @@ string Disk::readSector(size_t sector_id) {
     cerr << "DISCO: ERROR: No se pudo abrir sector para lectura" << endl;
     return "";
   }
+  stringstream buf;
+  buf << file.rdbuf();
 
-  size_t size = disk->info().sectorSize;
-  string data(size, '\0');
-  file.read(&data[0], size);
-
-  // Elimina los '\0' del final
-  size_t end = data.find('\0');
-  if (end != string::npos)
-    data = data.substr(0, end);
-
+  string data = buf.str();
+  // if (data.size() != 0 && data[data.size()-1])
+  //   data.pop_back();
+  if (data.size() > sectorSize) {
+    cout<<"DISCO: WARNING El sector leido ha pasado su capacidad\n";
+  }
+  // data = data.substr(0, disk->info().sectorSize);
   return data;
 }
+
 
 /*
 INPUT: id del Sector y la data que se va a escribir
@@ -239,6 +240,9 @@ fstream Disk::openNthSector(size_t sector_id) const{
     cerr << "DISCO: ERROR: Sector ID fuera de rango" << endl;
     return fstream();
   }
+  if (sector_id == 0) {
+    cerr<<"DISCO: WARNING se accedio al bloque 0\n";
+  }
   pos sector_pos = getNthSector(sector_id);
   string filePath = diskRoot + "/platter_" + to_string(sector_pos.platter) +
                     "/surface_" + to_string(sector_pos.surface) +
@@ -275,7 +279,7 @@ Autor: Berly Dueñas
 */
 
 pos Disk::getNthSector(size_t sector_id)const {
-  if (/*sector_id == 0 || */sector_id >= totalSectors) {
+  if (sector_id >= totalSectors) {
     cerr << "DISCO: ERROR: Sector ID fuera de rango" << endl;
     return {0, 0, 0, 0};
   }
@@ -285,10 +289,10 @@ pos Disk::getNthSector(size_t sector_id)const {
   //   <<(sector_id / (platters * 2 * tracks) % sectors)
   //   <<(sector_id / (platters * 2) % tracks)<<'\n';
   return {
-      sector_id /2 %(platters), // platter
-      sector_id % 2,                                           // surface
-      sector_id / (platters * 2 * tracks) % sectors, // sector
-      sector_id / (platters * 2) % tracks                    // track
+      sector_id /2 %(platters),               // platter
+      sector_id % 2,                          // surface
+      sector_id / (platters * 2 * sectors),   // track
+      sector_id / (platters * 2) % sectors    // sector
   };
 }
 
