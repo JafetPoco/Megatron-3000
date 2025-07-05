@@ -19,11 +19,12 @@ private:
   void persist(); 
 
 public:
-  FreeBlockManager(std::string fname, std::size_t numBlocks);
+  FreeBlockManager(std::string diskname, std::size_t numBlocks);
   BlockID allocateBlock();
   void freeBlock(BlockID id);
   bool isBlockFree(BlockID id) const;
   size_t freeBlockCount() const;
+  bool deallocateBlock();
 };
 
 #endif
