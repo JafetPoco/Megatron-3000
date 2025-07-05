@@ -192,8 +192,8 @@ void Disk::format() {
 }
 
 /*
-INPUT: Id del Sector
-OUTPUT: data del sector
+INPUT: size_t ID del Sector
+OUTPUT: string data del sector
 Lee la información de un sector
 Autor: Jafet Poco
 */
@@ -223,7 +223,7 @@ string Disk::readSector(size_t sector_id) {
 
 
 /*
-INPUT: id del Sector y la data que se va a escribir
+INPUT: size_t id del Sector y la data en string que se va a escribir
 Escribe información dentro de un sector
 Autor: Jafet Poco
 */
@@ -257,6 +257,7 @@ void Disk::writeSector(size_t sector_id, std::string data) {
 
 /*
 INPUT: Id del sector
+OUTPUT: retorna el objeto fstream asociado al sector, si existe
 Permite abrir un sector con una cuenta vertical
 Autor: Berly Dueñas
 */
@@ -291,6 +292,7 @@ fstream Disk::openNthSector(size_t sector_id) const{
 
 /*
  * INPUT: Id del sector
+ * OUTPUT: string del path del sector
  * Permite abrir un sector con una cuenta vertical
  * Autor: Berly Dueñas
 */
@@ -306,6 +308,7 @@ string Disk::getSectorPath(size_t sector_id) const {
 
 /*
 INPUT: Id del sector
+OUTPUT: objeto posicion fisica
 Mapear un sector_id a posicion fisica del disco
 Autor: Berly Dueñas
 */
@@ -326,7 +329,8 @@ pos Disk::getNthSector(size_t sector_id)const {
 }
 
 /*
-INPUT: Id del sector
+INPUT: posicion del sector
+OUTPUT: id del sector
 Permite abrir un sector con una cuenta vertical
 Autor: Berly Dueñas
 */
@@ -353,6 +357,11 @@ size_t Disk::getSectorFreeSpace(size_t sector_id) const {
   return sectorSize - fileSize;
 }
 
+/*
+ * printDiskTree
+ * Imprime el arbol de directorios del disco
+ * Autor: Jafet Poco
+ */
 void Disk::printDiskTree() {
   for (size_t i = 1; i <= platters; i++) {
     cout << "Plato " << i << endl;
@@ -366,6 +375,11 @@ void Disk::printDiskTree() {
   cout << "================================================\n";
 }
 
+/*
+ * printDiskInfo
+ * Imprime informacion general del disco
+ * Autor: Jafet Poco
+ */
 void Disk::printDiskInfo() {
   printf("===================Disk info=======================\n");
   printf("Nombre del disco:\t\t%s\n", diskRoot.c_str());
@@ -380,6 +394,11 @@ void Disk::printDiskInfo() {
   printf("------------------------------------------------\n");
 }
 
+/*
+ * printSectorPos
+ * metodo debug, para imprimir la posicion fisica del disco
+ * Autor: Berly Dueñas
+ */
 void Disk::printSectorPos(size_t sectorId) {
   pos p = getNthSector(sectorId);
   cout<<p.platter << " "
@@ -388,6 +407,11 @@ void Disk::printSectorPos(size_t sectorId) {
       << p.sector << endl; 
 }
 
+/*
+ * printSectorCont
+ * metodo debug, para imprimir el contenido de sector
+ * Autor: Berly Dueñas
+ */
 void Disk::printSectorCont(size_t sector_id) {
   fstream file = openNthSector(sector_id);
   if (!file.is_open()) {
@@ -403,6 +427,13 @@ void Disk::printSectorCont(size_t sector_id) {
 #endif
 }
 
+/*
+ * doesSectorExist
+ * INPUT: posicion fisica en disco
+ * OUTPUT: booleano
+ * metodo debug, para saber si el sector existe dentro de una posicion fisica
+ * Autor: Berly Dueñas
+ */
 bool Disk::doesSectorExist(pos sector_pos) const{
   if (sector_pos.platter >= platters || sector_pos.surface > 1 ||
       sector_pos.track >= tracks || sector_pos.sector >= sectors) {
@@ -411,11 +442,25 @@ bool Disk::doesSectorExist(pos sector_pos) const{
   return true;
 }
 
+/*
+ * doesSectorExist
+ * INPUT: id de disco
+ * OUTPUT: booleano
+ * metodo debug, para saber si el sector existe dentro de un id de sector
+ * Autor: Berly Dueñas
+ */
 bool Disk::doesSectorExist(size_t sector_id) const{
   pos sector_pos = getNthSector(sector_id);
   return doesSectorExist(sector_pos);
 }
 
+/*
+ * doesSectorExist
+ * INPUT: posicion fisica en disco
+ * OUTPUT: booleano
+ * metodo debug, para saber si el sector existe dentro de una posicion fisica
+ * Autor: Jafet Poco
+ */
 bool Disk::isDiskOpen() {
   return fs::exists(diskRoot) && fs::is_directory(diskRoot);
 }

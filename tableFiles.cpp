@@ -1,3 +1,5 @@
+#define DEBUG
+#define VERBOSE
 #include "tableFiles.h"
 #include "freeBlockMan.h"
 #include "block.h"
@@ -20,9 +22,13 @@ de un archivo y el ID del bloque donde empieza
 Autor: Jafet Poco
 */
 TableFiles::TableFiles() { 
-  cout<<"Leyendo tabla de archivos...\n";
+  #ifdef VERBOSE
+  std::cerr<<"TF: Leyendo tabla de archivos...\n";
+  #endif
   loadTable();
-  cout<<"Tabla de archivos se cargo correctamente.\n";
+  #ifdef VERBOSE
+  std::cerr<<"TF: Tabla de archivos se cargo correctamente.\n";
+  #endif
 }
 
 void TableFiles::loadTable() {
@@ -32,7 +38,9 @@ void TableFiles::loadTable() {
   size_t sectorSize = info.sectorSize;
 
   std::string sector = disk->readSector(0);
-  // cout << "TF: Sector 0:\n" << sector << '\n';
+#ifdef DEBUG
+  std::cerr << "TF: Sector 0:\n" << sector << '\n';
+#endif
   if (sector.size() < sectorSize) {
     sector.append(sectorSize - sector.size(), '_');
   }
@@ -54,6 +62,9 @@ void TableFiles::loadTable() {
     }
 
     if (!name.empty()) {
+#ifdef DEBUG
+      std::cerr << "TF: Archivo encontrado: " << name << ", bloque: " << block << std::endl;
+#endif
       table[name] = static_cast<size_t>(block);
     }
     offset += ENTRY_SIZE;
@@ -68,12 +79,19 @@ Autor: Jafet Poco
 */
 
 BlockID TableFiles::findFile(std::string name) {
-  cerr<<"TF: buscando archivo: "<<name<<'\n';
+  #ifdef VERBOSE
+  std::cerr<<"TF: buscando archivo: "<<name<<'\n';
+  #endif
   auto it = table.find(name);
   if (it == table.end()){
-    cerr<<"no se encontro el archivo: "<<name<<'\n';
+#ifdef VERBOSE
+    std::cerr<<"TF: no se encontro el archivo: "<<name<<'\n';
+#endif
     return -1;
   }
+#ifdef DEBUG
+  std::cerr << "TF: Archivo encontrado, bloque: " << it->second << std::endl;
+#endif
   return it->second;
 }
 
@@ -83,17 +101,19 @@ Autor: Jafet Poco
 */
 void TableFiles::showTable(){
   if(table.size() == 0){
-    std::cerr<<"WARNNING: No hay archivos en el disco\n";
+#ifdef VERBOSE
+    std::cerr<<"TF: WARNNING: No hay archivos en el disco\n";
+#endif
     return;
   }
-  std::cout<<"================================\n";
-  std::cout<<"Tabla de Archivos: \n";
-  std::cout<<"--------------------------------\n";
-  std::cout<<"Nombre\t\tBloque\n";
+  std::cerr<<"================================\n";
+  std::cerr<<"Tabla de Archivos: \n";
+  std::cerr<<"--------------------------------\n";
+  std::cerr<<"Nombre\t\tBloque\n";
   for(const auto &par: table){
-    printf("%s\t\t%ld\n", par.first.c_str(), par.second);
+    std::cerr<<par.first<<"\t\t"<<par.second<<"\n";
   }
-  std::cout<<"================================\n";
+  std::cerr<<"================================\n";
 }
 
 /*
@@ -107,7 +127,9 @@ void TableFiles::saveTable() {
   size_t sectorSize = info.sectorSize;
 
   std::string sector = disk->readSector(0);
-  // cout<<"TF: Obtenido del disco: \n"<<sector<<endl;
+#ifdef DEBUG
+  std::cerr<<"TF: Obtenido del disco: \n"<<sector<<std::endl;
+#endif
   if (sector.empty()) {
     sector.assign(sectorSize, '_');
   }
@@ -115,7 +137,9 @@ void TableFiles::saveTable() {
   sector.resize(METADATA_LENGTH);
   std::string metadata;
   for (const auto &entry : table) {
-    // cerr<<entry.first<<endl;
+#ifdef DEBUG
+    std::cerr<<"TF: Guardando entrada: "<<entry.first<<", bloque: "<<entry.second<<std::endl;
+#endif
     std::string name = entry.first;
     int value = entry.second;
 
@@ -143,12 +167,16 @@ Autor: Jafet Poco
 
 BlockID TableFiles::addFile(std::string name) {
   if (table.find(name) != table.end()) {
-    std::cerr << "El archivo '" << name << "' ya existe.\n";
+#ifdef VERBOSE
+    std::cerr << "TF: El archivo '" << name << "' ya existe.\n";
+#endif
     return table.find(name)->second;
   }
   BlockID block = freeBlock->allocateBlock();
   if (block == -1) {
-    cerr<<"TableFiles: No se pueden almacenar mas archivos...\n";
+#ifdef VERBOSE
+    std::cerr<<"TF: No se pueden almacenar mas archivos...\n";
+#endif
     return -1;
   }
   table[name] = block;
@@ -157,6 +185,8 @@ BlockID TableFiles::addFile(std::string name) {
   // auto& ss=f->data->getData();
   // ss=BLOCK_HEAD_PTR; //"0000"
   // f->data->saveBlock();
-  std::cout << "TF: Archivo '" << name << "' agregado en bloque " << block << ".\n";
+#ifdef VERBOSE
+  std::cerr << "TF: Archivo '" << name << "' agregado en bloque " << block << ".\n";
+#endif
   return block;
 }
