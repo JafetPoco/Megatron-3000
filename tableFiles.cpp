@@ -107,7 +107,7 @@ void TableFiles::saveTable() {
   size_t sectorSize = info.sectorSize;
 
   std::string sector = disk->readSector(0);
-  cout<<"TF: Obtenido del disco: \n"<<sector<<endl;
+  // cout<<"TF: Obtenido del disco: \n"<<sector<<endl;
   if (sector.empty()) {
     sector.assign(sectorSize, '_');
   }
@@ -115,7 +115,7 @@ void TableFiles::saveTable() {
   sector.resize(METADATA_LENGTH);
   std::string metadata;
   for (const auto &entry : table) {
-    cout<<entry.first<<endl;
+    // cerr<<entry.first<<endl;
     std::string name = entry.first;
     int value = entry.second;
 

@@ -270,7 +270,7 @@ fstream Disk::openNthSector(size_t sector_id) const{
   }
   if (sector_id == 0) {
 #ifdef DEBUG
-    cerr<<"DISCO: WARNING se accedio al bloque 0\n";
+    // cerr<<"DISCO: WARNING se accedio al bloque 0\n";
 #endif
   }
   pos sector_pos = getNthSector(sector_id);

@@ -11,7 +11,8 @@ FreeBlockManager* freeBlock=nullptr;
 TableFiles* tableFile=nullptr;
 
 int main() {
-  disk = new Disk("Megatron", 2,2,4,512,8);
+  // disk = new Disk("Megatron", 2,2,4,512,8);
+  disk = new Disk("Megatron");
   freeBlock = new FreeBlockManager("Megatron", 256);
   tableFile = new TableFiles(); //carga si existe el disco
   Block page(0);
