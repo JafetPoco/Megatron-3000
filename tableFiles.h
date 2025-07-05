@@ -1,19 +1,23 @@
 #ifndef TABLE_FILES_H
 #define TABLE_FILES_H
 
-#include<map>
-#include<iostream>
-#include "disk.h"
+#include <iostream>
+#include <map>
+#include <string>
 
-class TableFiles{
+class TableFiles {
 private:
-  std::map<std::string, size_t> table;
+  std::map<std::string, ssize_t> table;
+
+  void loadTable();
+  void saveTable();
+
 public:
-  TableFiles(Disk *&disk);
-  bool findFile(std::string file, size_t *capacity);
+  TableFiles();
+
+  ssize_t findFile(std::string name);
   void showTable();
-  void saveChanges();
-  void addFile(std::string nameFile, size_t id);
+  ssize_t addFile(std::string name);
 };
 
-#endif 
+#endif // TABLE_FILES_H

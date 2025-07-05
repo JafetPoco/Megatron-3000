@@ -1,30 +1,62 @@
 #include "tableFiles.h"
+#include "freeBlockMan.h"
 #include "block.h"
+#include "globals.h"
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 
+using namespace std;
+
+static constexpr size_t METADATA_LENGTH = 40;
+static constexpr size_t ENTRY_SIZE = 34;
+static constexpr size_t NAME_SIZE = 30;
+static constexpr size_t BLOCK_SIZE = 4;
+static string BLOCK_HEAD_PTR="0000";
+
 /*
-INPUT: el Disco
 Lee el directorio del disco, y crea un mapa con el nombre
 de un archivo y el ID del bloque donde empieza
 Autor: Jafet Poco
 */
+TableFiles::TableFiles() { 
+  cout<<"Leyendo tabla de archivos...\n";
+  loadTable();
+  cout<<"Tabla de archivos se cargo correctamente.\n";
+}
 
-TableFiles::TableFiles(Disk *&disk) {
-  std::string buffer = disk->readSector(0);
+void TableFiles::loadTable() {
+  table.clear();
 
-  if(buffer.size() <= 40) return;
-  for(size_t offset = 40; buffer[offset] != '\0'; offset += 34){
-    std::string rawName = buffer.substr(offset, 30);
-    size_t endName = rawName.find('_');
-    std::string name = (endName != std::string::npos)
-                         ? rawName.substr(0, endName)
-                         : rawName;
+  auto info = disk->info();
+  size_t sectorSize = info.sectorSize;
 
-    size_t numBlock = stoi(buffer.substr(offset+30, 4));
-    
-    table.insert({name, numBlock});
+  std::string sector = disk->readSector(0);
+  // cout << "TF: Sector 0:\n" << sector << '\n';
+  if (sector.size() < sectorSize) {
+    sector.append(sectorSize - sector.size(), '_');
+  }
+
+  size_t offset = METADATA_LENGTH;
+  while (offset + ENTRY_SIZE <= sector.size()) {
+
+    std::string rawName = sector.substr(offset, NAME_SIZE);
+    size_t endPos = rawName.find('_');
+    std::string name =
+        (endPos == std::string::npos ? rawName : rawName.substr(0, endPos));
+
+    std::string numStr = sector.substr(offset + NAME_SIZE, BLOCK_SIZE);
+    int block = 0;
+    try {
+      block = std::stoi(numStr);
+    } catch (...) {
+      break; 
+    }
+
+    if (!name.empty()) {
+      table[name] = static_cast<size_t>(block);
+    }
+    offset += ENTRY_SIZE;
   }
 }
 
@@ -35,16 +67,20 @@ Busca un archivo por el nombre dentro del mapa (directorio)
 Autor: Jafet Poco
 */
 
-bool TableFiles::findFile(std::string name, size_t *position){
-  auto iterador = table.find(name);
-  if(iterador != table.end()) {
-    *position = iterador->second;
-    return true;
-  } else {
-    return false;
+BlockID TableFiles::findFile(std::string name) {
+  cerr<<"TF: buscando archivo: "<<name<<'\n';
+  auto it = table.find(name);
+  if (it == table.end()){
+    cerr<<"no se encontro el archivo: "<<name<<'\n';
+    return -1;
   }
+  return it->second;
 }
 
+/*
+Imprime la tabla de archivos
+Autor: Jafet Poco
+*/
 void TableFiles::showTable(){
   if(table.size() == 0){
     std::cerr<<"WARNNING: No hay archivos en el disco\n";
@@ -66,25 +102,61 @@ Escribe los cambios realizados en el disco
 Autor: Jafet Poco
 */
 
-void TableFiles::saveChanges(){
-  std::stringstream directory;
-  for(auto file: table){
-    directory << std::left << std::setfill('_') << std::setw(30) << file.first;
-    directory << std::right << std::setfill('0') << std::setw(4) << file.second;
+void TableFiles::saveTable() {
+  auto info = disk->info();
+  size_t sectorSize = info.sectorSize;
+
+  std::string sector = disk->readSector(0);
+  cout<<"TF: Obtenido del disco: \n"<<sector<<endl;
+  if (sector.empty()) {
+    sector.assign(sectorSize, '_');
   }
-  std::string directoryStr = directory.str();
 
-  std::string dataBlock = disk->readSector(0);
-  dataBlock.replace(40, directoryStr.length(), directoryStr);
-  disk->writeSector(0, dataBlock);
+  sector.resize(METADATA_LENGTH);
+  std::string metadata;
+  for (const auto &entry : table) {
+    cout<<entry.first<<endl;
+    std::string name = entry.first;
+    int value = entry.second;
+
+    if (name.length() > 30)
+      name = name.substr(0, 30);
+    else
+      name.append(30 - name.length(), '_');
+
+    char buffer[5];
+    snprintf(buffer, sizeof(buffer), "%04d", value);
+
+    metadata += name + buffer;
+  }
+
+  sector.replace(METADATA_LENGTH, metadata.size(), metadata);
+
+  ofstream sectorF(disk->getSectorPath(0), ios::trunc);
+  sectorF<<sector;
 }
-
 /*
 INPUT: Nombre del archivo y el ID del bloque donde empieza
 Agrega un archivo al mapa (directorio)
 Autor: Jafet Poco
 */
 
-void TableFiles::addFile(std::string nameFile, size_t id){
-  table.insert({nameFile, id});
+BlockID TableFiles::addFile(std::string name) {
+  if (table.find(name) != table.end()) {
+    std::cerr << "El archivo '" << name << "' ya existe.\n";
+    return table.find(name)->second;
+  }
+  BlockID block = freeBlock->allocateBlock();
+  if (block == -1) {
+    cerr<<"TableFiles: No se pueden almacenar mas archivos...\n";
+    return -1;
+  }
+  table[name] = block;
+  saveTable();
+  // Frame *f = buffer->accessPage(block, 'w');
+  // auto& ss=f->data->getData();
+  // ss=BLOCK_HEAD_PTR; //"0000"
+  // f->data->saveBlock();
+  std::cout << "TF: Archivo '" << name << "' agregado en bloque " << block << ".\n";
+  return block;
 }
