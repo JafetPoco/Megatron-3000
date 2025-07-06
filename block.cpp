@@ -44,8 +44,8 @@ void Block::openBlock(BlockID id) {
     data += sectorData;
   }
   if(data != ""){
-    header = data.substr(0, 8);
-    data = data.substr(8);
+    header = data.substr(0, 4);
+    data = data.substr(4);
 #ifdef DEBUG
     std::cerr << "BLOCK: Header: " << header << ", Data: " << data << std::endl;
 #endif
