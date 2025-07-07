@@ -30,6 +30,27 @@ private:
    * @author Jafet Poco
    */
   void writeMetadata();
+  /**
+   * @brief Saber si el sector existe dentro de una posicion fisica
+   * @param sector_pos posicion fisica en disco
+   * @return bool
+   * @author Berly Dueñas
+   */
+  bool doesSectorExist(pos sector_pos) const;
+  /**
+   * @brief Mapear un sector_id a posicion fisica del disco
+   * @param sector_id Id del sector
+   * @return pos objeto posicion fisica
+   * @author Berly Dueñas
+   */
+  pos getNthSector(size_t sector_id) const;
+  /**
+   * @brief Permite abrir un sector con una cuenta vertical
+   * @param sector_pos posicion del sector
+   * @return size_t id del sector
+   * @author Berly Dueñas
+   */
+  size_t getNthSector(pos sector_pos)const ;
 public:
   /**
    * @brief Permite crear un disco con los parametros dados
@@ -90,20 +111,6 @@ public:
    */
   std::fstream openNthSector(size_t sector_id) const;
   /**
-   * @brief Mapear un sector_id a posicion fisica del disco
-   * @param sector_id Id del sector
-   * @return pos objeto posicion fisica
-   * @author Berly Dueñas
-   */
-  pos getNthSector(size_t sector_id) const;
-  /**
-   * @brief Permite abrir un sector con una cuenta vertical
-   * @param sector_pos posicion del sector
-   * @return size_t id del sector
-   * @author Berly Dueñas
-   */
-  size_t getNthSector(pos sector_pos)const ;
-  /**
    * @brief Retorna el espacio libre de un sector
    * @param sector_id Id del sector
    * @return size_t espacio libre
@@ -135,13 +142,6 @@ public:
    */
   void printSectorCont(size_t sector_id);
   /**
-   * @brief Saber si el sector existe dentro de una posicion fisica
-   * @param sector_pos posicion fisica en disco
-   * @return bool
-   * @author Berly Dueñas
-   */
-  bool doesSectorExist(pos sector_pos) const;
-  /**
    * @brief Saber si el sector existe dentro de un id de sector
    * @param sector_id id de disco
    * @return bool
@@ -154,9 +154,6 @@ public:
    * @author Berly Dueñas
    */
   void printSectorPos(size_t sectorId);
-
-  //assertions
-  void assertOnRange(pos sector_pos);
 
   size_t getTotalSectors() const {
     return totalSectors;

@@ -30,7 +30,7 @@ public:
   /**
    * @brief Busca un archivo por el nombre dentro del mapa (directorio)
    * @param name Nombre del archivo
-   * @return ssize_t Verdadero si el archivo existe o Falso de lo contrario
+   * @return ssize_t id del bloque inicio si el archivo existe o -1 de lo contrario
    * @author Jafet Poco
    */
   ssize_t findFile(std::string name);
