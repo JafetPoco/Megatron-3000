@@ -8,16 +8,14 @@
 #include "freeBlockMan.h"
 
 File::File(std::string name) : nameFile(name), currentByte(0) {
-  size_t position;
-  if(tableFile->findFile(name, &position) == true){
+  ssize_t position = tableFile->findFile(name);
+  if(position != -1){
     open(position);
     return; 
   }
   
   printf("Creando archivo...\n");
-  ssize_t posFreeBlock = freeBlock->allocateBlock();
-  tableFile->addFile(name, posFreeBlock);
-  tableFile->saveChanges();
+  ssize_t posFreeBlock = tableFile->addFile(name);
 
   orderBlock.insert(posFreeBlock);
   orderBlockList.push_back(posFreeBlock);
@@ -28,6 +26,8 @@ void File::open(size_t position){
   orderBlock.insert(position);
   orderBlockList.push_back(position);
 }
+
+//FIX/TEST EVERYTHING HERE TODO
 
 void File::updateOrderBlocks(size_t blockPos){
   size_t originalSize = orderBlockList.size();
