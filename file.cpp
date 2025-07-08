@@ -1,119 +1,140 @@
-#include <iostream>
-#include <iomanip>
-#include <sstream>
 #include "file.h"
-#include "globals.h"
 #include "bufPool.h"
-#include "tableFiles.h"
-#include "freeBlockMan.h"
+#include "globals.h"
+#include <iostream>
+#include <string>
 
-File::File(std::string name) : nameFile(name), currentByte(0) {
-  ssize_t position = tableFile->findFile(name);
-  if(position != -1){
-    open(position);
-    return; 
-  }
-  
-  std::cerr<<"Creando archivo "<<name<<"\n";
-  ssize_t posFreeBlock = tableFile->addFile(name);
+ssize_t File::capacity = 0;
 
-  orderBlock.insert(posFreeBlock);
-  orderBlockList.push_back(posFreeBlock);
+File::File() : fileName(""), firstBlock(-1), currentBlock(nullptr), mode('r') {}
+
+File::File(std::string fileName, char mode)
+    : fileName(fileName), firstBlock(-1), currentBlock(nullptr), mode(mode) {
+  open(fileName, mode);
 }
 
-void File::open(size_t position){
-  bufferPool->requestPage(position, 'r');
-  orderBlock.insert(position);
-  orderBlockList.push_back(position);
+bool File::nextBlock() {
+  if (!isOpen())
+    return false;
+  std::string &data = currentBlock->data->getData();
+  if (data.size() < 4)
+    return false;
+  std::string header = data.substr(0, 4);
+  BlockID nextID = std::stoi(header);
+  if (nextID == 0)
+    return false; // End of list
+  buffer->releasePage(currentBlock->data->getID());
+  currentBlock = buffer->accessPage(nextID, mode);
+  return currentBlock != nullptr;
 }
 
-//FIX/TEST EVERYTHING HERE TODO
+Frame *File::getBlock() { return currentBlock; }
 
-void File::updateOrderBlocks(size_t blockPos){
-  size_t originalSize = orderBlockList.size();
-  for(size_t i = originalSize; i < blockPos; i++){
-    std::string header = bufferPool->requestPage(orderBlockList[i], 'r');
-    size_t nextBlock = (size_t)stoi(header.substr(0, 4));
-    orderBlock.insert(nextBlock);
-    orderBlockList.push_back(nextBlock);
-  }
-}
-
-std::string File::read(size_t size){
-  size_t sectorSize = disk->info().sectorSize;
-  size_t blockSize = disk->info().blockLength * sectorSize;
-  size_t blockPos = currentByte / blockSize;
-  size_t dataPos = currentByte % blockSize;
-  currentByte += size;
-
-  if(orderBlockList.size() <= blockPos){
-    updateOrderBlocks(blockPos);
-  }
-  size_t idBlock = orderBlockList[blockPos];
-  std::string data = bufferPool->requestPage(idBlock, 'r');
-  return data.substr(dataPos, size);
-}
-
-void File::write(std::string data){
-  size_t sectorSize = disk->info().sectorSize;
-  size_t blockSize = disk->info().blockLength * sectorSize;
-  size_t blockPos = currentByte / blockSize;
-  size_t dataPos = currentByte % blockSize;
-  size_t size = data.length();
-  currentByte += size;
-  if(dataPos + size > blockSize) {
-    std::cerr<<"No hay espacio en el bloque, creando uno nuevo\n";
-    size_t newBlockPos = freeBlock->allocateBlock();
-    std::stringstream ss;
-    ss << std::setfill('0') << std::setw(4) << newBlockPos;
-    
-    
-    std::string *headerLastBlock = &bufferPool->requestPage(orderBlockList.back(), 'w');
-    headerLastBlock->replace(0, 4, ss.str());
-    
-    orderBlock.insert(newBlockPos);
-    orderBlockList.push_back(newBlockPos);
-    
-    std::string *newBlockData = &bufferPool->requestPage(newBlockPos, 'w');
-    *newBlockData = "0000";
-    ss.str(""); ss.clear();
-    ss << std::setfill('0') << std::setw(4) << (size + 8);
-    *newBlockData += ss.str();
-    *newBlockData += data;
-  } else {
-    if(orderBlockList.size() < blockPos){
-      updateOrderBlocks(blockPos);
+bool File::write(const std::string &input) {
+  if (!isOpen() || !currentBlock)
+    return false;
+  std::string &data = currentBlock->data->getData();
+  data = "";
+  // Header: 4 bytes for next block pointer
+  ssize_t cap = getCapacity();
+  size_t written = 0;
+  size_t pos = 4;
+  while (written < input.size()) {
+    size_t toWrite =
+        std::min((size_t)cap - (data.size() > 4 ? data.size() - 4 : 0),
+                 input.size() - written);
+    if (data.size() < 4)
+      data = std::string("0000");
+    if (data.size() < 4 + toWrite)
+      data.resize(4 + toWrite, '_');
+    data.replace(pos, toWrite, input.substr(written, toWrite));
+    currentBlock->dirty = true;
+    written += toWrite;
+    if (written < input.size()) {
+      // Need a new block
+      BlockID newBlock = freeBlock->allocateBlock();
+      char header[5];
+      snprintf(header, sizeof(header), "%04zd", newBlock);
+      data.replace(0, 4, header);
+      currentBlock->data->saveBlock();
+      buffer->releasePage(currentBlock->data->getID());
+      currentBlock = buffer->accessPage(newBlock, 'w');
+      if (!currentBlock)
+        return false;
+      data = "0000";
+      pos = 4;
     }
-    
-    std::cout<<orderBlockList[blockPos]<<std::endl;
-    size_t idBlock = orderBlockList[blockPos];
-    std::string *blockData = &bufferPool->requestPage(idBlock, 'w');
-    blockData->replace(dataPos, size, data);
   }
+  currentBlock->data->saveBlock();
+  return true;
 }
 
-void File::seek(size_t numByte){
-  currentByte = numByte;
+ssize_t File::getCapacity() const {
+  if (capacity > 0)
+    return capacity;
+  // Try to get from blockCapacity global
+  if (blockCapacity > 0)
+    return blockCapacity - 4; // 4 bytes header
+  // Fallback: guess
+  return 512 - 4;
 }
 
-std::string File::readAll(){
-  size_t sectorSize = disk->info().sectorSize;
-  size_t blockSize = disk->info().blockLength * sectorSize;
+std::string File::getData() const {
+  if (!currentBlock)
+    return "";
+  const std::string &data = currentBlock->data->getData();
+  if (data.size() <= 4)
+    return "";
+  return data.substr(4);
+}
 
-  std::string data = "";
-  for(auto block: orderBlockList){
-    data += bufferPool->requestPage(block, 'r');
+bool File::open(string fileName, char mode) {
+  BlockID firstID = tableFile->findFile(fileName);
+  cout<<"abriendo bloque...\n";
+  cout<<"FIRST ID ="<<firstID<<" test:"<<(firstID == -1)<<endl;
+  if (firstID == -1) {
+    cerr << "FILE: " << fileName << " no existe en disco, creando uno\n";
+    firstID = tableFile->addFile(fileName);
   }
-  return data;
+
+  Frame* currentBlock = buffer->accessPage(firstID, mode);
+
+  if (!currentBlock) {
+    cerr << "La pagina " << firstID << " no pudo ser leida\n";
+    return false;
+  }
+
+  this->currentBlock = currentBlock;
+
+  return true;
 }
 
-char File::get(){
-  size_t sectorSize = disk->info().sectorSize;
-  size_t blockSize = disk->info().blockLength * sectorSize;
-  size_t blockPos = currentByte / blockSize;
-  size_t dataPos = currentByte % blockSize;
+bool File::isOpen() {
+  if (fileName.empty()) {
+    return false;
+  }
+  return true;
+}
 
-  size_t idBlock = orderBlockList[blockPos];
-  std::string data = bufferPool->requestPage(idBlock, 'r');
-  return data[dataPos];
+bool File::close() {
+  if (currentBlock && currentBlock->dirty) {
+    currentBlock->data->saveBlock();
+  }
+  buffer->releasePage(firstBlock);
+  fileName = "";
+  return true;
+}
+
+size_t File::getNext() {
+  if (!isOpen()) {
+    cerr << "FILE: Aun no se abrio un archivo\n";
+    return 0;
+  }
+  string &data = currentBlock->data->getData();
+  if (data.size() < 4) {
+    return 0;
+  }
+  string header = data.substr(0, 4);
+  size_t num = stoi(header);
+  return num;
 }

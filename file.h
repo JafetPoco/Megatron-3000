@@ -2,37 +2,37 @@
 #define FILE_H
 
 #include <cstddef>
+#include <string>
 #include <vector>
-#include <unordered_set>
 #include "block.h"
-#include "globals.h"
+#include "disk.h"
+#include "tableFiles.h"
+#include "freeBlockMan.h"
+#include "bufPool.h"
 
-class TableFiles;
-class FreeBlockManager;
 
 class File{
 private:
-  std::string nameFile;
-  std::unordered_set<ssize_t> orderBlock;
-  std::vector<ssize_t> orderBlockList;
-  size_t currentByte;
-  void addBlock(size_t id);
-  void updateOrderBlocks(size_t blockPos);
+  std::string fileName;
+  static ssize_t capacity;
+  BlockID firstBlock;
+  string currentBlock;
+  char mode;
+
 public:
-
-  File(std::string name);
-  static void setBufferPool(BufPool* bp){ bufferPool = bp; }
-
-  void open(size_t position);
-  void close();
-  void seek(size_t numByte);
-
-  void write(std::string data);
-  std::string read(size_t size);
-  std::string readAll();
-  char get();
-
-  size_t getCurrentByte() const { return currentByte; }
+  File();
+  File(std::string fileName, char mode = 'r');
+  size_t getNext();
+  static void set_capacity(ssize_t c) { capacity=c; }
+  bool open(std::string fileName, char mode='r');
+  bool close();
+  bool isOpen();
+  bool nextBlock();
+  string getBlock();
+  // New methods
+  bool write(const std::string& data);
+  ssize_t getCapacity() const;
+  std::string getData() const;
 };
 
 #endif 
