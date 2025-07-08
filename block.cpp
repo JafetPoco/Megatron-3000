@@ -32,7 +32,7 @@ void Block::openBlock(BlockID id) {
     header = "";
     return;
   }
-  size_t sector = id*4;
+  size_t sector = id*disk->info().blockLength;
   data = "";
   header = "";
   for (size_t i = 0; i<disk->info().blockLength; i++) {
