@@ -10,7 +10,7 @@ CXXFLAGS = -std=c++17 -Wall
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp 
+SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp
 
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)

@@ -1,3 +1,5 @@
+#include "bufPool.h"
+#include "file.h"
 #include "disk.h"
 #include "block.h"
 #include "freeBlockMan.h"
@@ -9,44 +11,54 @@ using namespace std;
 Disk* disk = nullptr;
 FreeBlockManager* freeBlock=nullptr;
 TableFiles* tableFile=nullptr;
+BufPool* bufferPool = nullptr;
 
 int main() {
-  // disk = new Disk("Megatron", 2,2,4,512,8);
-  disk = new Disk("Megatron");
+  disk = new Disk("Megatron", 2,2,8,512,3);
+  // disk = new Disk("Megatron");
+  cerr<<disk->getTotalSectors()<<endl;
   disk->printDiskInfo();
   freeBlock = new FreeBlockManager("Megatron", 256);
   tableFile = new TableFiles(); //carga si existe el disco
-  Block page(0);
-  
-  tableFile->addFile("test1");
-  tableFile->addFile("test2");
-  tableFile->addFile("test3");
-  tableFile->addFile("test4");
-  tableFile->addFile("test5");
-  tableFile->addFile("test6");
-  tableFile->addFile("test7");
-  tableFile->addFile("test8");
-  tableFile->addFile("test10");
-  tableFile->addFile("test11");
-  tableFile->addFile("test12");
-  tableFile->addFile("test13");
-  tableFile->addFile("test14");
-  tableFile->addFile("test15");
-  tableFile->addFile("test16");
-  tableFile->addFile("test17");
-  tableFile->addFile("test18");
-  tableFile->addFile("test19");
-  tableFile->addFile("test20");
-  tableFile->addFile("test21");
-  tableFile->addFile("test22");
-  tableFile->addFile("test23");
-  tableFile->addFile("test24");
-  tableFile->addFile("test25");
-  tableFile->addFile("test26");
-  tableFile->showTable();
+  bufferPool = new Clock(5);
 
-  page.openBlock(0);
-  cout<<page.getData()<<endl;
+
+  Block test1(1);
+  test1.getData();
+  Block test2(2);
+  test2.getData();
+  File test("test1");
+  // Block page(0);
+  
+  // tableFile->addFile("test1");
+  // tableFile->addFile("test2");
+  // tableFile->addFile("test3");
+  // tableFile->addFile("test4");
+  // tableFile->addFile("test5");
+  // tableFile->addFile("test6");
+  // tableFile->addFile("test7");
+  // tableFile->addFile("test8");
+  // tableFile->addFile("test10");
+  // tableFile->addFile("test11");
+  // tableFile->addFile("test12");
+  // tableFile->addFile("test13");
+  // tableFile->addFile("test14");
+  // tableFile->addFile("test15");
+  // tableFile->addFile("test16");
+  // tableFile->addFile("test17");
+  // tableFile->addFile("test18");
+  // tableFile->addFile("test19");
+  // tableFile->addFile("test20");
+  // tableFile->addFile("test21");
+  // tableFile->addFile("test22");
+  // tableFile->addFile("test23");
+  // tableFile->addFile("test24");
+  // tableFile->addFile("test25");
+  // tableFile->addFile("test26");
+  // tableFile->showTable();
+
+//   page.openBlock(0);
+//   cout<<page.getData()<<endl;
 }
 
 /****************************************************/

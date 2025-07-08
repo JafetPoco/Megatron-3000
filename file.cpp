@@ -14,7 +14,7 @@ File::File(std::string name) : nameFile(name), currentByte(0) {
     return; 
   }
   
-  printf("Creando archivo...\n");
+  std::cerr<<"Creando archivo "<<name<<"\n";
   ssize_t posFreeBlock = tableFile->addFile(name);
 
   orderBlock.insert(posFreeBlock);
