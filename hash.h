@@ -1,8 +1,10 @@
 #ifndef HASH_H
 #define HASH_H
 
-#include <bits/stdc++.h>
-
+#include <iostream>
+#include <map>
+#include <set>
+#include <vector>
 using namespace std;
 class Bucket {
   int depth, size;
