@@ -57,7 +57,7 @@ int main() {
 
   saveBlocks(paginas);
 
-  hashTable.display(1);
+  hashTable.display(0);
 
   menuQ(paginas, hashTable);
 
@@ -181,10 +181,10 @@ vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory &hashTable)
       }
 
       // Simular guardado con cout
-      cout << "GUARDADO >> Chunk " << setw(4) << setfill('0') << actual.pageID << ":\n";
-      for (const auto& reg : actual.registros)
-        cout << reg.contenido;
-      cout << "\n----------------------------\n";
+      cout << "GUARDADO >> pagina " << setw(4) << setfill('0') << actual.pageID << ":\n";
+      // for (const auto& reg : actual.registros)
+        // cout << reg.contenido;
+      // cout << "\n----------------------------\n";
 
       paginas.push_back(actual);
       actual = Chunk{actual.pageID + 1};
@@ -201,10 +201,10 @@ vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory &hashTable)
       actual.registros.push_back({-1, string(payloadSize - tam, '@')});
     }
 
-    cout << "GUARDADO >> Chunk " << setw(4) << setfill('0') << actual.pageID << ":\n";
-    for (const auto& reg : actual.registros)
-      cout << reg.contenido;
-    cout << "\n----------------------------\n";
+    cout << "GUARDADO >> pagina " << setw(4) << setfill('0') << actual.pageID << ":\n";
+    // for (const auto& reg : actual.registros)
+    //   cout << reg.contenido;
+    // cout << "\n----------------------------\n";
 
     paginas.push_back(actual);
   }

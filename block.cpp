@@ -7,7 +7,7 @@
 #include "globals.h"
 
 // #define DEBUG
-#define VERBOSE
+// #define VERBOSE
 
 namespace fs = std::filesystem;
 
