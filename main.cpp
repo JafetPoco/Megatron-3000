@@ -59,6 +59,7 @@ int main() {
 
 //   page.openBlock(0);
 //   cout<<page.getData()<<endl;
+  testBuffer();
 }
 
 /****************************************************/
@@ -91,4 +92,15 @@ bool testDisk() {
 bool testTableFiles() {
   tableFile = new TableFiles();
   return true;
+}
+
+void testBuffer() {
+  bufferPool = new LRU(4);
+  bufferPool->requestPage(0, 'r');
+  bufferPool->requestPage(1, 'r');
+  bufferPool->requestPage(2, 'r');
+  bufferPool->requestPage(3, 'r');
+  Block* test = bufferPool->requestPage(0, 'r');
+  string& data = test->getData();
+  cout<<"Data in block 0: "<<data<<endl;
 }
