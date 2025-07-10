@@ -2,6 +2,7 @@
 #define VERBOSE
 #include "tableFiles.h"
 #include "freeBlockMan.h"
+#include "bufPool.h"
 #include "block.h"
 #include "globals.h"
 #include <iostream>
@@ -181,10 +182,8 @@ BlockID TableFiles::addFile(std::string name) {
   }
   table[name] = block;
   saveTable();
-  // Frame *f = buffer->accessPage(block, 'w');
-  // auto& ss=f->data->getData();
-  // ss=BLOCK_HEAD_PTR; //"0000"
-  // f->data->saveBlock();
+  string& ss = bufferPool->requestPage(block, 'w');
+  ss=BLOCK_HEAD_PTR; //"0000"
 #ifdef VERBOSE
   std::cerr << "TF: Archivo '" << name << "' agregado en bloque " << block << ".\n";
 #endif
