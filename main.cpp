@@ -17,7 +17,7 @@ size_t blockCapacity;
 void testBuffer();
 
 int main() {
-  disk = new Disk("Megatron", 2,2,8,512,3);
+  disk = new Disk("Megatron", 2,2,8,512,4);
   // disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   cerr<<disk->getTotalSectors()<<endl;
@@ -26,13 +26,13 @@ int main() {
   tableFile = new TableFiles(); //carga si existe el disco
   bufferPool = new Clock(5);
 
-
-  Block test1(1);
-  test1.getData();
-  Block test2(2);
-  test2.getData();
   File test("test1");
-  // Block page(0);
+  cout<<"Siguiente de test1: "<<test.getNext()<<"\n";
+  cout<<"contenido: "<<test.read()<<endl;
+  test.write("hola");
+
+  cout<<"contenido: "<<test.read()<<endl;
+  bufferPool->clearBuffer();
   
   // tableFile->addFile("test1");
   // tableFile->addFile("test2");
@@ -63,7 +63,7 @@ int main() {
 
 //   page.openBlock(0);
 //   cout<<page.getData()<<endl;
-  testBuffer();
+  // testBuffer();
 }
 
 /****************************************************/

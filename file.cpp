@@ -24,6 +24,7 @@ bool File::open(std::string fileName, char mode) {
   currentBlock = nullptr;
   if (bufferPool) {
     currentBlock = &bufferPool->requestPage(firstBlock, mode);
+    bufferPool->clearBuffer();
   }
   return currentBlock != nullptr;
 }
@@ -40,10 +41,24 @@ std::string& File::read() const {
     std::cerr<<"FILE:No se cargo un archivo\n";
     exit(1);
   };
+  std::cerr<<"FILE: retornando currentBlock: "<<*currentBlock<<'\n';
   return *currentBlock;
 }
 
-bool File::write(std::string &input) {
+string File::readAll() {
+  if (!isOpen() && !currentBlock) {
+    std::cerr<<"FILE: no se abrio un archivo. error\n";
+    return "";
+  }
+
+  auto cap = getCapacity();
+  string all=currentBlock->substr(4);
+  while (getNext() != 0x00) {
+
+  }
+}
+
+bool File::write(std::string input) {
   if (!isOpen() || !currentBlock) return false;
 
   ssize_t cap = getCapacity();
@@ -118,7 +133,6 @@ bool File::nextBlock() {
 
 ssize_t File::getCapacity() const {
   if (capacity > 0) return capacity;
-  extern ssize_t blockCapacity;
   if (blockCapacity > 0) return blockCapacity - 4;
   return 512 - 4;
 }

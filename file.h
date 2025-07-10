@@ -26,7 +26,8 @@ public:
   bool open(std::string fileName, char mode='r');
   bool close();
   std::string& read() const;
-  bool write(std::string& data);
+  string readAll();
+  bool write(std::string data);
 
   bool isOpen() const;
 
