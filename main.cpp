@@ -19,6 +19,7 @@ void testBuffer();
 int main() {
   disk = new Disk("Megatron", 2,2,8,512,3);
   // disk = new Disk("Megatron");
+  blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   cerr<<disk->getTotalSectors()<<endl;
   disk->printDiskInfo();
   freeBlock = new FreeBlockManager("Megatron", 256);
