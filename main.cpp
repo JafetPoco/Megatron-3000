@@ -12,6 +12,9 @@ Disk* disk = nullptr;
 FreeBlockManager* freeBlock=nullptr;
 TableFiles* tableFile=nullptr;
 BufPool* bufferPool = nullptr;
+size_t blockCapacity;
+
+void testBuffer();
 
 int main() {
   disk = new Disk("Megatron", 2,2,8,512,3);
@@ -100,7 +103,6 @@ void testBuffer() {
   bufferPool->requestPage(1, 'r');
   bufferPool->requestPage(2, 'r');
   bufferPool->requestPage(3, 'r');
-  Block* test = bufferPool->requestPage(0, 'r');
-  string& data = test->getData();
-  cout<<"Data in block 0: "<<data<<endl;
+  string& test = bufferPool->requestPage(0, 'r');
+  cout<<"Data in block 0: "<<test<<endl;
 }
