@@ -1,4 +1,5 @@
 #include "bufPool.h"
+#include "hash.h"
 #include "file.h"
 #include "disk.h"
 #include "block.h"
@@ -14,9 +15,13 @@ TableFiles* tableFile=nullptr;
 BufPool* bufferPool = nullptr;
 size_t blockCapacity;
 
+struct Registro;
+struct Chunk;
 void testBuffer();
 string clean_line(string &linea);
-vector<string> chunkSplit(istream &input, size_t chunkSize);
+vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory &hashTable);
+void selectWhere(int id, Directory &hashTable, vector<Chunk> &paginas);
+void selectAll(vector<Chunk> &paginas);
 
 int main() {
   disk = new Disk("Megatron", 2,2,8,512,4);
@@ -34,25 +39,25 @@ int main() {
     return 1;
   }
 
-  cout << "Capacidad: "<<blockCapacity<<endl;
-  vector<string> chunks = chunkSplit(archivo, blockCapacity);
+  Directory hashTable(1, 4);
 
-  cout << "Chunks generados: " << chunks.size() << endl;
-  if (!chunks.empty()) {
-    for (auto& i: chunks) {
-      // cout<<i<<"\n\n";
-    }
-  }
-  
-  for (int i=0;i<chunks.size();i++) {
-    string& data = bufferPool->requestPage(i+1, 'w');
-    data = chunks[i];
-  }
-  bufferPool->clearBuffer();
-  
-  for (int i=0;i<chunks.size();i++) {
-    Block page(i+1);
-    cout<<page.getData()<<endl<<endl;
+  cout << "Capacidad: "<<blockCapacity<<endl;
+  vector<Chunk> paginas = chunkSplit(archivo, blockCapacity, hashTable);
+  archivo.close();
+
+  hashTable.display(1);
+
+  int opcion;
+  cout << "\n1. SELECT * from titanic\n2. SELECT * WHERE id = ?\nOpción: ";
+  cin >> opcion;
+
+  if (opcion == 1) {
+    selectAll(paginas);
+  } else if (opcion == 2) {
+    int id;
+    cout << "Ingrese ID: ";
+    cin >> id;
+    selectWhere(id, hashTable, paginas);
   }
 
 
@@ -130,6 +135,24 @@ void testBuffer() {
   cout<<"Data in block 0: "<<test<<endl;
 }
 
+struct Registro {
+  int id;
+  string contenido;
+};
+
+struct Chunk {
+  int pageID;
+  vector<Registro> registros;
+};
+
+
+Registro lineProcess(string &linea) {
+  Registro r;
+  r.id = stoi(linea.substr(0, 4));
+  r.contenido = clean_line(linea) + '\n';
+  return r;
+}
+
 string clean_line(string &linea) {
   string resultado;
   bool quote = false;
@@ -146,46 +169,97 @@ string clean_line(string &linea) {
   return resultado;
 }
 
-vector<string> chunkSplit(istream &input, size_t chunkSize) {
+vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory &hashTable) {
   const size_t headerSize = 4;
-  if (chunkSize <= headerSize) {
-    cerr << "ERROR: chunkSize debe ser mayor que 4." << endl;
-    return {};
-  }
+  const size_t payloadSize = chunkSize - headerSize;
 
   string linea;
-  getline(input, linea);
+  getline(input, linea); // saltar cabecera
 
-  vector<string> registros;
+  vector<Chunk> paginas;
+  Chunk actual{0};
+  size_t tam = 0;
+
   while (getline(input, linea)) {
-    registros.push_back(clean_line(linea));
-  }
+    if (linea.size() < 4) continue;
 
-  size_t payloadSize = chunkSize - headerSize;
-  size_t contador = 1;
-  string buffer;
-  vector<string> chunks;
+    Registro r = lineProcess(linea);
 
-  for (const auto &registro : registros) {
-    if (buffer.size() + registro.size() > payloadSize) {
-      string header = to_string(contador++);
-      header = string(4 - header.size(), '0') + header;
+    if (tam + r.contenido.size() > payloadSize) {
+      if (tam < payloadSize) {
+        actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+      }
 
-      buffer.resize(payloadSize, '@');
-      chunks.push_back(header + buffer);
+      // Simular guardado con cout
+      cout << "GUARDADO >> Chunk " << setw(4) << setfill('0') << actual.pageID << ":\n";
+      for (const auto& reg : actual.registros)
+        cout << reg.contenido;
+      cout << "\n----------------------------\n";
 
-      buffer.clear();
+      paginas.push_back(actual);
+      actual = Chunk{actual.pageID + 1};
+      tam = 0;
     }
-    buffer += registro;
+
+    hashTable.insert(r.id, to_string(actual.pageID), false);
+    actual.registros.push_back(r);
+    tam += r.contenido.size();
   }
 
-  if (!buffer.empty()) {
-    string header = to_string(contador++);
-    header = string(4 - header.size(), '0') + header;
+  if (!actual.registros.empty()) {
+    if (tam < payloadSize) {
+      actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+    }
 
-    buffer.resize(payloadSize, '@');
-    chunks.push_back(header + buffer);
+    cout << "GUARDADO >> Chunk " << setw(4) << setfill('0') << actual.pageID << ":\n";
+    for (const auto& reg : actual.registros)
+      cout << reg.contenido;
+    cout << "\n----------------------------\n";
+
+    paginas.push_back(actual);
   }
 
-  return chunks;
+  return paginas;
 }
+
+void selectWhere(int id, Directory &hashTable, vector<Chunk> &paginas) {
+  cout << "SELECT * WHERE id = " << id << endl;
+
+  string pageIDstr = hashTable.search(id);
+  if (pageIDstr == "") {
+    cout << "ID no encontrado en el índice." << endl;
+    return;
+  }
+
+  int pageID = stoi(pageIDstr);
+  if (pageID < 0 || pageID >= (int)paginas.size()) {
+    cout << "pageID fuera de rango." << endl;
+    return;
+  }
+
+  const Chunk &chunk = paginas[pageID];
+  for (const auto &reg : chunk.registros) {
+    if (reg.id == id) {
+      cout << "Encontrado en chunk " << setw(4) << setfill('0') << pageID << ":\n";
+      cout << reg.contenido;
+      return;
+    }
+  }
+
+  cout << "ID no encontrado dentro del chunk esperado." << endl;
+}
+
+void selectAll(vector<Chunk> &paginas) {
+  cout << "SELECT * "<< endl;
+  for (const auto &chunk : paginas) {
+    // cout << "==== Chunk " << setw(4) << setfill('0') << chunk.pageID << " ====" << endl;
+    for (const auto &reg : chunk.registros) {
+      if (reg.id != -1)
+        cout << reg.contenido;
+    }
+    // cout << endl;
+  }
+  cout<<endl;
+}
+
+
