@@ -1,4 +1,5 @@
 #include "hash.h"
+#include <string>
 
 void menu() {
   cout << "--------------------" << endl;
@@ -145,11 +146,11 @@ void Directory::update(int key, string value) {
   buckets[bucket_no]->update(key, value);
 }
 
-void Directory::search(int key) {
+string Directory::search(int key) {
   int bucket_no = hash(key);
   cout << "Searching key " << key << " in bucket " << bucket_id(bucket_no)
        << endl;
-  buckets[bucket_no]->search(key);
+  return buckets[bucket_no]->search(key);
 }
 
 void Directory::display(bool duplicates) {
@@ -213,14 +214,16 @@ int Bucket::update(int key, string value) {
   }
 }
 
-void Bucket::search(int key) {
+string Bucket::search(int key) {
   std::map<int, string>::iterator it;
   it = values.find(key);
   if (it != values.end()) {
     cout << "Value = " << it->second << endl;
+    return (it->second);
   } else {
     cout << "This key does not exists" << endl;
   }
+  return "";
 }
 
 int Bucket::isFull(void) {

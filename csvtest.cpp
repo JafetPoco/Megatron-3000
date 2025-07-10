@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include "hash.h"
+#include "hash.cpp"
 
 using namespace std;
 
@@ -24,50 +26,61 @@ string clean_line(const string &linea) {
   return resultado;
 }
 
-vector<string> chunkSplit(istream &input, size_t chunkSize) {
+struct Registro {
+  int id;
+  string contenido;
+};
+
+struct Chunk {
+  int pageID;
+  vector<Registro> registros;
+};
+
+
+vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory *hashTable = nullptr) {
   const size_t headerSize = 4;
-  if (chunkSize <= headerSize) {
-    cerr << "ERROR: chunkSize debe ser mayor que 4." << endl;
-    return {};
-  }
+  const size_t payloadSize = chunkSize - headerSize;
 
   string linea;
-  getline(input, linea);
+  getline(input, linea);  // Saltar cabecera
 
-  vector<string> registros;
+  vector<Chunk> paginas;
+  Chunk actual{0};
+  size_t tam = 0;
+
   while (getline(input, linea)) {
-    registros.push_back(clean_line(linea));
-  }
+    if (linea.size() < 4) continue;
 
-  size_t payloadSize = chunkSize - headerSize;
-  size_t contador = 1;
-  string buffer;
-  vector<string> chunks;
+    Registro r;
+    r.id = stoi(linea.substr(0, 4));
+    r.contenido = clean_line(linea) + '\n';
 
-  for (const auto &registro : registros) {
-    if (buffer.size() + registro.size() > payloadSize) {
-      string header = to_string(contador++);
-      header = string(4 - header.size(), '0') + header;
-
-      buffer.resize(payloadSize, '@');
-      chunks.push_back(header + buffer);
-
-      buffer.clear();
+    if (tam + r.contenido.size() > payloadSize) {
+      if (tam < payloadSize) {
+        actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+      }
+      paginas.push_back(actual);
+      actual = Chunk{actual.pageID + 1};
+      tam = 0;
     }
-    buffer += registro;
+
+    if (hashTable) {
+      hashTable->insert(r.id, to_string(actual.pageID), false);
+    }
+
+    actual.registros.push_back(r);
+    tam += r.contenido.size();
   }
 
-  if (!buffer.empty()) {
-    string header = to_string(contador++);
-    header = string(4 - header.size(), '0') + header;
-
-    buffer.resize(payloadSize, '@');
-    chunks.push_back(header + buffer);
+  if (!actual.registros.empty()) {
+    if (tam < payloadSize) {
+      actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+    }
+    paginas.push_back(actual);
   }
 
-  return chunks;
+  return paginas;
 }
-
 int main() {
   ifstream archivo("titanic.csv");
   if (!archivo) {
@@ -75,13 +88,13 @@ int main() {
     return 1;
   }
 
-  size_t chunkSize = 512;
-  vector<string> chunks = chunkSplit(archivo, chunkSize);
+  size_t chunkSize = 512*4;
+  vector<Chunk> chunks = chunkSplit(archivo, chunkSize);
 
   cout << "Chunks generados: " << chunks.size() << endl;
   if (!chunks.empty()) {
     for (auto& i: chunks) {
-      cout<<i<<"\n\n";
+      cout<<i.pageID<<"||||"<<i.registros.size()<<"\n\n";
     }
   }
   return 0;

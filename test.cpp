@@ -42,48 +42,78 @@ Registro lineProcess(string &linea) {
   return r;
 }
 
-void buildIndex(istream &input, size_t chunkSize, vector<Chunk> &v,
-                Directory &h) {
-  string a;
-  getline(input, a);
+vector<Chunk> chunkSplit(istream &input, size_t chunkSize, Directory *hashTable = nullptr) {
+  const size_t headerSize = 4;
+  const size_t payloadSize = chunkSize - headerSize;
 
-  const size_t p = chunkSize - 4;
+  string linea;
+  getline(input, linea);  // Saltar cabecera
+
+  vector<Chunk> paginas;
   Chunk actual{0};
   size_t tam = 0;
 
-  while (getline(input, a)) {
-    if (a.size() < 4) continue;
+  while (getline(input, linea)) {
+    if (linea.size() < 4) continue;
 
-    Registro b = lineProcess(a);
+    Registro r;
+    r.id = stoi(linea.substr(0, 4));
+    r.contenido = clean_line(linea) + '\n';
 
-    if (tam + b.contenido.size() > p) {
-      if (tam < p) actual.registros.push_back({-1, string(p - tam, '@')});
-      v.push_back(actual);
+    if (tam + r.contenido.size() > payloadSize) {
+      if (tam < payloadSize) {
+        actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+      }
+      paginas.push_back(actual);
       actual = Chunk{actual.pageID + 1};
       tam = 0;
     }
 
-    h.insert(b.id, to_string(actual.pageID), false);
-    actual.registros.push_back(b);
-    tam += b.contenido.size();
-  }
-
-  // Último chunk
-  if (!actual.registros.empty()) {
-    if (tam< p) {
-      Registro relleno{-1, string(p- tam, '@')};
-      actual.registros.push_back(relleno);
+    if (hashTable) {
+      hashTable->insert(r.id, to_string(actual.pageID), false);
     }
-    v.push_back(actual);
+
+    actual.registros.push_back(r);
+    tam += r.contenido.size();
   }
+
+  if (!actual.registros.empty()) {
+    if (tam < payloadSize) {
+      actual.registros.push_back({-1, string(payloadSize - tam, '@')});
+    }
+    paginas.push_back(actual);
+  }
+
+  return paginas;
 }
 
-// Consulta tipo SQL: SELECT * WHERE id = ?
-void selectWhere(int id, Directory &hashTable) {
-  cout << "SELECT * WHERE id = ";
-  cin >> id;
-  hashTable.search(id);
+void selectWhere(int id, Directory &hashTable, const vector<Chunk>& paginas) {
+  cout << "SELECT * WHERE id = " << id << endl;
+
+  string pageIDstr;
+  if (!hashTable.search(id)) {
+    cout << "ID no encontrado en el índice." << endl;
+    return;
+  }
+
+  int pageID = stoi(pageIDstr);
+  if (pageID < 0 || pageID >= (int)paginas.size()) {
+    cout << "pageID fuera de rango." << endl;
+    return;
+  }
+
+  const Chunk& chunk = paginas[pageID];
+  for (const auto& reg : chunk.registros) {
+    if (reg.id == id) {
+      cout << "Encontrado en chunk " << setw(4) << setfill('0') << pageID << ":\n";
+      cout << reg.contenido;
+      return;
+    }
+  }
+
+  cout << "ID no encontrado dentro del chunk esperado." << endl;
 }
+
 
 void selectAll(const vector<Chunk> &paginas) {
   cout << "SELECT * (lectura secuencial de todos los registros)" << endl;
@@ -126,7 +156,7 @@ int main() {
     return 1;
   }
 
-  buildIndex(archivo, chunkSize, paginas, hashTable);
+  chunkSplit(archivo, chunkSize, paginas, hashTable);
   archivo.close();
 
   hashTable.display(1);

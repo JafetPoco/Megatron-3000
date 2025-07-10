@@ -2,11 +2,12 @@
 #include <cstring>
 #include <iostream>
 #include <filesystem>
+#include <ostream>
 #include <sstream>
 #include "globals.h"
 
-#define DEBUG
-#define VERBOSE
+// #define DEBUG
+// #define VERBOSE
 
 namespace fs = std::filesystem;
 
@@ -64,6 +65,7 @@ Autor: Berly Dueñas
 void Block::saveBlock() {
   #ifdef VERBOSE
   std::cerr<<"BLOCK: datos a escribir: "<<data<<std::endl;
+  std::cerr<<"BLOCK: size de datos: "<<data.size()<<std::endl; 
   #endif
   if (!disk || !disk->isDiskOpen()) {
 #ifdef VERBOSE
@@ -82,7 +84,7 @@ void Block::saveBlock() {
   std::stringstream ss;
   ss << std::setfill('0') << std::setw(4) << (totalLen > totalCapacity ? totalCapacity : totalLen);
   header.replace(4, 4, ss.str());
-  string allText = header + data;
+  string allText = data;
 
   if (allText.size() > totalCapacity) {
 #ifdef DEBUG

@@ -15,7 +15,7 @@ public:
   int insert(int key, string value);
   int remove(int key);
   int update(int key, string value);
-  void search(int key);
+  string search(int key);
   int isFull(void);
   int isEmpty(void);
   int getDepth(void);
@@ -42,7 +42,7 @@ public:
   void insert(int key, string value, bool reinserted);
   void remove(int key, int mode);
   void update(int key, string value);
-  void search(int key);
+  string search(int key);
   void display(bool duplicates);
 };
 

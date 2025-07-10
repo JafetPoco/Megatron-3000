@@ -55,6 +55,7 @@ void LRU::saveChanges(ssize_t id){
 std::string& LRU::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
   //printf("Request Page: %d\n", id);
   nrequests++;
+  std::cerr<<"BUFFER: solicitando pagina "<<id<<'\n';
 
   if(frames.find(id) == frames.end()){
     if(framesKey.size() >= (size_t) nframe){ //pregunta si hay espacio para agregar una page

@@ -40,18 +40,22 @@ int main() {
   cout << "Chunks generados: " << chunks.size() << endl;
   if (!chunks.empty()) {
     for (auto& i: chunks) {
-      cout<<i<<"\n\n";
+      // cout<<i<<"\n\n";
     }
   }
   
   for (int i=0;i<chunks.size();i++) {
-    Block page(i+1);
-    string& data = page.getData();
-    cout<<"**********************Capacidad de chunk: "<<chunks[i].size()<<endl; 
+    string& data = bufferPool->requestPage(i+1, 'w');
     data = chunks[i];
-    page.saveBlock();
   }
- 
+  bufferPool->clearBuffer();
+  
+  for (int i=0;i<chunks.size();i++) {
+    Block page(i+1);
+    cout<<page.getData()<<endl<<endl;
+  }
+
+
   // tableFile->addFile("test1");
   // tableFile->addFile("test2");
   // tableFile->addFile("test3");

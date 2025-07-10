@@ -8,8 +8,8 @@
 #include <unistd.h>
 #include <sstream>
 
-#define DEBUG 
-#define VERBOSE
+// #define DEBUG 
+// #define VERBOSE
 using namespace std;
 
 /*
