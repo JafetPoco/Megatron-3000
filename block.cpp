@@ -7,7 +7,7 @@
 #include "globals.h"
 
 // #define DEBUG
-// #define VERBOSE
+#define VERBOSE
 
 namespace fs = std::filesystem;
 
@@ -51,7 +51,7 @@ void Block::openBlock(BlockID id) {
     std::cerr << "BLOCK: Header: " << header << ", Data: " << data << std::endl;
 #endif
   } else {
-    header = "00000008";
+    header = "0000";
   }
 
 }
