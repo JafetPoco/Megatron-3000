@@ -15,6 +15,8 @@ BufPool* bufferPool = nullptr;
 size_t blockCapacity;
 
 void testBuffer();
+string clean_line(string &linea);
+vector<string> chunkSplit(istream &input, size_t chunkSize);
 
 int main() {
   disk = new Disk("Megatron", 2,2,8,512,4);
@@ -25,15 +27,31 @@ int main() {
   freeBlock = new FreeBlockManager("Megatron", 256);
   tableFile = new TableFiles(); //carga si existe el disco
   bufferPool = new Clock(5);
-
-  File test("test1");
-  cout<<"Siguiente de test1: "<<test.getNext()<<"\n";
-  cout<<"contenido: "<<test.read()<<endl;
-  test.write("hola");
-
-  cout<<"contenido: "<<test.read()<<endl;
-  bufferPool->clearBuffer();
   
+  ifstream archivo("titanic.csv");
+  if (!archivo) {
+    cerr << "No se pudo abrir el archivo" << endl;
+    return 1;
+  }
+
+  cout << "Capacidad: "<<blockCapacity<<endl;
+  vector<string> chunks = chunkSplit(archivo, blockCapacity);
+
+  cout << "Chunks generados: " << chunks.size() << endl;
+  if (!chunks.empty()) {
+    for (auto& i: chunks) {
+      cout<<i<<"\n\n";
+    }
+  }
+  
+  for (int i=0;i<chunks.size();i++) {
+    Block page(i+1);
+    string& data = page.getData();
+    cout<<"**********************Capacidad de chunk: "<<chunks[i].size()<<endl; 
+    data = chunks[i];
+    page.saveBlock();
+  }
+ 
   // tableFile->addFile("test1");
   // tableFile->addFile("test2");
   // tableFile->addFile("test3");
@@ -106,4 +124,64 @@ void testBuffer() {
   bufferPool->requestPage(3, 'r');
   string& test = bufferPool->requestPage(0, 'r');
   cout<<"Data in block 0: "<<test<<endl;
+}
+
+string clean_line(string &linea) {
+  string resultado;
+  bool quote = false;
+  for (char c : linea) {
+    if (c == '"') {
+      quote = !quote;
+    } else if (c == ',' && !quote) {
+      resultado += '#';
+    } else {
+      resultado += c;
+    }
+  }
+  resultado+="%";
+  return resultado;
+}
+
+vector<string> chunkSplit(istream &input, size_t chunkSize) {
+  const size_t headerSize = 4;
+  if (chunkSize <= headerSize) {
+    cerr << "ERROR: chunkSize debe ser mayor que 4." << endl;
+    return {};
+  }
+
+  string linea;
+  getline(input, linea);
+
+  vector<string> registros;
+  while (getline(input, linea)) {
+    registros.push_back(clean_line(linea));
+  }
+
+  size_t payloadSize = chunkSize - headerSize;
+  size_t contador = 1;
+  string buffer;
+  vector<string> chunks;
+
+  for (const auto &registro : registros) {
+    if (buffer.size() + registro.size() > payloadSize) {
+      string header = to_string(contador++);
+      header = string(4 - header.size(), '0') + header;
+
+      buffer.resize(payloadSize, '@');
+      chunks.push_back(header + buffer);
+
+      buffer.clear();
+    }
+    buffer += registro;
+  }
+
+  if (!buffer.empty()) {
+    string header = to_string(contador++);
+    header = string(4 - header.size(), '0') + header;
+
+    buffer.resize(payloadSize, '@');
+    chunks.push_back(header + buffer);
+  }
+
+  return chunks;
 }
