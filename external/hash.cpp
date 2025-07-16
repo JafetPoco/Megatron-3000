@@ -102,7 +102,14 @@ int main() {
         cout << endl;
       }
       d.search(key);
-    } else if (choice == "display") {
+    } 
+    else if (choice == "display1") {
+      if (show_messages) {
+        cout << endl;
+      }
+      d.display(1);
+    }
+    else if (choice == "display") {
       if (show_messages) {
         cout << endl;
       }
