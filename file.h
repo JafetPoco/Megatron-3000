@@ -83,9 +83,9 @@ public:
    */
   BlockID getCurrent() const;
 
-  /* * Obtiene el bloque actual.
-   * @brief Devuelve una referencia al bloque actual.
-   * @return Referencia al bloque actual.
+  /* Avanza al siguiente bloque.
+   * @brief Avanza al siguiente bloque del archivo.
+   * @return true si se avanzó al siguiente bloque, false si no hay más bloques.
    * @author Jafet Poco
    */
   bool nextBlock();

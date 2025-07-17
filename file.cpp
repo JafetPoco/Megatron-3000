@@ -42,7 +42,9 @@ std::string& File::read() const {
     std::cerr<<"FILE:No se cargo un archivo\n";
     exit(1);
   };
-  std::cerr<<"FILE: retornando currentBlock para read(): "<<*currentBlock<<'\n';
+  // string payload = currentBlock->substr(4,capacity);
+  std::cerr<<"FILE: retornando string para read(): "<<*currentBlock<<'\n';
+  // return payload;
   return *currentBlock;
 }
 
@@ -63,6 +65,9 @@ bool File::write(std::string input) {
   if (!isOpen() || !currentBlock) return false;
 
   ssize_t cap = getCapacity();
+#ifdef DEBUG
+  cerr<<"FILE: capacity: cap "<<cap<<endl;
+#endif
   size_t written = 0;
   BlockID thisBlockID = currentBlockID;
   std::string* blockData = currentBlock;
