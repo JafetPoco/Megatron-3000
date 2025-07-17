@@ -35,8 +35,8 @@ void saveBlocks(vector<Chunk>& paginas);
 void menuQ(vector<Chunk>& paginas, Directory& hashTable);
 
 int main() {
-  // disk = new Disk("Megatron", 8,8,8,512,4); 
-  disk = new Disk("Megatron");
+  disk = new Disk("Megatron", 8,8,8,512,4); 
+  //disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   cerr<<disk->getTotalSectors()<<endl;
   disk->printDiskInfo();
@@ -44,9 +44,20 @@ int main() {
   tableFile = new TableFiles(); //carga si existe el disco
   bufferPool = new Clock(5);
 
+  File::set_capacity(blockCapacity);
+
   File schemafile("schema", 'w');
-  cout<<"WRITE STATUS: "<<schemafile.write("titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58#Sex#string#6#Age#double#3#SibSp#long#5#Parch#long#2#Ticket#string#16#Fare#double#7#Cabin#string#11#Embarked#string#10\n")<<endl;
-  schemafile.read();
+  cout<<"CAPACITY: "<<schemafile.getCapacity()<<endl;
+  string& schemaData = schemafile.accessBlock();
+  schemaData = "titanic#id#4#LONG#name#50#STRING#age#3#LONG#fare#8#DOUBLE\n";
+  cout<<"Next block???: "<<schemafile.getNext()<<endl;
+  cout<<"Schema data: "<<schemaData<<endl;
+  schemafile.close();
+
+  bufferPool->clearBuffer();
+
+  Block test(1);
+  cout<<"Block ID: "<<test.getData()<<endl;
 
   // bufferPool->clearBuffer();
 

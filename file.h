@@ -14,12 +14,13 @@ class File{
 private:
   std::string fileName;
   static ssize_t capacity;
-  BlockID firstBlock;
+  std::vector<BlockID> blocks;
   BlockID currentBlockID;
-  string* currentBlock;
   char mode;
+  std::string payload;
 
 public:
+
   /* * Constructor por defecto.
    * @brief Crea un objeto File sin inicializar.
    * @author Jafet Poco
@@ -52,15 +53,7 @@ public:
    * @param blockID ID del bloque a cargar.
    * @author Jafet Poco
    */
-  std::string& read() const;
-
-  /* * Escribe datos en el archivo.
-   * @brief Escribe los datos especificados en el archivo.
-   * @param data Datos a escribir en el archivo.
-   * @return true si la escritura fue exitosa, false en caso contrario.
-   * @author Jafet Poco
-   */
-  bool write(std::string data);
+  std::string& accessBlock();
 
   /* * Verifica si el archivo está abierto.
    * @brief Comprueba si el archivo está abierto.
@@ -74,7 +67,15 @@ public:
    * @return Nombre del archivo.
    * @author Berly Dueñas
    */
+  string getFilename() const;
+
+  /*
+  * @brief Obtiene el siguiente bloque del archivo.
+  * @return ID del siguiente bloque del archivo.
+  * @author Jafet Poco
+  */
   BlockID getNext() const;
+  /*
 
   /* * Obtiene el bloque actual.
    * @brief Devuelve el ID del bloque actual.
@@ -89,6 +90,13 @@ public:
    * @author Jafet Poco
    */
   bool nextBlock();
+
+  /* @brief Agrega un bloque si y solo si el nextblock es 0
+   * @return true si se agregó el bloque, false en caso contrario.
+   * @author Jafet Poco
+   */
+  bool addBlock();
+
 
   /* * Obtiene el nombre del archivo.
    * @brief Devuelve el nombre del archivo asociado al objeto File.
