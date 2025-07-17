@@ -1,4 +1,5 @@
 #include "file.h"
+#include "block.h"
 #include "bufPool.h"
 #include "globals.h"
 #include <iostream>
@@ -41,22 +42,22 @@ std::string& File::read() const {
     std::cerr<<"FILE:No se cargo un archivo\n";
     exit(1);
   };
-  std::cerr<<"FILE: retornando currentBlock: "<<*currentBlock<<'\n';
+  std::cerr<<"FILE: retornando currentBlock para read(): "<<*currentBlock<<'\n';
   return *currentBlock;
 }
 
-string File::readAll() {
-  if (!isOpen() && !currentBlock) {
-    std::cerr<<"FILE: no se abrio un archivo. error\n";
-    return "";
-  }
+// string File::readAll() {
+//   if (!isOpen() && !currentBlock) {
+//     std::cerr<<"FILE: no se abrio un archivo. error\n";
+//     return "";
+//   }
 
-  auto cap = getCapacity();
-  string all=currentBlock->substr(4);
-  while (getNext() != 0x00) {
+//   auto cap = getCapacity();
+//   string all=currentBlock->substr(4);
+//   while (getNext() != 0x00) {
 
-  }
-}
+//   }
+// }
 
 bool File::write(std::string input) {
   if (!isOpen() || !currentBlock) return false;
@@ -113,11 +114,16 @@ bool File::isOpen() const {
   return !fileName.empty() && currentBlock != nullptr;
 }
 
-size_t File::getNext() {
+BlockID File::getNext() const {
   if (!isOpen() || !currentBlock) return 0;
   std::string& data = *currentBlock;
   if (data.size() < 4) return 0;
   return std::stoul(data.substr(0, 4));
+}
+
+BlockID File::getCurrent() const {
+  if (!isOpen() || !currentBlock) return 0;
+  return currentBlockID;
 }
 
 bool File::nextBlock() {
