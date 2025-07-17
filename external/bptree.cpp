@@ -1,338 +1,135 @@
-// C++ Program to Implement B+ Tree
-#include <algorithm>
+// B+ Tree of order 3 (max 2 keys per node)
 #include <iostream>
 #include <vector>
+#include <algorithm>
 using namespace std;
 
-// B plus tree class
-template <typename T>
-class BPlusTree {
-   public:
-    // structure to create a node
-    struct Node {
-        bool isLeaf;
-        vector<T> keys;
-        vector<Node*> children;
-        Node* next;
+const int ORDER = 3; // Max keys per node = ORDER - 1
 
-        Node(bool leaf = false) : isLeaf(leaf), next(nullptr) {}
-    };
+struct BPlusNode {
+    bool isLeaf;
+    vector<int> keys;
+    vector<BPlusNode*> children;
+    BPlusNode* next;
 
-    Node* root;
-    // Minimum degree (defines the range for the number of
-    // keys)
-    int t;
-
-    // Function to split a child node
-    void splitChild(Node* parent, int index, Node* child);
-
-    // Function to insert a key in a non-full node
-    void insertNonFull(Node* node, T key);
-
-    // Function to remove a key from a node
-    void remove(Node* node, T key);
-
-    // Function to borrow a key from the previous sibling
-    void borrowFromPrev(Node* node, int index);
-
-    // Function to borrow a key from the next sibling
-    void borrowFromNext(Node* node, int index);
-
-    // Function to merge two nodes
-    void merge(Node* node, int index);
-
-    // Function to print the tree
-    void printTree(Node* node, int level);
-
-   public:
-    BPlusTree(int degree) : root(nullptr), t(degree) {}
-
-    void insert(T key);
-    bool search(T key);
-    void remove(T key);
-    vector<T> rangeQuery(T lower, T upper);
-    void printTree();
+    BPlusNode(bool leaf = false) : isLeaf(leaf), next(nullptr) {}
 };
 
-// Implementation of splitChild function
-template <typename T>
-void BPlusTree<T>::splitChild(Node* parent, int index, Node* child) {
-    Node* newChild = new Node(child->isLeaf);
-    parent->children.insert(parent->children.begin() + index + 1, newChild);
-    parent->keys.insert(parent->keys.begin() + index, child->keys[t - 1]);
+class BPlusTree {
+    BPlusNode* root;
 
-    newChild->keys.assign(child->keys.begin() + t, child->keys.end());
-    child->keys.resize(t - 1);
+public:
+    BPlusTree() : root(nullptr) {}
 
-    if (!child->isLeaf) {
-        newChild->children.assign(child->children.begin() + t, child->children.end());
-        child->children.resize(t);
-    }
-
-    if (child->isLeaf) {
-        newChild->next = child->next;
-        child->next = newChild;
-    }
-}
-
-// Implementation of insertNonFull function
-template <typename T>
-void BPlusTree<T>::insertNonFull(Node* node, T key) {
-    if (node->isLeaf) {
-        node->keys.insert(upper_bound(node->keys.begin(), node->keys.end(), key), key);
-    } else {
-        int i = node->keys.size() - 1;
-        while (i >= 0 && key < node->keys[i]) {
-            i--;
+    void insert(int key) {
+        if (!root) {
+            root = new BPlusNode(true);
+            root->keys.push_back(key);
+            return;
         }
-        i++;
-        if (node->children[i]->keys.size() == 2 * t - 1) {
-            splitChild(node, i, node->children[i]);
-            if (key > node->keys[i]) {
-                i++;
-            }
-        }
-        insertNonFull(node->children[i], key);
-    }
-}
 
-// Implementation of remove function
-template <typename T>
-void BPlusTree<T>::remove(Node* node, T key) {
-    // If node is a leaf
-    if (node->isLeaf) {
-        auto it = find(node->keys.begin(), node->keys.end(), key);
-        if (it != node->keys.end()) {
-            node->keys.erase(it);
-        }
-    } else {
-        int idx = lower_bound(node->keys.begin(), node->keys.end(), key) - node->keys.begin();
-        if (idx < node->keys.size() && node->keys[idx] == key) {
-            if (node->children[idx]->keys.size() >= t) {
-                Node* predNode = node->children[idx];
-                while (!predNode->isLeaf) {
-                    predNode = predNode->children.back();
-                }
-                T pred = predNode->keys.back();
-                node->keys[idx] = pred;
-                remove(node->children[idx], pred);
-            } else if (node->children[idx + 1]->keys.size() >= t) {
-                Node* succNode = node->children[idx + 1];
-                while (!succNode->isLeaf) {
-                    succNode = succNode->children.front();
-                }
-                T succ = succNode->keys.front();
-                node->keys[idx] = succ;
-                remove(node->children[idx + 1], succ);
-            } else {
-                merge(node, idx);
-                remove(node->children[idx], key);
-            }
-        } else {
-            if (node->children[idx]->keys.size() < t) {
-                if (idx > 0 && node->children[idx - 1]->keys.size() >= t) {
-                    borrowFromPrev(node, idx);
-                } else if (idx < node->children.size() - 1 &&
-                           node->children[idx + 1]->keys.size() >= t) {
-                    borrowFromNext(node, idx);
-                } else {
-                    if (idx < node->children.size() - 1) {
-                        merge(node, idx);
-                    } else {
-                        merge(node, idx - 1);
-                    }
-                }
-            }
-            remove(node->children[idx], key);
-        }
-    }
-}
+        BPlusNode* newChild = nullptr;
+        int newKey = -1;
+        bool split = insertInternal(root, key, newKey, newChild);
 
-// Implementation of borrowFromPrev function
-template <typename T>
-void BPlusTree<T>::borrowFromPrev(Node* node, int index) {
-    Node* child = node->children[index];
-    Node* sibling = node->children[index - 1];
-
-    child->keys.insert(child->keys.begin(), node->keys[index - 1]);
-    node->keys[index - 1] = sibling->keys.back();
-    sibling->keys.pop_back();
-
-    if (!child->isLeaf) {
-        child->children.insert(child->children.begin(), sibling->children.back());
-        sibling->children.pop_back();
-    }
-}
-
-// Implementation of borrowFromNext function
-template <typename T>
-void BPlusTree<T>::borrowFromNext(Node* node, int index) {
-    Node* child = node->children[index];
-    Node* sibling = node->children[index + 1];
-
-    child->keys.push_back(node->keys[index]);
-    node->keys[index] = sibling->keys.front();
-    sibling->keys.erase(sibling->keys.begin());
-
-    if (!child->isLeaf) {
-        child->children.push_back(sibling->children.front());
-        sibling->children.erase(sibling->children.begin());
-    }
-}
-
-// Implementation of merge function
-template <typename T>
-void BPlusTree<T>::merge(Node* node, int index) {
-    Node* child = node->children[index];
-    Node* sibling = node->children[index + 1];
-
-    child->keys.push_back(node->keys[index]);
-    child->keys.insert(child->keys.end(), sibling->keys.begin(), sibling->keys.end());
-    if (!child->isLeaf) {
-        child->children.insert(child->children.end(), sibling->children.begin(),
-                               sibling->children.end());
-    }
-
-    node->keys.erase(node->keys.begin() + index);
-    node->children.erase(node->children.begin() + index + 1);
-
-    delete sibling;
-}
-
-// Implementation of printTree function
-template <typename T>
-void BPlusTree<T>::printTree(Node* node, int level) {
-    if (node != nullptr) {
-        for (int i = 0; i < level; ++i) {
-            cout << "  ";
-        }
-        for (const T& key : node->keys) {
-            cout << key << " ";
-        }
-        cout << endl;
-        for (Node* child : node->children) {
-            printTree(child, level + 1);
-        }
-    }
-}
-
-// Implementation of printTree wrapper function
-template <typename T>
-void BPlusTree<T>::printTree() {
-    printTree(root, 0);
-}
-
-// Implementation of search function
-template <typename T>
-bool BPlusTree<T>::search(T key) {
-    Node* current = root;
-    while (current != nullptr) {
-        int i = 0;
-        while (i < current->keys.size() && key > current->keys[i]) {
-            i++;
-        }
-        if (i < current->keys.size() && key == current->keys[i]) {
-            return true;
-        }
-        if (current->isLeaf) {
-            return false;
-        }
-        current = current->children[i];
-    }
-    return false;
-}
-
-// Implementation of range query function
-template <typename T>
-vector<T> BPlusTree<T>::rangeQuery(T lower, T upper) {
-    vector<T> result;
-    Node* current = root;
-    while (!current->isLeaf) {
-        int i = 0;
-        while (i < current->keys.size() && lower > current->keys[i]) {
-            i++;
-        }
-        current = current->children[i];
-    }
-    while (current != nullptr) {
-        for (const T& key : current->keys) {
-            if (key >= lower && key <= upper) {
-                result.push_back(key);
-            }
-            if (key > upper) {
-                return result;
-            }
-        }
-        current = current->next;
-    }
-    return result;
-}
-
-// Implementation of insert function
-template <typename T>
-void BPlusTree<T>::insert(T key) {
-    if (root == nullptr) {
-        root = new Node(true);
-        root->keys.push_back(key);
-    } else {
-        if (root->keys.size() == 2 * t - 1) {
-            Node* newRoot = new Node();
+        if (split) {
+            BPlusNode* newRoot = new BPlusNode(false);
+            newRoot->keys.push_back(newKey);
             newRoot->children.push_back(root);
-            splitChild(newRoot, 0, root);
+            newRoot->children.push_back(newChild);
             root = newRoot;
         }
-        insertNonFull(root, key);
     }
+
+    void printTree() {
+        vector<BPlusNode*> level;
+        level.push_back(root);
+        cout << "Tree Levels:\n";
+        while (!level.empty()) {
+            vector<BPlusNode*> nextLevel;
+            for (BPlusNode* node : level) {
+                cout << "[";
+                for (int k : node->keys)
+                    cout << k << " ";
+                cout << "] ";
+                if (!node->isLeaf)
+                    nextLevel.insert(nextLevel.end(), node->children.begin(), node->children.end());
+            }
+            cout << "\n";
+            level = nextLevel;
+        }
+
+        // Print leaf links
+        cout << "Leaf Level: ";
+        BPlusNode* leaf = root;
+        while (!leaf->isLeaf)
+            leaf = leaf->children[0];
+        while (leaf) {
+            cout << "[";
+            for (int k : leaf->keys) cout << k << " ";
+            cout << "] -> ";
+            leaf = leaf->next;
+        }
+        cout << "nullptr\n\n";
+    }
+
+private:
+    bool insertInternal(BPlusNode* node, int key, int& newKey, BPlusNode*& newChild) {
+        if (node->isLeaf) {
+            node->keys.insert(lower_bound(node->keys.begin(), node->keys.end(), key), key);
+            if (node->keys.size() < ORDER)
+                return false;
+            splitLeaf(node, newKey, newChild);
+            return true;
+        }
+
+        int idx = upper_bound(node->keys.begin(), node->keys.end(), key) - node->keys.begin();
+        bool split = insertInternal(node->children[idx], key, newKey, newChild);
+        if (!split) return false;
+
+        node->keys.insert(node->keys.begin() + idx, newKey);
+        node->children.insert(node->children.begin() + idx + 1, newChild);
+
+        if (node->keys.size() < ORDER)
+            return false;
+
+        splitInternal(node, newKey, newChild);
+        return true;
+    }
+
+
+void splitLeaf(BPlusNode* node, int& newKey, BPlusNode*& newLeaf) {
+    newLeaf = new BPlusNode(true);
+    int mid = node->keys.size() / 2;
+    newLeaf->keys.assign(node->keys.begin() + mid, node->keys.end());
+    node->keys.resize(mid);
+    newLeaf->next = node->next;
+    node->next = newLeaf;
+    newKey = newLeaf->keys[0]; // Correcta: se copia la primera clave del nuevo nodo
 }
 
-// Implementation of remove function
-template <typename T>
-void BPlusTree<T>::remove(T key) {
-    if (root == nullptr) {
-        return;
-    }
-    remove(root, key);
-    if (root->keys.empty() && !root->isLeaf) {
-        Node* tmp = root;
-        root = root->children[0];
-        delete tmp;
-    }
-}
 
-// Main function to test the B+ Tree implementation
+    void splitInternal(BPlusNode* node, int& newKey, BPlusNode*& newNode) {
+        newNode = new BPlusNode(false);
+        int mid = ORDER / 2;
+        newKey = node->keys[mid];
+
+        newNode->keys.assign(node->keys.begin() + mid + 1, node->keys.end());
+        newNode->children.assign(node->children.begin() + mid + 1, node->children.end());
+
+        node->keys.resize(mid);
+        node->children.resize(mid + 1);
+    }
+};
+
 int main() {
-    BPlusTree<int> tree(3);
-
-    // Insert elements
-    tree.insert(10);
-    tree.insert(20);
-    tree.insert(5);
-    tree.insert(15);
-    tree.insert(25);
-    tree.insert(30);
-
-    cout << "B+ Tree after insertions:" << endl;
-    tree.printTree();
-
-    // Search for a key
-    int searchKey = 15;
-    cout << "\nSearching for key " << searchKey << ": "
-         << (tree.search(searchKey) ? "Found" : "Not Found") << endl;
-
-    // Perform a range query
-    int lower = 10, upper = 25;
-    vector<int> rangeResult = tree.rangeQuery(lower, upper);
-    cout << "\nRange query [" << lower << ", " << upper << "]: ";
-    for (int key : rangeResult) {
-        cout << key << " ";
+    BPlusTree tree;
+    vector<int> values = {10, 15, 35, 5, 20, 17, 62};
+    for (int v : values) {
+        cout << "Inserting: " << v << "\n";
+        tree.insert(v);
+        tree.printTree();
     }
-    cout << endl;
-
-    // Remove a key
-    int removeKey = 20;
-    tree.remove(removeKey);
-    cout << "\nB+ Tree after removing " << removeKey << ":" << endl;
-    tree.printTree();
-
     return 0;
 }
+
