@@ -4,6 +4,7 @@
 #include "disk.h"
 #include "block.h"
 #include "freeBlockMan.h"
+#include "schema.h"
 #include "tableFiles.h"
 #include "globals.h"
 #include <iostream>
@@ -34,32 +35,42 @@ void saveBlocks(vector<Chunk>& paginas);
 void menuQ(vector<Chunk>& paginas, Directory& hashTable);
 
 int main() {
-  disk = new Disk("Megatron", 8,8,8,512,4); 
-  // disk = new Disk("Megatron");
+  // disk = new Disk("Megatron", 8,8,8,512,4); 
+  disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   cerr<<disk->getTotalSectors()<<endl;
   disk->printDiskInfo();
   freeBlock = new FreeBlockManager("Megatron", 256);
   tableFile = new TableFiles(); //carga si existe el disco
   bufferPool = new Clock(5);
-  
-  ifstream archivo("titanicG.csv");
-  if (!archivo) {
-    cerr << "No se pudo abrir el archivo" << endl;
-    return 1;
-  }
 
-  Directory hashTable(1, 8);
+  File schemafile("schema", 'w');
+  cout<<"WRITE STATUS: "<<schemafile.write("titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58#Sex#string#6#Age#double#3#SibSp#long#5#Parch#long#2#Ticket#string#16#Fare#double#7#Cabin#string#11#Embarked#string#10\n")<<endl;
+  schemafile.read();
 
-  cout << "Capacidad: "<<blockCapacity<<endl;
-  vector<Chunk> paginas = chunkSplit(archivo, blockCapacity, hashTable);
-  archivo.close();
+  // bufferPool->clearBuffer();
 
-  saveBlocks(paginas);
 
-  hashTable.display(0);
 
-  menuQ(paginas, hashTable);
+  // Schema schema("titanic");
+  // schema.printSchema();
+  // ifstream archivo("titanicG.csv");
+  // if (!archivo) {
+  //   cerr << "No se pudo abrir el archivo" << endl;
+  //   return 1;
+  // }
+
+  // Directory hashTable(1, 8);
+
+  // cout << "Capacidad: "<<blockCapacity<<endl;
+  // vector<Chunk> paginas = chunkSplit(archivo, blockCapacity, hashTable);
+  // archivo.close();
+
+  // saveBlocks(paginas);
+
+  // hashTable.display(0);
+
+  // menuQ(paginas, hashTable);
 
 
   // tableFile->addFile("test1");
