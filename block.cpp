@@ -30,12 +30,10 @@ void Block::openBlock(BlockID id) {
     std::cerr << "BLOCK: El disco no se inicio\n" ;
 #endif
     data = "";
-    header = "";
     return;
   }
   size_t sector = id*disk->info().blockLength;
   data = "";
-  header = "";
   for (size_t i = 0; i<disk->info().blockLength; i++) {
     size_t sector_offs = sector + i;
     string sectorData = disk->readSector(sector_offs);
@@ -44,16 +42,6 @@ void Block::openBlock(BlockID id) {
 #endif
     data += sectorData;
   }
-  if(data != ""){
-    header = data.substr(0, 4);
-    data = data.substr(4);
-#ifdef DEBUG
-    std::cerr << "BLOCK: Header: " << header << ", Data: " << data << std::endl;
-#endif
-  } else {
-    header = "0000";
-  }
-
 }
 
 /*
@@ -72,7 +60,6 @@ void Block::saveBlock() {
     std::cerr << "BLOCK: El disco no se inició\n";
 #endif
     data = "";
-    header = "";
     return;
   }
 
@@ -81,9 +68,6 @@ void Block::saveBlock() {
   size_t totalCapacity = sectorSize * blockLength;
 
   size_t totalLen = strlen(data.c_str()) + header.size();
-  std::stringstream ss;
-  ss << std::setfill('0') << std::setw(4) << (totalLen > totalCapacity ? totalCapacity : totalLen);
-  header.replace(4, 4, ss.str());
   string allText = data;
 
   if (allText.size() > totalCapacity) {

@@ -15,7 +15,6 @@ private:
   BlockID id;
   size_t usedCapacity;
   string data;
-  string header;
 public:
   /**
    * @brief Constructor por defecto
