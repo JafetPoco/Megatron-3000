@@ -217,11 +217,11 @@ std::list<int>::iterator Clock::clockAlgorithm(){
 }
 
 void Clock::saveChange(ssize_t id){
-  std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
+  // std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
   std::string *originalDataBlock = &blocks[id]->getData();
   
-  char op;
-  std::cin>>op;
+  char op = 'y';
+  // std::cin>>op;
   if(op == 'Y' || op == 'y'){
     *originalDataBlock = frames[id].first.data;
     blocks[id]->saveBlock();
