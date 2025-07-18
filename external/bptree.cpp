@@ -16,12 +16,11 @@ public:
 template <typename T> class BPlusTree {
 private:
   BPlusNode<T> *root;
-  int degree; // mínimo número de claves por nodo interno: d
+  int t;
 
 public:
-  BPlusTree(int d) : root(nullptr), degree(d) {}
+  BPlusTree(int t) : root(nullptr), t(t) {}
 
-  // Búsqueda simple: retorna true si existe la clave
   bool search(const T &key) {
     if (!root)
       return false;
@@ -43,7 +42,6 @@ public:
     T newKey;
     BPlusNode<T> *newChild = nullptr;
     if (insertInternal(root, key, newKey, newChild)) {
-      // split root
       BPlusNode<T> *newRoot = new BPlusNode<T>(false);
       newRoot->keys.push_back(newKey);
       newRoot->children.push_back(root);
@@ -52,13 +50,11 @@ public:
     }
   }
 
-  // Eliminación pública
   void remove(const T &key) {
     if (!root)
       return;
     removeInternal(root, key);
     if (!root->isLeaf && root->children.size() == 1) {
-      // reducir altura
       BPlusNode<T> *tmp = root;
       root = root->children[0];
       delete tmp;
@@ -89,6 +85,7 @@ public:
       cout << "\n";
       level = move(next);
     }
+
     cout << "Leaf Level: ";
     BPlusNode<T> *leaf = root;
     while (leaf && !leaf->isLeaf)
@@ -104,10 +101,10 @@ public:
   }
 
 private:
-  int maxLeafKeys() const { return 2 * degree; }
-  int minLeafKeys() const { return degree; }
-  int maxInternalKeys() const { return 2 * degree; }
-  int minInternalKeys() const { return degree; }
+  int maxLeafKeys() const { return 2 * t-1; }
+  int minLeafKeys() const { return t; }
+  int maxInternalKeys() const { return 2 * t-1; }
+  int minInternalKeys() const { return t; }
 
   bool insertInternal(BPlusNode<T> *node, const T &key, T &upKey,
                       BPlusNode<T> *&newChild) {
@@ -164,19 +161,19 @@ private:
       node->keys.erase(it);
       return node->keys.size() < (size_t)minLeafKeys();
     }
-    // interno
+
     int idx = upper_bound(node->keys.begin(), node->keys.end(), key) -
               node->keys.begin();
     bool underflow = removeInternal(node->children[idx], key);
     if (!underflow)
       return false;
-    // resolver underflow de children[idx]
+
     BPlusNode<T> *child = node->children[idx];
     BPlusNode<T> *left = (idx > 0 ? node->children[idx - 1] : nullptr);
     BPlusNode<T> *right =
         (idx + 1 < node->children.size() ? node->children[idx + 1] : nullptr);
+
     if (left && left->keys.size() > minInternalKeys()) {
-      // rotación derecha
       child->keys.insert(child->keys.begin(), node->keys[idx - 1]);
       node->keys[idx - 1] = left->keys.back();
       left->keys.pop_back();
@@ -185,7 +182,6 @@ private:
         left->children.pop_back();
       }
     } else if (right && right->keys.size() > minInternalKeys()) {
-      // rotación izquierda
       child->keys.push_back(node->keys[idx]);
       node->keys[idx] = right->keys.front();
       right->keys.erase(right->keys.begin());
@@ -194,18 +190,17 @@ private:
         right->children.erase(right->children.begin());
       }
     } else if (left) {
-      // merge con left
       mergeNodes(left, child, node->keys[idx - 1]);
       node->children.erase(node->children.begin() + idx);
       node->keys.erase(node->keys.begin() + idx - 1);
       delete child;
     } else if (right) {
-      // merge con right
       mergeNodes(child, right, node->keys[idx]);
       node->children.erase(node->children.begin() + idx + 1);
       node->keys.erase(node->keys.begin() + idx);
       delete right;
     }
+
     return node->keys.size() < (size_t)minInternalKeys();
   }
 
@@ -225,15 +220,16 @@ private:
 };
 
 int main() {
-  int degree;
+  int t;
   string command;
   int key;
 
-  cout << "B+ Tree \n";
-  cout << "Degree (d): ";
-  cin >> degree;
+  cout << "B+ Tree\n";
+  cout << "Minimum degree (t): ";
+  if (!(cin >> t))
+    return 1;
 
-  BPlusTree<int> tree(degree);
+  BPlusTree<int> tree(t);
 
   cout << "\nCommands:\n";
   cout << "  insert <key>\n";
@@ -242,20 +238,28 @@ int main() {
   cout << "  display\n";
   cout << "  exit\n";
 
-  cout << "\n>>> ";
-  while (cin >> command) {
+  string line;
+  while (true) {
+    cout << ">>> ";
+    if (!(cin >> command))
+      break;
+
     if (command == "insert") {
-      cin >> key;
-      tree.insert(key);
-      cout << "Inserted " << key << ".";
+      if (cin >> key)
+        tree.insert(key), cout << "Inserted " << key << ".";
+      else
+        break;
     } else if (command == "delete") {
-      cin >> key;
-      tree.remove(key);
-      cout << "Deleted " << key << ".";
+      if (cin >> key)
+        tree.remove(key), cout << "Deleted " << key << ".";
+      else
+        break;
     } else if (command == "search") {
-      cin >> key;
-      bool found = tree.search(key);
-      cout << (found ? "se encontro" : "no se encontro");
+      if (cin >> key) {
+        bool found = tree.search(key);
+        cout << (found ? "se encontro" : "no se encontro");
+      } else
+        break;
     } else if (command == "display") {
       tree.printTree();
     } else if (command == "exit") {
@@ -263,7 +267,7 @@ int main() {
     } else {
       cout << "Unknown command. Try again.";
     }
-    cout << "\n>>> ";
+    cout << "\n";
   }
 
   return 0;
