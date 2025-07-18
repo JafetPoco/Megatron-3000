@@ -38,10 +38,11 @@ void Directory::grow(void) {
 }
 
 void Directory::shrink(void) {
-  int i, flag = 1;
+  size_t i;
+  //flag = 1;
   for (i = 0; i < buckets.size(); i++) {
     if (buckets[i]->getDepth() == global_depth) {
-      flag = 0;
+      //flag = 0;
       return;
     }
   }

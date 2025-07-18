@@ -137,12 +137,12 @@ void LRU::print(int id, char color){
     char pin = frame.pin ? 'T' : 'F';
     if(id == *it){
       if(color == 'y'){
-        printf(YELLOW "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+        printf(YELLOW "%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
       } else {
-        printf(GREEN "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+        printf(GREEN "%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
       }
     } else {
-      printf("%d\t|%d\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
+      printf("%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
     }
   }
   if(i < nframe){
@@ -303,12 +303,12 @@ void Clock::print(int id, char color){
     char pin = FrameClock.pin ? 'T' : 'F';
     if(id == *it){
       if(color == 'y'){
-        printf(YELLOW "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+        printf(YELLOW "%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
       } else {
-        printf(GREEN "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+        printf(GREEN "%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
       }
     } else {
-      printf("%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n", i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+      printf("%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n", i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
     }
   }
   if(i < nframe){

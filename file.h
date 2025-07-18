@@ -75,7 +75,6 @@ public:
   * @author Jafet Poco
   */
   BlockID getNext() const;
-  /*
 
   /* * Obtiene el bloque actual.
    * @brief Devuelve el ID del bloque actual.

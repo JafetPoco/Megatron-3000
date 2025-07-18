@@ -67,7 +67,6 @@ void Block::saveBlock() {
   size_t blockLength = disk->info().blockLength;
   size_t totalCapacity = sectorSize * blockLength;
 
-  size_t totalLen = strlen(data.c_str());
   string allText = data;
 
   if (allText.size() > totalCapacity) {

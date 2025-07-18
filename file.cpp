@@ -3,6 +3,7 @@
 #include "bufPool.h"
 #include "globals.h"
 #include <iostream>
+#include <sstream>
 #include <string>
 
 #define DEBUG
@@ -15,7 +16,7 @@ string blockidTOString(BlockID id) {
 
 ssize_t File::capacity = 0;
 
-File::File() : fileName(""), mode('r'), currentBlockID(-1), payload("") {}
+File::File() : fileName(""), currentBlockID(-1), mode('r'), payload("") {}
 
 File::File(std::string fileName, char mode) {
   open(fileName, mode);
