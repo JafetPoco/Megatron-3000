@@ -47,18 +47,23 @@ int main() {
   File::set_capacity(blockCapacity);
 
   File schemafile("schema", 'w');
-  cout<<"CAPACITY: "<<schemafile.getCapacity()<<endl;
   string& schemaData = schemafile.accessBlock();
-  schemaData = "titanic#id#4#LONG#name#50#STRING#age#3#LONG#fare#8#DOUBLE\n";
-  cout<<"Next block???: "<<schemafile.getNext()<<endl;
-  cout<<"Schema data: "<<schemaData<<endl;
-  schemafile.close();
+  schemaData = "bloque 1";
+  schemafile.addBlock();
+  schemaData = "test bloque2";
+  schemafile.addBlock();
+  schemaData = "test bloque3";
 
+  schemafile.close();
   bufferPool->clearBuffer();
 
   Block test(1);
-  cout<<"Block ID: "<<test.getData()<<endl;
+  cout<<"Block 1 data: "<<test.getData()<<endl;
 
+  Block test2(2);
+  cout<<"Block 2 data: "<<test2.getData()<<endl;
+  Block test3(3);
+  cout<<"Block 3 data: "<<test3.getData()<<endl;
   // bufferPool->clearBuffer();
 
 

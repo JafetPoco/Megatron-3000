@@ -24,9 +24,9 @@ Schema::Schema() {}
 
 Schema::Schema(std::string relation_name) {
   File in("schema");
-  std::string content = in.read();
+  std::string content = in.accessBlock();
   while (in.nextBlock()) {
-    content += in.read();
+    content += in.accessBlock();
   }
   in.close();
 #ifdef DEBUG

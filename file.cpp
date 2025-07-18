@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-// #define DEBUG
+#define DEBUG
 
 string blockidTOString(BlockID id) {
   std::ostringstream oss;
@@ -56,6 +56,7 @@ std::cerr<<"clone string "<< clone << std::endl;
   fileName = "";
   blocks.clear();
   currentBlockID = -1;
+  payload = "";
   return true;
 }
 
@@ -95,9 +96,9 @@ bool File::nextBlock() {
   if (nextID == 0) return false;
 
   //save data on the current block before moving to the next
-  data = blockidTOString(currentBlockID) + payload;
+  data = blockidTOString(nextID) + payload;
 #ifdef DEBUG
-  std::cerr << "FILE: Guardando datos en el bloque " << currentBlockID << ": " << data << std::endl;
+  std::cerr << "FILE: nextBlock() Guardando datos en el bloque " << currentBlockID << ": " << data << std::endl;
 #endif
 
   blocks.push_back(nextID);
@@ -112,9 +113,7 @@ bool File::addBlock() {
   if (getNext() != 0) return false;
   BlockID newBlockID = freeBlock->allocateBlock();
   std::string& data = bufferPool->requestPage(currentBlockID, mode);
-  std::ostringstream oss;
-  oss << std::setw(4) << std::setfill('0') << newBlockID;
-  data.replace(0, 4, oss.str()); // Actualiza el ID del siguiente bloque
+  data = blockidTOString(newBlockID) + payload;
   blocks.push_back(newBlockID);
   currentBlockID = newBlockID;
   return true;
