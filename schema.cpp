@@ -8,6 +8,21 @@
 #define DEBUG
 #define VERBOSE
 
+class CSVProcessor {
+public:
+  explicit CSVProcessor(const std::string& filename);
+  void process();
+  const std::vector<Field>& getFields() const;
+
+private:
+  std::string            filename_;
+  std::vector<Field>     fields_;
+
+  std::vector<std::string> parseLine(const std::string& line) const;
+  FieldType                inferValueType(const std::string& value) const;
+};
+std::vector<Schema> parseSchemas(const std::string &input);
+
 std::vector<std::string> splitString(std::string s, char delimiter) {
   std::vector<std::string> tokens;
   std::string token;
@@ -20,137 +35,145 @@ std::vector<std::string> splitString(std::string s, char delimiter) {
   return tokens;
 }
 
-Schema::Schema() {}
-
-Schema::Schema(std::string relation_name) {
-  File in("schema");
-  std::string content = in.accessBlock();
-  while (in.nextBlock()) {
-    content += in.accessBlock();
-  }
-  in.close();
-#ifdef DEBUG
-  std::cout << "SCHEMA: " << content << std::endl;
-#endif
-  if (content.size() == 0) {
-    std::cout<<"No se obtuvo informacion del archivo";
-    return;
-  }
-  // auto rawlines = splitString(content, '\n');
-  
-  // std::vector<std::vector<string>> relations;
-  // for (auto& i : rawlines) {
-  //   std::cout<<i<<std::endl;
-  //   relations.push_back( splitString(i, '#') );
-  // }
-
+SchemaManager::SchemaManager() {
+  File schemafile("schema", 'r');
+  string content;
 }
 
-size_t Schema::getLength() { return fields.size(); }
 
-/*
-INPUT: cabecera de una tabla
-Me crea datos tipo Field con los datos de cada campo
-(nombre del campo, tipo de dato y tamaño)
-Autor: Berly Dueñas
-*/
+#include <fstream>
+#include <stdexcept>
+#include <algorithm>
 
-bool Schema::load(std::string &line) {
-  fields.clear();
-  std::stringstream ss(line);
-  std::string token;
-  std::vector<std::string> parts;
+CSVProcessor::CSVProcessor(const std::string& filename)
+  : filename_(filename)
+{}
 
-  while (std::getline(ss, token, '#')) {
-    if (!token.empty()) {
-      parts.push_back(token);
+void CSVProcessor::process() {
+  std::ifstream in(filename_);
+  if (!in.is_open()) {
+    throw std::runtime_error("No se pudo abrir: " + filename_);
+  }
+
+  std::string line;
+  // Leer cabecera
+  if (!std::getline(in, line)) return;
+  auto headers = parseLine(line);
+  fields_.resize(headers.size());
+  for (size_t i = 0; i < headers.size(); ++i) {
+    fields_[i].field_name = headers[i];
+    // size y type ya inicializados
+  }
+
+  // Leer resto de filas
+  while (std::getline(in, line)) {
+    auto values = parseLine(line);
+    for (size_t i = 0; i < values.size() && i < fields_.size(); ++i) {
+      const auto& v = values[i];
+      fields_[i].size = std::max(fields_[i].size, v.length());
+      // inferir tipo
+      fields_[i].type = std::max(fields_[i].type, inferValueType(v));
     }
   }
+}
 
-  if ((parts.size() - 1) % 3 != 0) {
-    std::cerr << "SCHEMA: Formato inválido: " << line << std::endl;
-    return false;
+const std::vector<Field>& CSVProcessor::getFields() const {
+  return fields_;
+}
+
+std::vector<std::string> CSVProcessor::parseLine(const std::string& line) const {
+  std::vector<std::string> result;
+  std::string field;
+  bool        inQuotes = false;
+
+  for (size_t i = 0; i <= line.size(); ++i) {
+    char c = (i < line.size()) ? line[i] : ',';
+    if (c == '"') {
+      if (inQuotes && i+1 < line.size() && line[i+1] == '"') {
+        field += '"';
+        ++i;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    }
+    else if (c == ',' && !inQuotes) {
+      result.push_back(field);
+      field.clear();
+    }
+    else {
+      field += c;
+    }
+  }
+  return result;
+}
+
+FieldType CSVProcessor::inferValueType(const std::string& value) const {
+  if (value.empty()) {
+    return FieldType::INT;  // No alteramos el tipo si está vacío
   }
 
-  for (size_t i = 1; i + 2 < parts.size(); i += 3) {
-    std::string name = parts[i];
-    std::string typeRaw = parts[i + 1];
-    std::string sizeStr = parts[i + 2];
+  // 1) Intentar INT
+  try {
+    size_t idx = 0;
+    std::stol(value, &idx);
+    if (idx == value.size()) {
+      return FieldType::INT;
+    }
+  } catch (...) {
+    // no es INT
+  }
 
-    FieldType type;
-    if (typeRaw.rfind("long", 0) == 0) {
-      type = INT;
-    } else if (typeRaw.rfind("string", 0) == 0) {
-      type = STRING;
-    } else if (typeRaw.rfind("double", 0) == 0) {
-      type = DOUBLE;
-    } else {
-      std::cerr << "Tipo no soportado: " << typeRaw << std::endl;
+  // 2) Intentar DOUBLE
+  try {
+    size_t idx = 0;
+    std::stod(value, &idx);
+    if (idx == value.size()) {
+      return FieldType::DOUBLE;
+    }
+  } catch (...) {
+    // no es DOUBLE
+  }
+
+  // 3) Si falla todo, STRING
+  return FieldType::STRING;
+}
+
+std::vector<Schema> parseSchemas(const std::string &input) {
+  std::vector<Schema> schemas;
+  std::istringstream stream(input);
+  std::string line;
+
+  while (std::getline(stream, line)) {
+    if (line.empty())
+      continue;
+
+    std::istringstream linestream(line);
+    std::string token;
+    std::vector<std::string> tokens;
+
+    while (std::getline(linestream, token, '#')) {
+      tokens.push_back(token);
+    }
+
+    if (tokens.size() < 4 || (tokens.size() - 1) % 3 != 0) {
+      // invalid schema line: must have 1 table name + N × (name/type/size)
       continue;
     }
 
-    size_t size = 0;
-    try {
-      size = std::stoul(sizeStr);
-    } catch (...) {
-      std::cerr << "Tamaño inválido: " << sizeStr << std::endl;
-      continue;
+    Schema schema;
+    schema.schemaName = tokens[0];
+
+    for (size_t i = 1; i + 2 < tokens.size(); i += 3) {
+      Field f;
+      f.field_name = tokens[i];
+      f.type = parseType(tokens[i + 1]);
+      f.size = std::stoi(tokens[i + 2]);
+      schema.fields.push_back(f);
     }
 
-    fields.push_back({name, size, type});
+    schemas.push_back(std::move(schema));
   }
 
-  // std::cerr << "SCHEMA: field size: " << fields.size() << std::endl;
-  return true;
+  return schemas;
 }
 
-/*
-INPUT: Nombre del archivo y Nombre de la tabla
-Busca en schema la cabecera de la tabla indicada
-Autor: Berly Dueñas 
-*/
-
-//bool Schema::loadFromFile(const std::string &filename, std::string &tableName) {
-//  File in(filename);
-//  //std::ifstream in(filename);
-//  /*
-//  if (!in) {
-//    std::cerr << "No se pudo abrir el archivo: " << filename << std::endl;
-//    return false;
-//  }
-//  */
-
-//  std::string line;
-//  std::stringstream inS(in.readAll());
-//  while (std::getline(inS, line)) {
-//    std::stringstream ss(line);
-//    std::string name;
-//    getline(ss, name, '#');
-//    if(name == tableName){
-//      return loadFromSchemaLine(line);
-//    }
-//  }
-
-//  std::cerr << "No existe la tabla '" << tableName << "' en el archivo." << std::endl;
-//  return false;
-//}
-
-void Schema::printSchema() {
-  std::cout << "Esquema con " << fields.size() << " campos:\n";
-  for (const auto &f : fields) {
-    std::string typeStr;
-    switch (f.type) {
-    case INT:
-      typeStr = "LONG";
-      break;
-    case STRING:
-      typeStr = "STRING";
-      break;
-    case DOUBLE:
-      typeStr = "DOUBLE";
-      break;
-    }
-    std::cout << "- " << f.field_name << " (" << typeStr << ", " << f.size
-              << " bytes)\n";
-  }
-}

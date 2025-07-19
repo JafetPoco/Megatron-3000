@@ -46,79 +46,16 @@ int main() {
 
   File::set_capacity(blockCapacity);
 
-  File schemafile("schema", 'w');
-  string& schemaData = schemafile.accessBlock();
-  schemaData = "bloque 1";
-  schemafile.addBlock();
-  schemaData = "test bloque2";
-  schemafile.addBlock();
-  schemaData = "test bloque3";
+  File schemafile;
+  schemafile.accessBlock() =  R"(titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58
+test#num#long#3#decimal#double#6#word#string#12
+floats#numf#float#4
+)";
 
-  schemafile.close();
+  SchemaManager test;
+  test.printSchema();
+
   bufferPool->clearBuffer();
-
-  Block test(1);
-  cout<<"Block 1 data: "<<test.getData()<<endl;
-
-  Block test2(2);
-  cout<<"Block 2 data: "<<test2.getData()<<endl;
-  Block test3(3);
-  cout<<"Block 3 data: "<<test3.getData()<<endl;
-  // bufferPool->clearBuffer();
-
-
-
-  // Schema schema("titanic");
-  // schema.printSchema();
-  // ifstream archivo("titanicG.csv");
-  // if (!archivo) {
-  //   cerr << "No se pudo abrir el archivo" << endl;
-  //   return 1;
-  // }
-
-  // Directory hashTable(1, 8);
-
-  // cout << "Capacidad: "<<blockCapacity<<endl;
-  // vector<Chunk> paginas = chunkSplit(archivo, blockCapacity, hashTable);
-  // archivo.close();
-
-  // saveBlocks(paginas);
-
-  // hashTable.display(0);
-
-  // menuQ(paginas, hashTable);
-
-
-  // tableFile->addFile("test1");
-  // tableFile->addFile("test2");
-  // tableFile->addFile("test3");
-  // tableFile->addFile("test4");
-  // tableFile->addFile("test5");
-  // tableFile->addFile("test6");
-  // tableFile->addFile("test7");
-  // tableFile->addFile("test8");
-  // tableFile->addFile("test10");
-  // tableFile->addFile("test11");
-  // tableFile->addFile("test12");
-  // tableFile->addFile("test13");
-  // tableFile->addFile("test14");
-  // tableFile->addFile("test15");
-  // tableFile->addFile("test16");
-  // tableFile->addFile("test17");
-  // tableFile->addFile("test18");
-  // tableFile->addFile("test19");
-  // tableFile->addFile("test20");
-  // tableFile->addFile("test21");
-  // tableFile->addFile("test22");
-  // tableFile->addFile("test23");
-  // tableFile->addFile("test24");
-  // tableFile->addFile("test25");
-  // tableFile->addFile("test26");
-  // tableFile->showTable();
-
-//   page.openBlock(0);
-//   cout<<page.getData()<<endl;
-  // testBuffer();
 }
 
 /****************************************************/
