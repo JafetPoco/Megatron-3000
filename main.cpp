@@ -46,16 +46,18 @@ int main() {
 
   File::set_capacity(blockCapacity);
 
-  File schemafile;
-  schemafile.accessBlock() =  R"(titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58
-test#num#long#3#decimal#double#6#word#string#12
-floats#numf#float#4
-)";
+  File schemafile("schema", 'w');
+  string& page =schemafile.accessBlock() ;
+  page=  "titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58\ntest#num#long#3#decimal#double#6#word#string#12\nfloats#numf#float#4";
+  schemafile.close();
 
-  SchemaManager test;
-  test.printSchema();
+  // SchemaManager test;
+  // test.printSchema();
 
   bufferPool->clearBuffer();
+
+  Block paget(1);
+  cout<<paget.getData();
 }
 
 /****************************************************/
