@@ -55,6 +55,7 @@ void LRU::saveChanges(ssize_t id){
 std::string& LRU::requestPage(int id, char tipe){ //En megatron, debe de devolver la direccion de memoria del bloque
   //printf("Request Page: %d\n", id);
   nrequests++;
+  std::cerr<<"BUFFER: solicitando pagina "<<id<<'\n';
 
   if(frames.find(id) == frames.end()){
     if(framesKey.size() >= (size_t) nframe){ //pregunta si hay espacio para agregar una page
@@ -136,12 +137,12 @@ void LRU::print(int id, char color){
     char pin = frame.pin ? 'T' : 'F';
     if(id == *it){
       if(color == 'y'){
-        printf(YELLOW "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+        printf(YELLOW "%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
       } else {
-        printf(GREEN "%d\t|%d\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
+        printf(GREEN "%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n" RESET, i++, frame.id, tipe, dirty, frame.count, pin);
       }
     } else {
-      printf("%d\t|%d\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
+      printf("%d\t|%zd\t|%c\t|%c\t|%d\t|%c\n", i++, frame.id, tipe, dirty, frame.count, pin);
     }
   }
   if(i < nframe){
@@ -216,11 +217,11 @@ std::list<int>::iterator Clock::clockAlgorithm(){
 }
 
 void Clock::saveChange(ssize_t id){
-  std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
+  // std::cout<<"Desea guardar los cambios de la pagina "<<id<<"? (Y para confirmar)\n";
   std::string *originalDataBlock = &blocks[id]->getData();
   
-  char op;
-  std::cin>>op;
+  char op = 'y';
+  // std::cin>>op;
   if(op == 'Y' || op == 'y'){
     *originalDataBlock = frames[id].first.data;
     blocks[id]->saveBlock();
@@ -302,12 +303,12 @@ void Clock::print(int id, char color){
     char pin = FrameClock.pin ? 'T' : 'F';
     if(id == *it){
       if(color == 'y'){
-        printf(YELLOW "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+        printf(YELLOW "%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
       } else {
-        printf(GREEN "%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+        printf(GREEN "%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n" RESET, i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
       }
     } else {
-      printf("%d\t│%d\t│%c\t│%c\t│%d\t│%c\t│%d\n", i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
+      printf("%d\t│%zd\t│%c\t│%c\t│%d\t│%c\t│%d\n", i++, FrameClock.id, tipe, dirty, FrameClock.count, pin, FrameClock.state);
     }
   }
   if(i < nframe){

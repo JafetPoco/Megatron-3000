@@ -1,0 +1,42 @@
+2
+display
+insert 10
+display
+
+insert 20
+display
+
+insert 30
+display
+
+insert 5
+display
+
+insert 25
+display
+
+insert 40
+display
+
+search 10
+search 100
+
+delete 25 
+display
+
+delete 5 
+display
+
+delete 10
+display
+
+delete 20
+display
+
+delete 30
+display
+
+delete 40 
+display
+
+exit

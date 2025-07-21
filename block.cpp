@@ -2,8 +2,12 @@
 #include <cstring>
 #include <iostream>
 #include <filesystem>
+#include <ostream>
 #include <sstream>
 #include "globals.h"
+
+// #define DEBUG
+// #define VERBOSE
 
 namespace fs = std::filesystem;
 
@@ -22,27 +26,22 @@ Autor: Jafet Poco
 void Block::openBlock(BlockID id) { 
   this->id = id;
   if (!disk || !disk->isDiskOpen()) {
+#ifdef VERBOSE
     std::cerr << "BLOCK: El disco no se inicio\n" ;
+#endif
     data = "";
-    header = "";
     return;
   }
-  size_t sector = id*4;
+  size_t sector = id*disk->info().blockLength;
   data = "";
-  header = "";
   for (size_t i = 0; i<disk->info().blockLength; i++) {
     size_t sector_offs = sector + i;
     string sectorData = disk->readSector(sector_offs);
-    // cout<<sectorData;
+#ifdef DEBUG
+    std::cerr << "BLOCK: Leyendo sector " << sector_offs << ", data: " << sectorData << std::endl;
+#endif
     data += sectorData;
   }
-  if(data != ""){
-    header = data.substr(0, 8);
-    data = data.substr(8);
-  } else {
-    header = "00000008";
-  }
-
 }
 
 /*
@@ -52,11 +51,15 @@ Autor: Berly Dueñas
 */
 
 void Block::saveBlock() {
-  std::cout<<"BLOCK: datos a escribir: "<<data<<std::endl;
+  #ifdef VERBOSE
+  std::cerr<<"BLOCK: datos a escribir: "<<data<<std::endl;
+  std::cerr<<"BLOCK: size de datos: "<<data.size()<<std::endl; 
+  #endif
   if (!disk || !disk->isDiskOpen()) {
+#ifdef VERBOSE
     std::cerr << "BLOCK: El disco no se inició\n";
+#endif
     data = "";
-    header = "";
     return;
   }
 
@@ -64,14 +67,12 @@ void Block::saveBlock() {
   size_t blockLength = disk->info().blockLength;
   size_t totalCapacity = sectorSize * blockLength;
 
-  size_t totalLen = strlen(data.c_str()) + header.size();
-  std::stringstream ss;
-  ss << std::setfill('0') << std::setw(4) << (totalLen > totalCapacity ? totalCapacity : totalLen);
-  header.replace(4, 4, ss.str());
-  string allText = header + data;
+  string allText = data;
 
   if (allText.size() > totalCapacity) {
+#ifdef DEBUG
     std::cerr << "BLOCK: WARN: La data a escribir excede la capacidad de bloque, se truncará.\n";
+#endif
   }
 
   size_t sectorStart = id * blockLength;
@@ -91,7 +92,9 @@ void Block::saveBlock() {
       sectorData = string(sectorSize, '\0');
     }
 
-    std::cout<<"BLOCK: sectorData -> block: "<<sectorData<<std::endl;
+    #ifdef DEBUG
+    std::cerr<<"BLOCK: sectorData -> block: "<<sectorData<<std::endl;
+    #endif
     disk->writeSector(sectorStart + i, sectorData);
   }
 }

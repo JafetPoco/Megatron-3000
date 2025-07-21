@@ -1,3 +1,5 @@
+#define DEBUG
+#define VERBOSE
 #include "freeBlockMan.h"
 #include <iostream>
 
@@ -8,6 +10,9 @@ Autor: Berly Dueñas
 
 void FreeBlockManager::persist() {
   file.seekp(0);
+#ifdef DEBUG
+  std::cerr << "FBM: Persistiendo bitmap en disco.\n";
+#endif
   file.write(bitmap.data(), bitmap.size());
   file.flush();
 }
@@ -30,7 +35,9 @@ FreeBlockManager::FreeBlockManager(std::string fname, std::size_t numBlocks)
   if (std::filesystem::exists(path)) {
     file.open(path, std::ios::in | std::ios::out);
     if (!file.is_open()) {
-      std::cerr << "No se pudo abrir el bitmap.\n";
+#ifdef VERBOSE
+      std::cerr << "FBM: No se pudo abrir el bitmap.\n";
+#endif
       return;
     }
 
@@ -39,10 +46,14 @@ FreeBlockManager::FreeBlockManager(std::string fname, std::size_t numBlocks)
     file.seekg(0);
 
     if (fileSize == totalBlocks) {
-      std::cout << "Bitmap existente, leyendo...\n";
+#ifdef VERBOSE
+      std::cerr << "FBM: Bitmap existente, leyendo...\n";
+#endif
       file.read(bitmap.data(), bitmap.size());
     } else {
-      std::cout << "Bitmap inválido, reescribiendo...\n";
+#ifdef VERBOSE
+      std::cerr << "FBM: Bitmap inválido, reescribiendo...\n";
+#endif
       file.close();
       file.open(path, std::ios::out | std::ios::trunc);
       file.write(bitmap.data(), bitmap.size());
@@ -50,11 +61,15 @@ FreeBlockManager::FreeBlockManager(std::string fname, std::size_t numBlocks)
       file.open(path, std::ios::in | std::ios::out);
     }
   } else {
-    std::cout << "No existe, creando nuevo bitmap...\n";
+#ifdef VERBOSE
+    std::cerr << "FBM: No existe, creando nuevo bitmap...\n";
+#endif
     std::ofstream out(path);
     if (!out.is_open()) {
+#ifdef VERBOSE
       std::cerr<<"FBM: fallo escritura de bitmap\n";
       std::cerr<<path;
+#endif
     }
     out.write(bitmap.data(), bitmap.size());
     out.close();
@@ -72,11 +87,17 @@ Autor: Berly Dueñas
 BlockID FreeBlockManager::allocateBlock() {
   for (BlockID id = 0; id < (BlockID)totalBlocks; ++id) {
     if (bitmap[id] == '0') {
+#ifdef DEBUG
+      std::cerr << "FBM: Asignando bloque libre: " << id << std::endl;
+#endif
       bitmap[id] = '1';
       persist();
       return id;
     }
   }
+#ifdef VERBOSE
+  std::cerr << "FBM: No hay bloques libres disponibles.\n";
+#endif
   return -1;
 }
 
@@ -89,6 +110,9 @@ Autor: Berly Dueñas
 
 void FreeBlockManager::freeBlock(BlockID id) {
   if (id >= 0 && (std::size_t)id < totalBlocks) {
+#ifdef DEBUG
+    std::cerr << "FBM: Liberando bloque: " << id << std::endl;
+#endif
     bitmap[id] = '0';
     persist();
   }
@@ -103,7 +127,11 @@ Autor: Berly Dueñas
 */
 
 bool FreeBlockManager::isBlockFree(BlockID id) const {
-  return (id >= 0 && (std::size_t)id < totalBlocks) ? (bitmap[id] == '0') : false;
+  bool free = (id >= 0 && (std::size_t)id < totalBlocks) ? (bitmap[id] == '0') : false;
+#ifdef DEBUG
+  std::cerr << "FBM: isBlockFree(" << id << ") = " << free << std::endl;
+#endif
+  return free;
 }
 
 /*
@@ -118,5 +146,8 @@ std::size_t FreeBlockManager::freeBlockCount() const {
     if (c == '0')
       ++count;
   }
+#ifdef DEBUG
+  std::cerr << "FBM: Bloques libres: " << count << std::endl;
+#endif
   return count;
 }
