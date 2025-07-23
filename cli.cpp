@@ -1,8 +1,10 @@
 #include <algorithm>
+#include "file.h"
 #include "cli.h"
 #include "block.h"
 #include "disk.h"
 #include "globals.h"
+#include "schema.h"
 #include <iostream>
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -68,23 +70,28 @@ int main_cli() {
       continue;
     }
     //disk ops
-    if (line.rfind(".disk", 0) == 0) {
+    if (line.rfind("disk", 0) == 0) {
       handle_disk_command(line);
       continue;
     }
 
     //buffer
-    if (line.rfind(".buffer", 0) == 0) {
+    if (line.rfind("buffer", 0) == 0) {
       handle_buffer_command(line);
       continue;
     }
 
     //schema
-    if (line.rfind(".schema", 0) == 0) {
+    if (line.rfind("schema", 0) == 0) {
       handle_schema_command(line);
       continue;
     }
 
+    //schema
+    if (line.rfind("file", 0) == 0) {
+      handle_file_command(line);
+      continue;
+    }
     // Extraer comando inicial
     std::stringstream ss(line);
     std::string cmd;
@@ -196,22 +203,21 @@ void handle_help(const std::string&) {
 
   std::cout << "Comandos especiales:\n";
 
-  std::cout << "  .disk open block <n>           # Abrir bloque desde disco\n";
-  std::cout << "  .disk open sector <n>          # Abrir sector desde disco\n";
-  std::cout << "  .disk write <bloque> <datos>   # Escribir datos en un bloque\n";
-  std::cout << "  .disk info                     # Mostrar info del disco\n\n";
+  std::cout << "  disk open block <n>           # Abrir bloque desde disco\n";
+  std::cout << "  disk open sector <n>          # Abrir sector desde disco\n";
+  std::cout << "  disk info                     # Mostrar info del disco\n\n";
 
-  std::cout << "  .buffer show                   # Mostrar contenido del buffer pool\n";
-  std::cout << "  .buffer read <n>               # Leer página/bloque en buffer\n";
-  std::cout << "  .buffer type                   # Mostrar estrategia de reemplazo\n";
-  std::cout << "  .buffer stats                  # Estadísticas del buffer\n\n";
+  std::cout << "  buffer show                   # Mostrar contenido del buffer pool\n";
+  std::cout << "  buffer read <n>               # Leer página/bloque en buffer\n";
+  std::cout << "  buffer type                   # Mostrar estrategia de reemplazo\n";
+  std::cout << "  buffer stats                  # Estadísticas del buffer\n\n";
 
-  std::cout << "  .schema addcsv archivo tabla   # Registrar esquema a partir de CSV\n";
-  std::cout << "  .schema print                  # Mostrar tablas registradas\n\n";
+  std::cout << "  schema addcsv archivo tabla   # Registrar esquema a partir de CSV\n";
+  std::cout << "  schema print                  # Mostrar tablas registradas\n\n";
 
-  std::cout << "  .file open <archivo>           # Abrir archivo\n";
-  std::cout << "  .file find <archivo>           # Buscar archivo\n";
-  std::cout << "  .file size <archivo>           # Mostrar tamaño de archivo\n\n";
+  std::cout << "  file open <archivo>           # Abrir archivo\n";
+  std::cout << "  file find <archivo>           # Buscar archivo\n";
+  std::cout << "  file size <archivo>           # Mostrar tamaño de archivo\n\n";
 
   std::cout << "General:\n";
   std::cout << "  help                           # Mostrar esta ayuda\n";
@@ -225,7 +231,7 @@ void handle_help(const std::string&) {
 void handle_disk_command(const std::string &str) {
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
-    std::cerr << "Error: comando .disk incompleto\n";
+    std::cerr << "Comando disk: <open|info> <args>\n";
     return;
   }
 
@@ -234,7 +240,7 @@ void handle_disk_command(const std::string &str) {
   //OPEN 
   if (subcmd == "open") {
     if (parts.size() < 3) {
-      std::cerr << "Uso: .disk open [block|sector] <número>\n";
+      std::cerr << "Uso: disk open [block|sector] <número>\n";
       return;
     }
 
@@ -242,7 +248,7 @@ void handle_disk_command(const std::string &str) {
 
     if (entity == "block") {
       if (parts.size() < 4) {
-        std::cerr << "Error: .disk open block requiere un número de bloque\n";
+        std::cerr << "Error: disk open block requiere un número de bloque\n";
         return;
       }
 
@@ -265,7 +271,7 @@ void handle_disk_command(const std::string &str) {
     } 
     else if (entity == "sector") {
       if (parts.size() < 4) {
-        std::cerr << "Error: .disk open sector requiere un número de sector\n";
+        std::cerr << "Error: disk open sector requiere un número de sector\n";
         return;
       }
 
@@ -287,38 +293,23 @@ void handle_disk_command(const std::string &str) {
       std::cerr << "Error: entidad desconocida \"" << parts[2] << "\". Usa 'block' o 'sector'.\n";
       return;
     }
-  }
-  //WRITE
-  else if (subcmd == "write") {
-    if (parts.size() < 4) {
-      std::cerr << "Error: .disk write requiere bloque y datos\n";
-      return;
-    }
-    int block = std::stoi(parts[2]);
-
-    // Extraer todo después del número de bloque
-    size_t data_pos = str.find(parts[2]) + parts[2].size();
-    std::string data = trim(str.substr(data_pos));
-
-    // TODO: Llamar a la función real para escribir el bloque
-    // Ejemplo: disk.write_block(block, data);
-    std::cout << "[DISK] Escribir en bloque " << block << ": \"" << data << "\"\n";
-
   } else if (subcmd == "info") {
-    // TODO: Mostrar información real del disco
-    // Ejemplo: disk.print_info();
     std::cout << "[DISK] Información del disco:\n";
-    std::cout << "[SIMULACIÓN] Total de bloques usados: (n)\n";
-
+    disk->printDiskInfo();
+  } else if (subcmd == "reset") {
+    cout << "[DISK] Reiniciando disco...\n";
+    delete disk;
+    // Recreate disk with default parameters
+    disk = new Disk("Megatron", 8,8,8,512,4);
   } else {
-    std::cerr << "Error: subcomando .disk desconocido\n";
+    std::cerr << "Error: subcomando disk desconocido\n";
   }
 }
 
 void handle_schema_command(const std::string &str) {
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
-    std::cerr << "Uso: .schema [addcsv <archivo> <tabla> | print]\n";
+    std::cerr << "Uso: schema [addcsv <archivo> <tabla> | print]\n";
     return;
   }
 
@@ -326,68 +317,62 @@ void handle_schema_command(const std::string &str) {
 
   if (subcmd == "addcsv") {
     if (parts.size() < 4) {
-      std::cerr << "Uso: .schema addcsv <archivo.csv> <nombre_tabla>\n";
+      std::cerr << "Uso: schema addcsv <archivo.csv> <nombre_tabla>\n";
       return;
     }
     const std::string &archivo = parts[2];
     const std::string &tabla = parts[3];
 
-    // TODO: Llamar schema_addcsv(archivo, tabla);
     std::cout << "[SCHEMA] Agregar CSV: archivo=\"" << archivo
               << "\", tabla=\"" << tabla << "\"\n";
-
+    schemas->uploadCsv(archivo, tabla);
   } else if (subcmd == "print") {
-    // TODO: Llamar schema_print();
     std::cout << "[SCHEMA] Mostrar todas las tablas registradas\n";
-
+    schemas->printSchema();
   } else {
-    std::cerr << "Subcomando .schema desconocido\n";
+    std::cerr << "Subcomando schema desconocido\n";
   }
 }
 
 void handle_buffer_command(const std::string &str) {
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
-    std::cerr << "Uso: .buffer [show|read <id>|type|stats]\n";
+    std::cerr << "Uso: buffer [show|read <id>|type|stats]\n";
     return;
   }
 
   const std::string &subcmd = to_lower(parts[1]);
 
   if (subcmd == "show") {
-    // TODO: Llamar buffer_show();
     std::cout << "[BUFFER] Mostrar contenido del buffer\n";
-
+    bufferPool->print(0,'y');
   } else if (subcmd == "read") {
     if (parts.size() < 3) {
-      std::cerr << "Uso: .buffer read <bloque_id>\n";
+      std::cerr << "Uso: buffer read <bloque_id>\n";
       return;
     }
     try {
       int id = std::stoi(parts[2]);
-      // TODO: Llamar buffer_read(id);
       std::cout << "[BUFFER] Leer bloque " << id << "\n";
+      cout << bufferPool->requestPage(id, 'r') <<endl;
     } catch (...) {
       std::cerr << "Error: bloque_id inválido.\n";
     }
 
   } else if (subcmd == "type") {
-    // TODO: Llamar buffer_show_type();
-    std::cout << "[BUFFER] Mostrar política de reemplazo\n";
-
+    std::cout << "[BUFFER] política de reemplazo:"<<bufferPool->type()<<'\n';
   } else if (subcmd == "stats") {
-    // TODO: Llamar buffer_show_stats();
-    std::cout << "[BUFFER] Mostrar estadísticas del buffer\n";
-
+    std::cout << "[BUFFER] estadísticas del buffer\n";
+    bufferPool->printEstadistic();
   } else {
-    std::cerr << "Subcomando .buffer desconocido\n";
+    std::cerr << "Subcomando buffer desconocido\n";
   }
 }
 
 void handle_file_command(const std::string &str) {
   auto parts = split(str, ' ');
   if (parts.size() < 3) {
-    std::cerr << "Uso: .file [open|find|size] <nombre_archivo>\n";
+    std::cerr << "Uso: file [open|find|size] <nombre_archivo>\n";
     return;
   }
 
@@ -395,19 +380,23 @@ void handle_file_command(const std::string &str) {
   const std::string &filename = parts[2];
 
   if (subcmd == "open") {
-    // TODO: Llamar file_open(filename);
     std::cout << "[FILE] Abrir archivo \"" << filename << "\"\n";
-
+    File file(filename);
   } else if (subcmd == "find") {
-    // TODO: Llamar file_find(filename);
-    std::cout << "[FILE] Buscar archivo \"" << filename << "\"\n";
-
+    std::cout << "[FILE] Buscando archivo \"" << filename << "\"\n";
+    if (tableFile->findFile(filename)) {
+      cout<<"Archivo "<<filename<< " existe en disco\n";
+    } else {
+      cout<<"Archivo "<<filename<< " NO existe en disco\n";
+    }
   } else if (subcmd == "size") {
-    // TODO: Llamar file_size(filename);
     std::cout << "[FILE] Tamaño de archivo \"" << filename << "\"\n";
-
+    File file(filename);
+    int c = 1;
+    while (file.nextBlock()) { c++; }
+    cout<<"Tamaño de "<<filename<<": "<<c*file.getCapacity()<<'\n';
   } else {
-    std::cerr << "Subcomando .file desconocido\n";
+    std::cerr << "Subcomando file desconocido\n";
   }
 }
 
@@ -415,7 +404,7 @@ void handle_hashd_command(const std::string &str, Directory &d) {
   //HASH DEBUG hashd
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
-    std::cerr << "Uso: .hashd <insert|delete|update|search|display> [args...]\n";
+    std::cerr << "Uso: hashd <insert|delete|update|search|display> [args...]\n";
     return;
   }
 

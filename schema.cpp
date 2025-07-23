@@ -71,15 +71,7 @@ SchemaManager::SchemaManager() {
   while (schemafile.nextBlock()) {
     content += schemafile.accessBlock();
   }
-  std::cout<<RED"SCHEMAfile content: "<<content<<std::endl<<RESET;
-  schemafile.close();
-  this->schemas = parseSchemas(content);
-  for (auto& i : schemas) {
-    std::cout<<BOLD<<GREEN<<i.schemaName<<"\n"<<RESET;
-    for (auto& j : i.fields) {
-      std::cout<<j.field_name<< "("<<j.size<<")"<<fieldTypeToString(j.type)<<'\n';
-    }
-  }
+  schemas = parseSchemas(content);
 }
 
 /*
@@ -239,7 +231,13 @@ Schema SchemaManager::getSchema(string schemaName) {
 }
 
 void SchemaManager::printSchema(){
-  
+  for (auto& i : schemas) {
+    std::cout << BOLD << GREEN << i.schemaName << "\n" << RESET;
+    for (auto& j : i.fields) {
+      std::cout << j.field_name << " (" << j.size << ") " 
+                << fieldTypeToString(j.type) << '\n';
+    }
+  }
 }
 
 bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
@@ -250,7 +248,12 @@ bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
   schema.fields = csv.getFields();
 
   if (schema.fields.size() == 0) {
-    std::cerr<<"NO SE PUDO AGREGAR NO HAY CONTENIDO";
+    std::cerr<<"NO SE PUDO AGREGAR NO HAY CONTENIDO\n";
+    return false;
+  }
+
+  if (findSchema(schema.schemaName)) {
+    std::cout<<"[INFO] Ya existe una relacion con ese nombre\n";
     return false;
   }
 

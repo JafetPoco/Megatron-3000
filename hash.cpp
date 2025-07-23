@@ -1,7 +1,12 @@
 #include "hash.h"
+#include "file.h"
+#include "schema.h"
 #include <fstream>
 #include <sstream>
 #include <string>
+
+#define DEBUG
+//#define VERBOSE
 
 void menu() {
   cout << "--------------------" << endl;
@@ -40,16 +45,15 @@ void Directory::grow(void) {
 }
 
 void Directory::shrink(void) {
-  size_t i;
   //flag = 1;
-  for (i = 0; i < buckets.size(); i++) {
+  for (size_t i = 0; i < buckets.size(); i++) {
     if (buckets[i]->getDepth() == global_depth) {
       //flag = 0;
       return;
     }
   }
   global_depth--;
-  for (i = 0; i < 1 << global_depth; i++)
+  for (int i = 0; i < 1 << global_depth; i++)
     buckets.pop_back();
 }
 
@@ -115,26 +119,32 @@ void Directory::insert(int key, int value, bool reinserted) {
   int bucket_no = hash(key);
   int status = buckets[bucket_no]->insert(key, value);
   if (status == 1) {
+    #ifdef VERBOSE
     if (!reinserted)
       cout << "Inserted key " << key << " in bucket " << bucket_id(bucket_no)
            << endl;
     else
       cout << "Moved key " << key << " to bucket " << bucket_id(bucket_no)
            << endl;
+    #endif
   } else if (status == 0) {
     split(bucket_no);
     insert(key, value, reinserted);
   } else {
+    #ifdef VERBOSE
     cout << "Key " << key << " already exists in bucket "
          << bucket_id(bucket_no) << endl;
+    #endif
   }
 }
 
 void Directory::remove(int key, int mode) {
   int bucket_no = hash(key);
   if (buckets[bucket_no]->remove(key))
+  #ifdef VERBOSE
     cout << "Deleted key " << key << " from bucket " << bucket_id(bucket_no)
          << endl;
+  #endif
   if (mode > 0) {
     if (buckets[bucket_no]->isEmpty() && buckets[bucket_no]->getDepth() > 1)
       merge(bucket_no);
@@ -151,8 +161,10 @@ void Directory::update(int key, int value) {
 
 int Directory::search(int key) {
   int bucket_no = hash(key);
+  #ifdef VERBOSE
   cout << "Searching key " << key << " in bucket " << bucket_id(bucket_no)
        << endl;
+  #endif
   return buckets[bucket_no]->search(key);
 }
 
@@ -199,7 +211,9 @@ int Bucket::remove(int key) {
     values.erase(it);
     return 1;
   } else {
+    #ifdef VERBOSE
     cout << "Cannot remove : This key does not exists" << endl;
+    #endif
     return 0;
   }
 }
@@ -209,10 +223,14 @@ int Bucket::update(int key, int value) {
   it = values.find(key);
   if (it != values.end()) {
     values[key] = value;
+    #ifdef VERBOSE
     cout << "Value updated" << endl;
+    #endif
     return 1;
   } else {
+    #ifdef VERBOSE
     cout << "Cannot update : This key does not exists" << endl;
+    #endif
     return 0;
   }
 }
@@ -221,10 +239,14 @@ int Bucket::search(int key) {
   std::map<int, int >::iterator it;
   it = values.find(key);
   if (it != values.end()) {
+    #ifdef VERBOSE
     cout << "Value = " << it->second << endl;
+    #endif
     return (it->second);
   } else {
+    #ifdef VERBOSE
     cout << "This key does not exists" << endl;
+    #endif
   }
   return 0;
 }
@@ -271,7 +293,7 @@ void Bucket::display() {
 
 std::string Directory::getSerialized() const {
   std::ostringstream out;
-  out << global_depth << " " << bucket_size << "\n";
+  out << global_depth << " " << bucket_size << " ";
   std::set<Bucket *> written;
 
   for (Bucket *b : buckets) {
@@ -282,7 +304,7 @@ std::string Directory::getSerialized() const {
       for (const auto &[k, v] : kv) {
         out << " " << k << " " << v;
       }
-      out << "\n";
+      out << " ";
     }
   }
 
@@ -329,6 +351,21 @@ bool Directory::readSerialized(const std::string &serialized) {
 
 void Directory::persist(const std::string &filename) {
   std::string data = getSerialized();
-  //TODO escribir a disco
-}
 
+  File file(filename, 'w');
+  size_t cap = file.getCapacity();
+  auto chunks = splitStringChunks(data, cap);
+
+  for (size_t i = 0; i < chunks.size(); ++i) {
+    std::string &payload = file.accessBlock();
+    payload = chunks[i];
+
+    if (i + 1 < chunks.size()) {
+      if (!file.nextBlock()) {
+        file.addBlock();
+      }
+    }
+  }
+
+  file.close();
+}

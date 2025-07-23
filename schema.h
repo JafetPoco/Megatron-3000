@@ -92,4 +92,6 @@ private:
   std::vector<std::string> parseLine(const std::string& line) const;
   FieldType                inferValueType(const std::string& value) const;
 };
+
+std::vector<std::string> splitStringChunks(const std::string& input, size_t chunkSize);
 #endif

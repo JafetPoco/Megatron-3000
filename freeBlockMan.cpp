@@ -1,5 +1,5 @@
-#define DEBUG
-#define VERBOSE
+//#define DEBUG
+//#define VERBOSE
 #include "freeBlockMan.h"
 #include <iostream>
 
