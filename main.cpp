@@ -29,9 +29,6 @@ int main() {
 
   File::set_capacity(blockCapacity);
 
-  SchemaManager test;
-  test.uploadCsv("titanic.csv", "titanic");
-  // test.printSchema();
   bufferPool->clearBuffer();
   main_cli();
 }

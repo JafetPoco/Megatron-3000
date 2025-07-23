@@ -44,6 +44,7 @@ public:
   virtual void print(int id, char color) = 0;
   virtual void printEstadistic() = 0;
   virtual void clearBuffer() = 0;
+  virtual string type() = 0;
   ~BufPool() = default;
 };
 
@@ -69,6 +70,7 @@ public:
   void print(int id, char color);
   void printEstadistic();
   void clearBuffer();
+  string type() {return "lru";}
 };
 
 class Clock : public BufPool {
@@ -93,6 +95,7 @@ public:
   void print(int id, char color);
   void printEstadistic();
   void clearBuffer();
+  string type() {return "clock";}
 };
 
 #endif //buf_pool

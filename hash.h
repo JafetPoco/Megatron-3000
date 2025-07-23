@@ -36,14 +36,19 @@ class Directory {
   void split(int bucket_no);
   void merge(int bucket_no);
   string bucket_id(int n);
+  std::string getSerialized() const;
 
 public:
   Directory(int depth, int bucket_size);
+  Directory(string file);
   void insert(int key, int value, bool reinserted);
   void remove(int key, int mode);
   void update(int key, int value);
   int search(int key);
   void display(bool duplicates);
+
+  bool readSerialized(const std::string &serialized);
+  void persist(const std::string &outname);;
 };
 
 void menu();

@@ -1,4 +1,6 @@
 #include "hash.h"
+#include <fstream>
+#include <sstream>
 #include <string>
 
 void menu() {
@@ -265,5 +267,68 @@ void Bucket::display() {
   for (it = values.begin(); it != values.end(); it++)
     cout << it->first << " ";
   cout << endl;
+}
+
+std::string Directory::getSerialized() const {
+  std::ostringstream out;
+  out << global_depth << " " << bucket_size << "\n";
+  std::set<Bucket *> written;
+
+  for (Bucket *b : buckets) {
+    if (written.find(b) == written.end()) {
+      written.insert(b);
+      out << b->getDepth();
+      std::map<int, int> kv = b->copy();
+      for (const auto &[k, v] : kv) {
+        out << " " << k << " " << v;
+      }
+      out << "\n";
+    }
+  }
+
+  return out.str();
+}
+
+bool Directory::readSerialized(const std::string &serialized) {
+  std::istringstream ss(serialized);
+  int new_global_depth, new_bucket_size;
+
+  if (!(ss >> new_global_depth >> new_bucket_size))
+    return false;
+
+  // Limpiar estructura actual
+  for (auto *b : buckets) delete b;
+  buckets.clear();
+
+  global_depth = new_global_depth;
+  bucket_size = new_bucket_size;
+
+  int dir_size = 1 << global_depth;
+  std::vector<Bucket *> loaded_buckets;
+
+  for (int i = 0; i < dir_size; ++i) {
+    int depth;
+    if (!(ss >> depth))
+      return false;
+
+    Bucket *b = new Bucket(depth, bucket_size);
+    int key, value;
+
+    while (ss >> key >> value) {
+      b->insert(key, value);
+      if (ss.peek() == '\n') break;
+    }
+
+    loaded_buckets.push_back(b);
+    ss.ignore(); // Skip newline
+  }
+
+  buckets = loaded_buckets;
+  return true;
+}
+
+void Directory::persist(const std::string &filename) {
+  std::string data = getSerialized();
+  //TODO escribir a disco
 }
 

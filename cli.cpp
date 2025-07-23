@@ -412,6 +412,7 @@ void handle_file_command(const std::string &str) {
 }
 
 void handle_hashd_command(const std::string &str, Directory &d) {
+  //HASH DEBUG hashd
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
     std::cerr << "Uso: .hashd <insert|delete|update|search|display> [args...]\n";
