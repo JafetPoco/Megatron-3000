@@ -13,14 +13,44 @@
 std::string fieldTypeToString(FieldType type) {
   switch (type) {
     case INT:
-      return "INT";
+      return "int";
     case STRING:
-      return "STRING";
+      return "string";
     case DOUBLE:
-      return "DOUBLE";
+      return "double";
     default:
       return "UNKNOWN";
   }
+}
+FieldType parseType(const std::string& value) {
+  if (value.empty()) {
+    return FieldType::INT;  // No alteramos el tipo si está vacío
+  }
+
+  // 1) Intentar INT
+  try {
+    size_t idx = 0;
+    std::stol(value, &idx);
+    if (idx == value.size()) {
+      return FieldType::INT;
+    }
+  } catch (...) {
+    // no es INT
+  }
+
+  // 2) Intentar DOUBLE
+  try {
+    size_t idx = 0;
+    std::stod(value, &idx);
+    if (idx == value.size()) {
+      return FieldType::DOUBLE;
+    }
+  } catch (...) {
+    // no es DOUBLE
+  }
+
+  // 3) Si falla todo, STRING
+  return FieldType::STRING;
 }
 
 std::vector<std::string> splitString(std::string s, char delimiter) {
@@ -178,8 +208,8 @@ std::vector<Schema> SchemaManager::parseSchemas(const std::string &input) {
     for (size_t i = 1; i + 2 < tokens.size(); i += 3) {
       Field f;
       f.field_name = tokens[i];
-      // f.type = parseType(tokens[i + 1]);
-      f.type = FieldType::INT;
+      f.type = parseType(tokens[i + 1]);
+      // f.type = FieldType::INT;
       f.size = std::stoi(tokens[i + 2]);
       schema.fields.push_back(f);
     }
@@ -206,4 +236,66 @@ Schema SchemaManager::getSchema(string schemaName) {
     }
   }
   throw std::runtime_error("Schema not found: " + schemaName);
+}
+
+void SchemaManager::printSchema(){
+  
+}
+
+bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
+  CSVProcessor csv(filename);
+  csv.process();
+  Schema schema;
+  schema.schemaName = newSchemaName;
+  schema.fields = csv.getFields();
+
+  if (schema.fields.size() == 0) {
+    std::cerr<<"NO SE PUDO AGREGAR NO HAY CONTENIDO";
+    return false;
+  }
+
+  schemas.push_back(schema);
+  persist();
+  return true;
+}
+
+std::vector<std::string> splitStringChunks(const std::string& input, size_t chunkSize) {
+    std::vector<std::string> result;
+    size_t len = input.size();
+
+    for (size_t i = 0; i < len; i += chunkSize) {
+        result.push_back(input.substr(i, chunkSize));
+    }
+
+    return result;
+}
+
+void SchemaManager::persist(){
+  string writeCont;
+  for (auto &schema : schemas) {
+    std::ostringstream oss;
+    oss << schema.schemaName;
+    for (const auto& field : schema.fields) {
+        oss << "#" << field.field_name
+            << "#" << fieldTypeToString(field.type)
+            << "#" << field.size;
+    }
+    writeCont+=oss.str()+"\n";
+  }
+
+  std::cout<<writeCont;
+  File schemafile("schema", 'w');
+  if (writeCont.size() > schemafile.getCapacity()) {
+    auto chunks=splitStringChunks(writeCont, schemafile.getCapacity());
+    for (auto& chunk: chunks) {
+      string& payload=schemafile.accessBlock();
+      payload = chunk;
+      if (!schemafile.nextBlock()) schemafile.addBlock();
+    }
+  }
+  else {
+    string& payload = schemafile.accessBlock();
+    payload=writeCont;
+  }
+  schemafile.close();
 }

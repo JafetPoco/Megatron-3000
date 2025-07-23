@@ -21,9 +21,8 @@ struct Schema {
   std::vector<Field> fields;
 };
 
-struct Record {
-  std::vector<string> data;
-};
+using Record = std::vector<string>;
+
 
 class SchemaManager {
 private:
@@ -36,6 +35,7 @@ private:
    * */
   bool uploadFromVector(std::vector<Field> &fields);
   std::vector<Schema> parseSchemas(const std::string &input);
+  void persist();
 
 public:
   /*
@@ -47,6 +47,8 @@ public:
   bool findSchema(string schemaName);
 
   Schema getSchema(string schemaName);
+
+  bool uploadCsv(string csvFilename, string newSchemaName);
 
   /*
    * @brief

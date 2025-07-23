@@ -28,12 +28,8 @@ int main() {
 
   File::set_capacity(blockCapacity);
 
-  File schemafile("schema", 'w');
-  string& page =schemafile.accessBlock() ;
-  page=  "titanic#PassengerId#long#3#Survived#long#1#PClass#long#4#Name#string#58\ntest#num#long#3#decimal#double#6#word#string#12\nfloats#numf#float#4\n";
-  schemafile.close();
-
   SchemaManager test;
+  test.uploadCsv("titanic.csv", "titanic");
   // test.printSchema();
   bufferPool->clearBuffer();
 }
