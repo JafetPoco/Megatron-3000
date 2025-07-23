@@ -53,8 +53,8 @@ void Directory::shrink(void) {
 
 void Directory::split(int bucket_no) {
   int local_depth, pair_index, index_diff, dir_size, i;
-  map<int, string> temp;
-  map<int, string>::iterator it;
+  map<int, int> temp;
+  map<int, int>::iterator it;
 
   local_depth = buckets[bucket_no]->increaseDepth();
   if (local_depth > global_depth)
@@ -109,7 +109,7 @@ string Directory::bucket_id(int n) {
   return s;
 }
 
-void Directory::insert(int key, string value, bool reinserted) {
+void Directory::insert(int key, int value, bool reinserted) {
   int bucket_no = hash(key);
   int status = buckets[bucket_no]->insert(key, value);
   if (status == 1) {
@@ -142,12 +142,12 @@ void Directory::remove(int key, int mode) {
   }
 }
 
-void Directory::update(int key, string value) {
+void Directory::update(int key, int value) {
   int bucket_no = hash(key);
   buckets[bucket_no]->update(key, value);
 }
 
-string Directory::search(int key) {
+int Directory::search(int key) {
   int bucket_no = hash(key);
   cout << "Searching key " << key << " in bucket " << bucket_id(bucket_no)
        << endl;
@@ -179,8 +179,8 @@ Bucket::Bucket(int depth, int size) {
   this->size = size;
 }
 
-int Bucket::insert(int key, string value) {
-  std::map<int, string>::iterator it;
+int Bucket::insert(int key, int value) {
+  std::map<int, int>::iterator it;
   it = values.find(key);
   if (it != values.end())
     return -1;
@@ -191,7 +191,7 @@ int Bucket::insert(int key, string value) {
 }
 
 int Bucket::remove(int key) {
-  std::map<int, string>::iterator it;
+  std::map<int, int>::iterator it;
   it = values.find(key);
   if (it != values.end()) {
     values.erase(it);
@@ -202,8 +202,8 @@ int Bucket::remove(int key) {
   }
 }
 
-int Bucket::update(int key, string value) {
-  std::map<int, string>::iterator it;
+int Bucket::update(int key, int value) {
+  std::map<int, int>::iterator it;
   it = values.find(key);
   if (it != values.end()) {
     values[key] = value;
@@ -215,8 +215,8 @@ int Bucket::update(int key, string value) {
   }
 }
 
-string Bucket::search(int key) {
-  std::map<int, string>::iterator it;
+int Bucket::search(int key) {
+  std::map<int, int >::iterator it;
   it = values.find(key);
   if (it != values.end()) {
     cout << "Value = " << it->second << endl;
@@ -224,7 +224,7 @@ string Bucket::search(int key) {
   } else {
     cout << "This key does not exists" << endl;
   }
-  return "";
+  return 0;
 }
 
 int Bucket::isFull(void) {
@@ -253,15 +253,15 @@ int Bucket::decreaseDepth(void) {
   return depth;
 }
 
-std::map<int, string> Bucket::copy(void) {
-  std::map<int, string> temp(values.begin(), values.end());
+std::map<int, int> Bucket::copy(void) {
+  std::map<int, int> temp(values.begin(), values.end());
   return temp;
 }
 
 void Bucket::clear(void) { values.clear(); }
 
 void Bucket::display() {
-  std::map<int, string>::iterator it;
+  std::map<int, int>::iterator it;
   for (it = values.begin(); it != values.end(); it++)
     cout << it->first << " ";
   cout << endl;

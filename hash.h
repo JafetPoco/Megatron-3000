@@ -8,20 +8,20 @@
 using namespace std;
 class Bucket {
   int depth, size;
-  std::map<int, string> values;
+  std::map<int, int> values;
 
 public:
   Bucket(int depth, int size);
-  int insert(int key, string value);
+  int insert(int key, int value);
   int remove(int key);
-  int update(int key, string value);
-  string search(int key);
+  int update(int key, int value);
+  int search(int key);
   int isFull(void);
   int isEmpty(void);
   int getDepth(void);
   int increaseDepth(void);
   int decreaseDepth(void);
-  std::map<int, string> copy(void);
+  std::map<int, int> copy(void);
   void clear(void);
   void display(void);
 };
@@ -39,10 +39,10 @@ class Directory {
 
 public:
   Directory(int depth, int bucket_size);
-  void insert(int key, string value, bool reinserted);
+  void insert(int key, int value, bool reinserted);
   void remove(int key, int mode);
-  void update(int key, string value);
-  string search(int key);
+  void update(int key, int value);
+  int search(int key);
   void display(bool duplicates);
 };
 
