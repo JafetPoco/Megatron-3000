@@ -8,6 +8,7 @@
 #include "tableFiles.h"
 #include "globals.h"
 #include <iostream>
+#include "cli.h"
 using namespace std;
 
 Disk* disk = nullptr;
@@ -32,6 +33,7 @@ int main() {
   test.uploadCsv("titanic.csv", "titanic");
   // test.printSchema();
   bufferPool->clearBuffer();
+  main_cli();
 }
 
 /****************************************************/
