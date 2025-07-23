@@ -72,6 +72,19 @@ int main_cli() {
       handle_disk_command(line);
       continue;
     }
+
+    //buffer
+    if (line.rfind(".buffer", 0) == 0) {
+      handle_buffer_command(line);
+      continue;
+    }
+
+    //schema
+    if (line.rfind(".schema", 0) == 0) {
+      handle_schema_command(line);
+      continue;
+    }
+
     // Extraer comando inicial
     std::stringstream ss(line);
     std::string cmd;
@@ -173,14 +186,40 @@ void handle_addcsv(const std::string &sql) {
 }
 
 void handle_help(const std::string&) {
-    std::cout << "Comandos soportados:\n";
-    std::cout << "  SELECT columnas FROM tabla [WHERE condición];\n";
-    std::cout << "  DELETE FROM tabla [WHERE condición];\n";
-    std::cout << "  INSERT INTO tabla (col1, col2, ...) VALUES (val1, val2, ...);\n";
-    std::cout << "  addcsv archivo.csv tabla\n";
-    std::cout << "  exit  - salir del programa\n";
-    std::cout << "Notas:\n";
-    std::cout << "  - Las flechas ↑ ↓ navegan el historial\n";
+  std::cout << "Comandos soportados:\n\n";
+
+  std::cout << "SQL:\n";
+  std::cout << "  SELECT columnas FROM tabla [WHERE condición];\n";
+  std::cout << "  DELETE FROM tabla [WHERE condición];\n";
+  std::cout << "  INSERT INTO tabla (col1, col2, ...) VALUES (val1, val2, ...);\n";
+  std::cout << "  addcsv archivo.csv tabla       # Importar CSV en una tabla\n\n";
+
+  std::cout << "Comandos especiales:\n";
+
+  std::cout << "  .disk open block <n>           # Abrir bloque desde disco\n";
+  std::cout << "  .disk open sector <n>          # Abrir sector desde disco\n";
+  std::cout << "  .disk write <bloque> <datos>   # Escribir datos en un bloque\n";
+  std::cout << "  .disk info                     # Mostrar info del disco\n\n";
+
+  std::cout << "  .buffer show                   # Mostrar contenido del buffer pool\n";
+  std::cout << "  .buffer read <n>               # Leer página/bloque en buffer\n";
+  std::cout << "  .buffer type                   # Mostrar estrategia de reemplazo\n";
+  std::cout << "  .buffer stats                  # Estadísticas del buffer\n\n";
+
+  std::cout << "  .schema addcsv archivo tabla   # Registrar esquema a partir de CSV\n";
+  std::cout << "  .schema print                  # Mostrar tablas registradas\n\n";
+
+  std::cout << "  .file open <archivo>           # Abrir archivo\n";
+  std::cout << "  .file find <archivo>           # Buscar archivo\n";
+  std::cout << "  .file size <archivo>           # Mostrar tamaño de archivo\n\n";
+
+  std::cout << "General:\n";
+  std::cout << "  help                           # Mostrar esta ayuda\n";
+  std::cout << "  exit                           # Salir del programa\n\n";
+
+  std::cout << "Notas:\n";
+  std::cout << "  - Usa las flechas ↑ ↓ para navegar por el historial.\n";
+  std::cout << "  - Todos los comandos son insensibles a mayúsculas.\n";
 }
 
 void handle_disk_command(const std::string &str) {
@@ -273,3 +312,100 @@ void handle_disk_command(const std::string &str) {
     std::cerr << "Error: subcomando .disk desconocido\n";
   }
 }
+
+void handle_schema_command(const std::string &str) {
+  auto parts = split(str, ' ');
+  if (parts.size() < 2) {
+    std::cerr << "Uso: .schema [addcsv <archivo> <tabla> | print]\n";
+    return;
+  }
+
+  const std::string &subcmd = to_lower(parts[1]);
+
+  if (subcmd == "addcsv") {
+    if (parts.size() < 4) {
+      std::cerr << "Uso: .schema addcsv <archivo.csv> <nombre_tabla>\n";
+      return;
+    }
+    const std::string &archivo = parts[2];
+    const std::string &tabla = parts[3];
+
+    // TODO: Llamar schema_addcsv(archivo, tabla);
+    std::cout << "[SCHEMA] Agregar CSV: archivo=\"" << archivo
+              << "\", tabla=\"" << tabla << "\"\n";
+
+  } else if (subcmd == "print") {
+    // TODO: Llamar schema_print();
+    std::cout << "[SCHEMA] Mostrar todas las tablas registradas\n";
+
+  } else {
+    std::cerr << "Subcomando .schema desconocido\n";
+  }
+}
+
+void handle_buffer_command(const std::string &str) {
+  auto parts = split(str, ' ');
+  if (parts.size() < 2) {
+    std::cerr << "Uso: .buffer [show|read <id>|type|stats]\n";
+    return;
+  }
+
+  const std::string &subcmd = to_lower(parts[1]);
+
+  if (subcmd == "show") {
+    // TODO: Llamar buffer_show();
+    std::cout << "[BUFFER] Mostrar contenido del buffer\n";
+
+  } else if (subcmd == "read") {
+    if (parts.size() < 3) {
+      std::cerr << "Uso: .buffer read <bloque_id>\n";
+      return;
+    }
+    try {
+      int id = std::stoi(parts[2]);
+      // TODO: Llamar buffer_read(id);
+      std::cout << "[BUFFER] Leer bloque " << id << "\n";
+    } catch (...) {
+      std::cerr << "Error: bloque_id inválido.\n";
+    }
+
+  } else if (subcmd == "type") {
+    // TODO: Llamar buffer_show_type();
+    std::cout << "[BUFFER] Mostrar política de reemplazo\n";
+
+  } else if (subcmd == "stats") {
+    // TODO: Llamar buffer_show_stats();
+    std::cout << "[BUFFER] Mostrar estadísticas del buffer\n";
+
+  } else {
+    std::cerr << "Subcomando .buffer desconocido\n";
+  }
+}
+
+void handle_file_command(const std::string &str) {
+  auto parts = split(str, ' ');
+  if (parts.size() < 3) {
+    std::cerr << "Uso: .file [open|find|size] <nombre_archivo>\n";
+    return;
+  }
+
+  const std::string &subcmd = to_lower(parts[1]);
+  const std::string &filename = parts[2];
+
+  if (subcmd == "open") {
+    // TODO: Llamar file_open(filename);
+    std::cout << "[FILE] Abrir archivo \"" << filename << "\"\n";
+
+  } else if (subcmd == "find") {
+    // TODO: Llamar file_find(filename);
+    std::cout << "[FILE] Buscar archivo \"" << filename << "\"\n";
+
+  } else if (subcmd == "size") {
+    // TODO: Llamar file_size(filename);
+    std::cout << "[FILE] Tamaño de archivo \"" << filename << "\"\n";
+
+  } else {
+    std::cerr << "Subcomando .file desconocido\n";
+  }
+}
+

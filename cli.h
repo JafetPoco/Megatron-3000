@@ -62,5 +62,12 @@ void handle_help(const std::string &dummy);
  */
 void handle_disk_command(const std::string &str);
 
+void handle_buffer_command(const std::string &str);
+
+void handle_schema_command(const std::string &str);
+
+void handle_file_command(const std::string &str);
+
+
 #endif // CLI_H
 
