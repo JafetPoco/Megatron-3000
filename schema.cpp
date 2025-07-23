@@ -3,25 +3,25 @@
 #include <ostream>
 #include <sstream>
 #include <vector>
+#include "bufPool.h"
 #include "file.h"
 
 #define DEBUG
 #define VERBOSE
-
-class CSVProcessor {
-public:
-  explicit CSVProcessor(const std::string& filename);
-  void process();
-  const std::vector<Field>& getFields() const;
-
-private:
-  std::string            filename_;
-  std::vector<Field>     fields_;
-
-  std::vector<std::string> parseLine(const std::string& line) const;
-  FieldType                inferValueType(const std::string& value) const;
-};
-std::vector<Schema> parseSchemas(const std::string &input);
+#define BOLD        "\033[1m"
+#define UNDERLINE   "\033[4m"
+std::string fieldTypeToString(FieldType type) {
+  switch (type) {
+    case INT:
+      return "INT";
+    case STRING:
+      return "STRING";
+    case DOUBLE:
+      return "DOUBLE";
+    default:
+      return "UNKNOWN";
+  }
+}
 
 std::vector<std::string> splitString(std::string s, char delimiter) {
   std::vector<std::string> tokens;
@@ -37,13 +37,25 @@ std::vector<std::string> splitString(std::string s, char delimiter) {
 
 SchemaManager::SchemaManager() {
   File schemafile("schema", 'r');
-  string content;
+  string content=schemafile.accessBlock();
+  while (schemafile.nextBlock()) {
+    content += schemafile.accessBlock();
+  }
+  std::cout<<RED"SCHEMAfile content: "<<content<<std::endl<<RESET;
+  schemafile.close();
+  this->schemas = parseSchemas(content);
+  for (auto& i : schemas) {
+    std::cout<<BOLD<<GREEN<<i.schemaName<<"\n"<<RESET;
+    for (auto& j : i.fields) {
+      std::cout<<j.field_name<< "("<<j.size<<")"<<fieldTypeToString(j.type)<<'\n';
+    }
+  }
 }
 
-
-#include <fstream>
-#include <stdexcept>
-#include <algorithm>
+/*
+ * CSVProcessor implementation 
+ * 
+ * */
 
 CSVProcessor::CSVProcessor(const std::string& filename)
   : filename_(filename)
@@ -138,7 +150,7 @@ FieldType CSVProcessor::inferValueType(const std::string& value) const {
   return FieldType::STRING;
 }
 
-std::vector<Schema> parseSchemas(const std::string &input) {
+std::vector<Schema> SchemaManager::parseSchemas(const std::string &input) {
   std::vector<Schema> schemas;
   std::istringstream stream(input);
   std::string line;
@@ -166,7 +178,8 @@ std::vector<Schema> parseSchemas(const std::string &input) {
     for (size_t i = 1; i + 2 < tokens.size(); i += 3) {
       Field f;
       f.field_name = tokens[i];
-      f.type = parseType(tokens[i + 1]);
+      // f.type = parseType(tokens[i + 1]);
+      f.type = FieldType::INT;
       f.size = std::stoi(tokens[i + 2]);
       schema.fields.push_back(f);
     }
@@ -177,3 +190,20 @@ std::vector<Schema> parseSchemas(const std::string &input) {
   return schemas;
 }
 
+bool SchemaManager::findSchema(string schemaName) {
+  for (auto& i : schemas) {
+    if (i.schemaName == schemaName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Schema SchemaManager::getSchema(string schemaName) {
+  for (auto& i : schemas) {
+    if (i.schemaName == schemaName) {
+      return i;
+    }
+  }
+  throw std::runtime_error("Schema not found: " + schemaName);
+}

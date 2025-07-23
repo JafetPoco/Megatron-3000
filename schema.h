@@ -13,12 +13,16 @@ enum FieldType { INT, STRING, DOUBLE };
 struct Field {
   std::string field_name;
   size_t size = 0;
-  FieldType type = FieldType::INT;
+  FieldType type = FieldType::STRING;
 };
 
 struct Schema {
   string schemaName;
   std::vector<Field> fields;
+};
+
+struct Record {
+  std::vector<string> data;
 };
 
 class SchemaManager {
@@ -41,6 +45,8 @@ public:
   SchemaManager();
 
   bool findSchema(string schemaName);
+
+  Schema getSchema(string schemaName);
 
   /*
    * @brief
@@ -68,5 +74,20 @@ public:
    * @return El tamaño del registro en bytes
    * */
   size_t getRecordSize(string schemaName) const;
+};
+
+class CSVProcessor {
+public:
+  explicit CSVProcessor(const std::string& filename);
+  void process();
+  const std::vector<Field>& getFields() const;
+  std::vector<Record> getData();
+
+private:
+  std::string            filename_;
+  std::vector<Field>     fields_;
+
+  std::vector<std::string> parseLine(const std::string& line) const;
+  FieldType                inferValueType(const std::string& value) const;
 };
 #endif

@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-#define DEBUG
+// #define DEBUG
 
 string blockidTOString(BlockID id) {
   std::ostringstream oss;
@@ -47,8 +47,8 @@ bool File::close() {
   string& currentBlock = bufferPool->requestPage(currentBlockID, mode);
   currentBlock = blockidTOString(getNext()) + payload; // Save the block ID and payload
 
-  string& clone = bufferPool->requestPage(currentBlockID, mode);
 #ifdef DEBUG
+  string& clone = bufferPool->requestPage(currentBlockID, mode);
   std::cerr<<"payload: " << payload << std::endl;
   std::cerr << "FILE: CLOSE() Guardando datos en el bloque " << currentBlockID << ": " << currentBlock << std::endl;
 std::cerr<<"clone string "<< clone << std::endl;
