@@ -2,6 +2,8 @@
 #define CLI_H
 
 #include <string>
+#include "hash.h"
+#include "globals.h"
 
 /**
  * @file cli.h
@@ -68,6 +70,6 @@ void handle_schema_command(const std::string &str);
 
 void handle_file_command(const std::string &str);
 
-
+void handle_hashd_command(const std::string &str, Directory &d);
 #endif // CLI_H
 

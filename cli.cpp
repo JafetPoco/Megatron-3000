@@ -262,7 +262,8 @@ void handle_disk_command(const std::string &str) {
         return;
       }
 
-    } else if (entity == "sector") {
+    } 
+    else if (entity == "sector") {
       if (parts.size() < 4) {
         std::cerr << "Error: .disk open sector requiere un número de sector\n";
         return;
@@ -287,6 +288,7 @@ void handle_disk_command(const std::string &str) {
       return;
     }
   }
+  //WRITE
   else if (subcmd == "write") {
     if (parts.size() < 4) {
       std::cerr << "Error: .disk write requiere bloque y datos\n";
@@ -409,3 +411,64 @@ void handle_file_command(const std::string &str) {
   }
 }
 
+void handle_hashd_command(const std::string &str, Directory &d) {
+  auto parts = split(str, ' ');
+  if (parts.size() < 2) {
+    std::cerr << "Uso: .hashd <insert|delete|update|search|display> [args...]\n";
+    return;
+  }
+
+  const std::string &cmd = to_lower(parts[1]);
+
+  try {
+    if (cmd == "insert") {
+      if (parts.size() < 4) {
+        std::cerr << "Uso: .hashd insert <clave:int> <valor:int>\n";
+        return;
+      }
+      int key = std::stoi(parts[2]);
+      int value = std::stoi(parts[3]);
+      d.insert(key, value, 0);
+
+    } else if (cmd == "delete") {
+      if (parts.size() < 4) {
+        std::cerr << "Uso: .hashd delete <clave:int> <modo:int>\n";
+        return;
+      }
+      int key = std::stoi(parts[2]);
+      int mode = std::stoi(parts[3]);
+      d.remove(key, mode);
+
+    } else if (cmd == "update") {
+      if (parts.size() < 4) {
+        std::cerr << "Uso: .hashd update <clave:int> <nuevo_valor:int>\n";
+        return;
+      }
+      int key = std::stoi(parts[2]);
+      int value = std::stoi(parts[3]);
+      d.update(key, value);
+
+    } else if (cmd == "search") {
+      if (parts.size() < 3) {
+        std::cerr << "Uso: .hashd search <clave:int>\n";
+        return;
+      }
+      int key = std::stoi(parts[2]);
+      d.search(key);
+
+    } else if (cmd == "display") {
+      d.display(false);
+
+    } else if (cmd == "display1") {
+      d.display(true);
+
+    } else {
+      std::cerr << "Comando .hashd no reconocido: " << cmd << "\n";
+    }
+
+  } catch (const std::invalid_argument &e) {
+    std::cerr << "Error: argumentos inválidos (esperados enteros)\n";
+  } catch (const std::out_of_range &e) {
+    std::cerr << "Error: número fuera de rango\n";
+  }
+}
