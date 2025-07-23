@@ -18,6 +18,10 @@ ssize_t File::capacity = 0;
 
 File::File() : fileName(""), currentBlockID(-1), mode('r'), payload("") {}
 
+File::~File() {
+  close();
+}
+
 File::File(std::string fileName, char mode) {
   open(fileName, mode);
 }

@@ -27,6 +27,7 @@ public:
    * @note Este constructor no abre ningún archivo.
    */
   File();
+  ~File();
 
   /* * Constructor por defecto y con nombre de archivo y modo.
    * @brief Crea un objeto File con el nombre de archivo y modo especificados.
