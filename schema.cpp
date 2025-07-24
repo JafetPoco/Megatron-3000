@@ -315,12 +315,14 @@ void SchemaManager::persist() {
     }
     writeCont += oss.str() + "\n";
   }
+  // std::cout<<writeCont<<std::endl;
 
   // Crear archivo
   File schemafile("schema", 'w');
 
   // Dividir en chunks
   auto chunks = splitStringChunks(writeCont, schemafile.getCapacity());
+  // std::cout<<"chunk size: "<<chunks.size()<<std::endl;
 
   // Escribir en bloques
   for (size_t i = 0; i < chunks.size(); ++i) {
@@ -331,7 +333,6 @@ void SchemaManager::persist() {
     if (i + 1 < chunks.size()) {
       if (!schemafile.nextBlock()) {
         schemafile.addBlock();
-        schemafile.nextBlock(); // necesario para posicionarse en el nuevo
       }
     }
   }

@@ -35,4 +35,5 @@ int main() {
   schemas = new SchemaManager;
   stmg = new storageManager;
   main_cli();
+  bufferPool->clearBuffer();
 }

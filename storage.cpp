@@ -86,6 +86,7 @@ void storageManager::selectall() {
   cout << '\n';
   RecordManagerFixed rm(tableName);
   do {
+    content = table.accessBlock();
     if (content[content.size()-1] == '\n') content.pop_back();
     auto recs = rm.parseFixedData(content, schm);
     for (auto&i : recs) {
@@ -94,7 +95,6 @@ void storageManager::selectall() {
       }
       cout<<endl;
     }
-    content = table.accessBlock();
   } while (table.nextBlock());
 
   table.close(); 
@@ -123,6 +123,8 @@ void storageManager::selectColumns(const vector<string>& cols) {
     std::cerr << "[ERROR] No hay ninguna tabla cargada.\n";
     return;
   }
+
+  // Buscar índices de las columnas a mostrar
   vector<int> indices;
   for (const auto& col : cols) {
     int idx = getFieldIndex(col, schm);
@@ -130,24 +132,38 @@ void storageManager::selectColumns(const vector<string>& cols) {
       std::cerr << "[ERROR] Columna no existe: " << col << "\n";
       return;
     }
-    cout<<schm.fields[idx].field_name<<" | ";
     indices.push_back(idx);
   }
+
+  // Imprimir encabezados
+  for (size_t i = 0; i < indices.size(); ++i) {
+    std::cout << schm.fields[indices[i]].field_name;
+    if (i + 1 < indices.size()) std::cout << " | ";
+  }
+  std::cout << '\n';
+
+  // Abrir archivo y leer bloque por bloque
   File table(tableName, 'r');
-  string content = table.accessBlock();
-  while (table.nextBlock()) { 
-    content+=table.accessBlock();
-  }
   RecordManagerFixed rm(tableName);
+  string content;
 
-  auto recs = rm.parseFixedData(content, schm);
+  do {
+    content = table.accessBlock();
+    if (content.empty()) continue;
 
-  for (size_t i = 0; i<recs.size(); i++) {
-    for (auto &j : indices) {
-      cout<<recs[i][j]<<' ';
+    auto recs = rm.parseFixedData(content, schm);
+
+    for (const auto& rec : recs) {
+      for (size_t i = 0; i < indices.size(); ++i) {
+        std::cout << rec[indices[i]];
+        if (i + 1 < indices.size()) std::cout << " | ";
+      }
+      std::cout << '\n';
     }
-    cout<<"\n";
-  }
+
+  } while (table.nextBlock());
+
+  table.close();
 }
 
 void storageManager::selectWhere(const string& col, const string& op, const string& val) {

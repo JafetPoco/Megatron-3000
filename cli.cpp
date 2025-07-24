@@ -282,6 +282,7 @@ void handle_help(const std::string&) {
   std::cout << "  disk info                     # Mostrar info del disco\n\n";
 
   std::cout << "  buffer show                   # Mostrar contenido del buffer pool\n";
+  std::cout << "  buffer clear                  # reinicia\n";
   std::cout << "  buffer read <n>               # Leer página/bloque en buffer\n";
   std::cout << "  buffer type                   # Mostrar estrategia de reemplazo\n";
   std::cout << "  buffer stats                  # Estadísticas del buffer\n\n";
@@ -450,7 +451,11 @@ void handle_buffer_command(const std::string &str) {
   } else if (subcmd == "stats") {
     std::cout << "[BUFFER] estadísticas del buffer\n";
     bufferPool->printEstadistic();
-  } else {
+  } else if (subcmd == "clear") {
+    std::cout << "[BUFFER] limpiando\n";
+    bufferPool->clearBuffer();
+  }
+  else {
     std::cerr << "Subcomando buffer desconocido\n";
   }
 }
