@@ -327,3 +327,12 @@ void SchemaManager::persist(){
   }
   schemafile.close();
 }
+
+size_t SchemaManager::getRecordSize(string schemaName) {
+  Schema schm = getSchema(schemaName);
+  size_t size = 0;
+  for (auto& i: schm.fields) {
+    size += i.size;
+  }
+  return size;
+}

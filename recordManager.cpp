@@ -6,7 +6,8 @@
 #include <iostream>
 #include <vector>
 
-RecordManagerFixed::RecordManagerFixed(string tableName) : tableName(tableName){
+RecordManagerFixed::RecordManagerFixed(string tableName)
+    : tableName(tableName) {
   File file(tableName);
   file.close();
 }
@@ -28,7 +29,8 @@ std::string RecordManagerFixed::formatRow(vector<string> row, Schema &schema) {
   return ss.str();
 }
 
-std::vector<std::string> RecordManagerFixed::formatRows(const std::vector<Record> &records,
+std::vector<std::string>
+RecordManagerFixed::formatRows(const std::vector<Record> &records,
                                Schema &schema) {
   std::vector<std::string> formatted;
   for (const auto &record : records) {
@@ -43,7 +45,7 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
     return;
   }
 
-  File file(tableName, 'w');  // Usa tableName como nombre del archivo
+  File file(tableName, 'w'); // Usa tableName como nombre del archivo
   int recordSize = records[0].size();
   int blockCapacity = file.getCapacity();
   int maxPerBlock = blockCapacity / recordSize;
@@ -53,7 +55,8 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
 
   while (written < totalRecords) {
     // Calcular cuántos caben en este bloque
-    size_t count = std::min(static_cast<size_t>(maxPerBlock), totalRecords - written);
+    size_t count =
+        std::min(static_cast<size_t>(maxPerBlock), totalRecords - written);
 
     // Unir los registros para este bloque
     std::string blockData;
@@ -62,7 +65,7 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
     }
 
     // Escribir en el bloque actual
-    std::string& block = file.accessBlock();
+    std::string &block = file.accessBlock();
     block = blockData;
 
     written += count;
@@ -78,31 +81,31 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
   file.close();
 }
 
-std::vector<Record> RecordManagerFixed::parseFixedData(const std::string& data, const Schema& schema) {
-    std::vector<Record> records;
-    size_t recordSize = 0;
+std::vector<Record> RecordManagerFixed::parseFixedData(const std::string &data,
+                                                       const Schema &schema) {
+  std::vector<Record> records;
+  size_t recordSize = 0;
 
-    for (const auto& field : schema.fields) {
-        recordSize += field.size;
+  for (const auto &field : schema.fields) {
+    recordSize += field.size;
+  }
+
+  size_t offset = 0;
+  while (offset + recordSize <= data.size()) {
+    Record record;
+    size_t fieldOffset = 0;
+
+    for (const auto &field : schema.fields) {
+      std::string fieldValue = data.substr(offset + fieldOffset, field.size);
+      // Remover espacios finales
+      fieldValue.erase(fieldValue.find_last_not_of(' ') + 1);
+      record.push_back(fieldValue);
+      fieldOffset += field.size;
     }
 
-    size_t offset = 0;
-    while (offset + recordSize <= data.size()) {
-        Record record;
-        size_t fieldOffset = 0;
+    records.push_back(record);
+    offset += recordSize;
+  }
 
-        for (const auto& field : schema.fields) {
-            std::string fieldValue = data.substr(offset + fieldOffset, field.size);
-            // Remover espacios finales
-            fieldValue.erase(fieldValue.find_last_not_of(' ') + 1);
-            record.push_back(fieldValue);
-            fieldOffset += field.size;
-        }
-
-        records.push_back(record);
-        offset += recordSize;
-    }
-
-    return records;
+  return records;
 }
-

@@ -75,7 +75,7 @@ public:
    * @brief da el tamaño de un registro en bytes
    * @return El tamaño del registro en bytes
    * */
-  size_t getRecordSize(string schemaName) const;
+  size_t getRecordSize(string schemaName) ;
 };
 
 class CSVProcessor {

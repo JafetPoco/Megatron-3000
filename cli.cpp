@@ -109,28 +109,91 @@ int main_cli() {
   return 0;
 }
 
-// Handler SELECT: "SELECT cols FROM table [WHERE cond]"
 void handle_select(const std::string &sql) {
-  std::string low = to_lower(sql);
-  size_t pos_from = low.find(" from ");
-  if (pos_from == std::string::npos) {
-    std::cerr << "Error: falta FROM en SELECT." << std::endl;
+  auto lower_sql = to_lower(sql);
+  if (lower_sql.find("from") == std::string::npos) {
+    std::cerr << "[ERROR] Uso: SELECT columna1,columna2 FROM <tabla> [WHERE columna operador valor]\n";
     return;
   }
-  std::string cols = trim(sql.substr(6, pos_from - 6));
-  size_t pos_where = low.find(" where ", pos_from);
-  std::string table =
-      (pos_where == std::string::npos)
-          ? trim(sql.substr(pos_from + 6))
-          : trim(sql.substr(pos_from + 6, pos_where - (pos_from + 6)));
-  std::string cond;
-  if (pos_where != std::string::npos) {
-    cond = trim(sql.substr(pos_where + 7));
+
+  size_t select_pos = lower_sql.find("select") + 6;
+  size_t from_pos = lower_sql.find("from");
+  std::string columnas_raw = trim(sql.substr(select_pos, from_pos - select_pos));
+
+  size_t where_pos = lower_sql.find("where");
+  std::string tabla, condicion;
+  if (where_pos != std::string::npos) {
+    tabla = trim(sql.substr(from_pos + 4, where_pos - (from_pos + 4)));
+    condicion = trim(sql.substr(where_pos + 5));
+  } else {
+    tabla = trim(sql.substr(from_pos + 4));
   }
-  std::cout << "SELECT columnas: " << cols << "\nFROM tabla: " << table;
-  if (!cond.empty())
-    std::cout << " | WHERE: " << cond;
-  std::cout << std::endl;
+
+  // Parse columnas
+  std::vector<std::string> columnas;
+  bool selectAll = columnas_raw == "*";
+  if (!selectAll) {
+    columnas = split(columnas_raw, ',');
+    for (auto &col : columnas) col = trim(col);
+  }
+
+  // Si no hay condición WHERE
+  if (condicion.empty()) {
+    if (selectAll) {
+      std::cout << "[EXEC] SELECT * FROM " << tabla << "\n";
+      if (!stmg->load(tabla)) {
+        cout<<"[EXEC] No existe la tabla "<<tabla<<endl;
+        return;
+      }
+      stmg->selectall();
+    } else {
+      std::cout << "[EXEC] SELECT ";
+      for (size_t i = 0; i < columnas.size(); ++i)
+        std::cout << columnas[i] << (i + 1 < columnas.size() ? ", " : "");
+      std::cout << " FROM " << tabla << "\n";
+      if (!stmg->load(tabla)) {
+        cout<<"[EXEC] No existe la tabla "<<tabla<<endl;
+        return;
+      }
+      stmg->selectColumns(columnas);
+    }
+    return;
+  }
+
+  // Detectar operador en WHERE
+  std::vector<std::string> ops = {"<=", ">=", "!=", "=", "<", ">"};
+  std::string op_found;
+  size_t op_pos = std::string::npos;
+  for (const auto& op : ops) {
+    op_pos = condicion.find(op);
+    if (op_pos != std::string::npos) {
+      op_found = op;
+      break;
+    }
+  }
+
+  if (op_found.empty()) {
+    std::cerr << "[ERROR] Comparador no válido en condición WHERE\n";
+    return;
+  }
+
+  std::string col = trim(condicion.substr(0, op_pos));
+  std::string val = trim(condicion.substr(op_pos + op_found.size()));
+
+  // Mostrar el comando a ejecutar
+  std::cout << "[EXEC] SELECT ";
+  if (selectAll) std::cout << "*";
+  else {
+    for (size_t i = 0; i < columnas.size(); ++i)
+      std::cout << columnas[i] << (i + 1 < columnas.size() ? ", " : "");
+  }
+  std::cout << " FROM " << tabla << " WHERE " << col << " " << op_found << " " << val << "\n";
+
+  // Ejecutar
+  // if (selectAll)
+  //   stmg->selectWhere(col, op_found, val);
+  // else
+  //   stmg->selectColumnsWhere(columnas, col, op_found, val);
 }
 
 // Handler DELETE: "DELETE FROM table [WHERE cond]"
