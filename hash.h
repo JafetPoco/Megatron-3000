@@ -41,6 +41,7 @@ public:
   std::string getSerialized() const;
   Directory(int depth, int bucket_size);
   Directory(string file);
+  Directory();
   void insert(int key, int value, bool reinserted=0);
   void remove(int key, int mode);
   void update(int key, int value);

@@ -24,6 +24,11 @@ void menu() {
 
 /* Directory class functions */
 
+Directory::Directory() {
+  this->global_depth = 1;
+  this->bucket_size = 16;
+}
+
 Directory::Directory(int depth, int bucket_size) {
   this->global_depth = depth;
   this->bucket_size = bucket_size;
