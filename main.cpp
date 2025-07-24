@@ -10,7 +10,6 @@
 #include "globals.h"
 #include <iostream>
 #include "cli.h"
-#include "uploadCsv.h"
 using namespace std;
 
 Disk* disk = nullptr;
@@ -35,8 +34,7 @@ int main() {
   bufferPool->clearBuffer();
   // main_cli();
   RecordManager* rm = new RecordManagerFixed("titanic");
-  UploadCsvFixed up;
-  schemas->uploadCsv("titanic.csv", "titanic", &up);
+  schemas->uploadCsv("titanic.csv", "titanic");
   // csv.process();
   //auto test =csv.getData();
 }

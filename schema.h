@@ -7,7 +7,6 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "uploadCsv.h"
 
 enum FieldType { INT, STRING, DOUBLE };
 
@@ -49,7 +48,7 @@ public:
 
   Schema getSchema(string schemaName);
 
-  bool uploadCsv(string csvFilename, string newSchemaName, IUploadCsv* algorithm);
+  bool uploadCsv(string csvFilename, string newSchemaName);
 
   /*
    * @brief
@@ -85,6 +84,7 @@ public:
   void process();
   const std::vector<Field>& getFields() const;
   std::vector<Record> getData();
+  bool insertDataToBlockFixes(size_t sizeRow);
 
 private:
   std::string            filename_;

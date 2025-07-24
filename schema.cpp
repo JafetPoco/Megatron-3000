@@ -5,7 +5,6 @@
 #include <vector>
 #include "bufPool.h"
 #include "file.h"
-#include "uploadCsv.h"
 
 #define DEBUG
 #define VERBOSE
@@ -166,6 +165,36 @@ std::vector<std::string> CSVProcessor::parseLine(const std::string& line) const 
   return result;
 }
 
+bool CSVProcessor::insertDataToBlockFixes(size_t sizeRow){
+  std::ifstream file(filename_);
+  std::string line;
+  getline(file, line);
+
+  auto dotPos = filename_.find('.');
+  std::string name = filename_.substr(0, dotPos);
+  File table(name, 'w');
+
+  size_t counter = 0;
+  while(getline(file, line)){
+    std::vector<std::string> values = parseLine(line);
+    counter += sizeRow;
+    std::cout<<counter<<"|"<<table.getCapacity()<<std::endl;
+    if(counter > table.getCapacity()){
+      counter=0;
+      table.addBlock();
+    }
+    std::stringstream ss;
+    for(size_t i = 0; i < values.size(); i++){
+      ss << std::left << std::setfill(' ') << std::setw(fields_[i].size) << values[i];
+    }
+    std::string& payload = table.accessBlock();
+    std::cout<<GREEN<<payload<<RESET<<std::endl;
+    payload += ss.str();
+  }
+  table.close();
+  return true;
+}
+
 FieldType CSVProcessor::inferValueType(const std::string& value) const {
   if (value.empty()) {
     return FieldType::INT;  // No alteramos el tipo si está vacío
@@ -266,7 +295,19 @@ void SchemaManager::printSchema(){
   }
 }
 
-bool SchemaManager::uploadCsv(string filename, string newSchemaName, IUploadCsv* algorithm) {
+size_t SchemaManager::getRecordSize(std::string name) const {
+  for(auto&schema : schemas){
+    if(schema.schemaName == name){
+      size_t size = 0;
+      for(auto&field : schema.fields){
+        size += field.size;
+      }
+      return size;
+    }
+  }
+}
+
+bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
   CSVProcessor csv(filename);
   csv.process();
   Schema schema;
@@ -286,7 +327,7 @@ bool SchemaManager::uploadCsv(string filename, string newSchemaName, IUploadCsv*
   schemas.push_back(schema);
   persist();
 
-  algorithm->upload(filename);
+  csv.insertDataToBlockFixes(getRecordSize(newSchemaName));
   return true;
 }
 

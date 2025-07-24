@@ -325,8 +325,7 @@ void handle_schema_command(const std::string &str) {
 
     std::cout << "[SCHEMA] Agregar CSV: archivo=\"" << archivo
               << "\", tabla=\"" << tabla << "\"\n";
-    UploadCsvFixed up;
-    schemas->uploadCsv(archivo, tabla, &up);
+    schemas->uploadCsv(archivo, tabla);
   } else if (subcmd == "print") {
     std::cout << "[SCHEMA] Mostrar todas las tablas registradas\n";
     schemas->printSchema();

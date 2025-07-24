@@ -14,7 +14,7 @@ LDLIBS = -lreadline
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp schema.cpp cli.cpp recordManager.cpp uploadCsv.cpp
+SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp schema.cpp cli.cpp recordManager.cpp
 
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)
