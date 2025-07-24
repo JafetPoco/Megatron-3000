@@ -1,6 +1,7 @@
 #include "bptree2.h"
 #include <algorithm>
 #include <queue>
+#include <sstream>
 
 using namespace std;
 
@@ -144,7 +145,7 @@ void BPlusTree::print() {
     for (int i = 0; i < sz; i++) {
       Node* node = q.front(); q.pop();
       cout << "[";
-      for (const auto& k : node->keys) cout << "(" << k.key << ", " << k.position << " ";
+      for (const auto& k : node->keys) cout << "(" <<YELLOW<<k.key <<RESET<<", " <<BLUE<<k.position<<RESET<<") ";
       cout << "] ";
       if (!node->isLeaf) {
         for (auto child : node->children) q.push(child);
@@ -153,4 +154,39 @@ void BPlusTree::print() {
     cout << "\n";
   }
   cout << "-------------------\n";
+}
+
+bool BPlusTree::readSerialized(const std::string &serialized){
+  istringstream ss(serialized);
+  string value;
+  while(ss >> value){
+    int key = stoi(value);
+    ss >> value;
+    insert({key, stoi(value)});
+  }
+  return true;
+}
+
+std::string BPlusTree::getSerialized() const {
+  if (!root) {
+    return "";
+  }
+
+  stringstream ss;
+
+  // 1. Buscar la primera hoja
+  Node* leaf = root;
+  while (!leaf->isLeaf) {
+    leaf = leaf->children[0];
+  }
+
+  // 2. Recorrer todas las hojas
+  while (leaf) {
+    for (const auto& k : leaf->keys) {
+      ss << k.key << " " << k.position << " ";
+    }
+    leaf = leaf->next;
+  }
+
+  return ss.str();
 }

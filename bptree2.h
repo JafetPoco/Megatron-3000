@@ -4,6 +4,10 @@
 #include <vector>
 #include <iostream>
 
+#define YELLOW  "\033[1;33m"
+#define BLUE    "\033[1;34m"
+#define RESET   "\033[0m"
+
 using namespace std;
 
 struct Value {
@@ -26,6 +30,9 @@ class BPlusTree {
   void insert(Value val);
   void remove(int key);
   void print();
+
+  bool readSerialized(const std::string &serialized);
+  std::string getSerialized() const;
 
  private:
   struct Node {
