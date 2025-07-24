@@ -1,38 +1,46 @@
-#ifndef B_PLUS_TREE_H
-#define B_PLUS_TREE_H
+#ifndef BPTREE2_H
+#define BPTREE2_H
 
-#include <iostream>
 #include <vector>
-#include <algorithm>
-#include <queue>
+#include <iostream>
 
 using namespace std;
 
-struct Node {
-  bool isLeaf;
-  vector<int> keys;
-  vector<Node*> children;
-  Node* next;
+struct Value {
+  int key;
+  int position;
 
-  Node(bool leaf = false) : isLeaf(leaf), next(nullptr) {}
+  bool operator<(const Value& other) const {
+    return key < other.key;
+  }
+
+  bool operator==(const int otherKey) const {
+    return key == otherKey;
+  }
 };
 
 class BPlusTree {
-  Node* root;
-  int order;
+ public:
+  BPlusTree(int order) : order(order), root(nullptr) {}
 
-public:
-  BPlusTree(int o) : root(nullptr), order(o) {}
-
-  bool readSerialized(const std::string &serialized);
-  std::string getSerialized() const;
-  
-  void insert(int key);
+  void insert(Value val);
   void remove(int key);
   void print();
 
-private:
-  int insertInternal(Node* node, int key, Node*& newChild);
+ private:
+  struct Node {
+    bool isLeaf;
+    vector<Value> keys;
+    vector<Node*> children;
+    Node* next;
+
+    Node(bool leaf) : isLeaf(leaf), next(nullptr) {}
+  };
+
+  Node* root;
+  int order;
+
+  Value insertInternal(Node* node, Value val, Node*& newChild);
   void removeInternal(Node* node, int key);
 };
 
