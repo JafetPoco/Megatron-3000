@@ -10,6 +10,7 @@
 #include "globals.h"
 #include <iostream>
 #include "cli.h"
+#include "uploadCsv.h"
 using namespace std;
 
 Disk* disk = nullptr;
@@ -20,8 +21,8 @@ SchemaManager* schemas= nullptr;
 size_t blockCapacity;
 
 int main() {
-  // disk = new Disk("Megatron", 8,8,8,512,4); 
-  disk = new Disk("Megatron");
+  disk = new Disk("Megatron", 8,8,8,512,4); 
+  //disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   File::set_capacity(blockCapacity);
   //cerr<<disk->getTotalSectors()<<endl;
@@ -34,7 +35,8 @@ int main() {
   bufferPool->clearBuffer();
   // main_cli();
   RecordManager* rm = new RecordManagerFixed("titanic");
-  CSVProcessor csv("titanic.csv");
+  UploadCsvFixed up;
+  schemas->uploadCsv("titanic.csv", "titanic", &up);
   // csv.process();
-  auto test =csv.getData();
+  //auto test =csv.getData();
 }

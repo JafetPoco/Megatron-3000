@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "uploadCsv.h"
 
 enum FieldType { INT, STRING, DOUBLE };
 
@@ -48,7 +49,7 @@ public:
 
   Schema getSchema(string schemaName);
 
-  bool uploadCsv(string csvFilename, string newSchemaName);
+  bool uploadCsv(string csvFilename, string newSchemaName, IUploadCsv* algorithm);
 
   /*
    * @brief

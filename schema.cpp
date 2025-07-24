@@ -5,6 +5,7 @@
 #include <vector>
 #include "bufPool.h"
 #include "file.h"
+#include "uploadCsv.h"
 
 #define DEBUG
 #define VERBOSE
@@ -265,7 +266,7 @@ void SchemaManager::printSchema(){
   }
 }
 
-bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
+bool SchemaManager::uploadCsv(string filename, string newSchemaName, IUploadCsv* algorithm) {
   CSVProcessor csv(filename);
   csv.process();
   Schema schema;
@@ -284,6 +285,8 @@ bool SchemaManager::uploadCsv(string filename, string newSchemaName) {
 
   schemas.push_back(schema);
   persist();
+
+  algorithm->upload(filename);
   return true;
 }
 

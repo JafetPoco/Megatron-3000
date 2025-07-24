@@ -3,14 +3,18 @@ TARGET = megatron
 
 # Compilador
 CXX = g++
+
 # Opciones de compilación
-CXXFLAGS = -std=c++17 -Wall -lreadline
+CXXFLAGS = -std=c++17 -Wall
+
+# Librerías para el enlazado
+LDLIBS = -lreadline
 
 # Carpeta de compilación
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp file.cpp schema.cpp cli.cpp recordManager.cpp
+SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp schema.cpp cli.cpp recordManager.cpp uploadCsv.cpp
 
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)
@@ -21,13 +25,13 @@ all: $(TARGET)
 
 # Cómo construir el ejecutable
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
 
 # Crear carpeta build y compilar cada .cpp
 $(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(OBJDIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Limpieza de archivos intermedios
+# Limpieza
 clean:
 	rm -rf $(OBJDIR) $(TARGET)
