@@ -91,6 +91,7 @@ void storageManager::selectColumns(const vector<string>& cols) {
       std::cerr << "[ERROR] Columna no existe: " << col << "\n";
       return;
     }
+    cout<<schm.fields[idx].field_name<<" | ";
     indices.push_back(idx);
   }
   File table(tableName, 'r');

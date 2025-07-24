@@ -49,7 +49,7 @@ public:
   void display(bool duplicates);
 
   bool readSerialized(const std::string &serialized);
-  void persist(const std::string &outname);;
+  void persist(const std::string &outname);
 };
 
 void menu();
