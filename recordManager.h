@@ -9,33 +9,31 @@ using namespace std;
 
 class RecordManager {
 protected:
-  virtual std::string formatRow(vector<string>) = 0;
+  virtual std::string formatRow(vector<string>, Schema& sizes) = 0;
 public:
-  virtual void select(std::string tableName) = 0;
-  // virtual void where() = 0;
-  // virtual void insert() = 0;
   ~RecordManager() = default;
 };
 
 class RecordManagerFixed : public RecordManager{
 private:
-  std::string formatRow(vector<string>) override;
+  string tableName;
   void printHeader(std::string file);
+  std::string formatRow(vector<string>, Schema& sizes) override;
 public:
-  RecordManagerFixed(string tableName);
-  ~RecordManagerFixed() = default;
-  void select(std::string tableName) override;
+  std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema);
+  void write(vector<string> records, string filename);
+  RecordManagerFixed(string tableName) : tableName(tableName){}
 };
 
-class RecordManagerVariable : public RecordManager{
-private:
-  std::string formatRow(vector<string>) override;
-  void printHeader(std::string file);
-public:
-  RecordManagerVariable();
-  ~RecordManagerVariable() = default;
-  void addToSchema(std::string firstsRow, std::string tableName);
-  void select(std::string tableName) override;
-};
+// class RecordManagerVariable : public RecordManager{
+// private:
+//   std::string formatRow(vector<string>, Schema& sizes) override;
+//   void printHeader(std::string file);
+// public:
+//   RecordManagerVariable();
+//   ~RecordManagerVariable() = default;
+//   void addToSchema(std::string firstsRow, std::string tableName);
+//   void select(std::string tableName) override;
+// };
 
 #endif //RECORD_MAN_H

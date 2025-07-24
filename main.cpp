@@ -4,6 +4,7 @@
 #include "disk.h"
 #include "block.h"
 #include "freeBlockMan.h"
+#include "recordManager.h"
 #include "schema.h"
 #include "tableFiles.h"
 #include "globals.h"
@@ -30,10 +31,10 @@ int main() {
   bufferPool = new Clock(5);
   schemas = new SchemaManager;
 
-  Directory d(2, 4);
-  d.insert(1, 10);
-  d.insert(2, 20);
-
   bufferPool->clearBuffer();
-  main_cli();
+  // main_cli();
+  RecordManager* rm = new RecordManagerFixed("titanic");
+  CSVProcessor csv("titanic.csv");
+  // csv.process();
+  auto test =csv.getData();
 }
