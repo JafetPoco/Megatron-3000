@@ -5,6 +5,34 @@
 #include "schema.h"
 #include <iostream>
 
+bool compare(const string& left, const string& op, const string& right, FieldType type) {
+  if (type == FieldType::INT) {
+    int l = stoi(left), r = stoi(right);
+    if (op == "=") return l == r;
+    if (op == "!=") return l != r;
+    if (op == "<") return l < r;
+    if (op == "<=") return l <= r;
+    if (op == ">") return l > r;
+    if (op == ">=") return l >= r;
+  } else if (type == FieldType::DOUBLE) {
+    double l = stod(left), r = stod(right);
+    if (op == "=") return l == r;
+    if (op == "!=") return l != r;
+    if (op == "<") return l < r;
+    if (op == "<=") return l <= r;
+    if (op == ">") return l > r;
+    if (op == ">=") return l >= r;
+  } else {
+    if (op == "=") return left == right;
+    if (op == "!=") return left != right;
+    if (op == "<") return left < right;
+    if (op == "<=") return left <= right;
+    if (op == ">") return left > right;
+    if (op == ">=") return left >= right;
+  }
+  return false;
+}
+
 bool storageManager::uploadCSV(string csvfile, string tableName) {
   try {
     cout<<"Subiendo csv "<<csvfile<<" con nombre "<<tableName<<endl;
@@ -17,6 +45,7 @@ bool storageManager::uploadCSV(string csvfile, string tableName) {
     schm= schemas->getSchema(tableName);
     auto formatted = rm.formatRows(test, schm);
     rm.write(formatted);
+    tableName = tableName;
 
     return true;
   } catch (const std::exception& e) {
@@ -106,6 +135,84 @@ void storageManager::selectColumns(const vector<string>& cols) {
       cout<<recs[i][j]<<' ';
     }
     cout<<"\n";
+  }
+}
+
+void storageManager::selectWhere(const string& col, const string& op, const string& val) {
+  if (!is_open()) {
+    std::cerr << "[ERROR] No hay tabla cargada.\n";
+    return;
+  }
+
+  int idx = getFieldIndex(col, schm);
+  if (idx == -1) {
+    std::cerr << "[ERROR] Columna no existe: " << col << "\n";
+    return;
+  }
+
+  File table(tableName, 'r');
+  string content = table.accessBlock();
+  while (table.nextBlock()) content += table.accessBlock();
+
+  RecordManagerFixed rm(tableName);
+  auto recs = rm.parseFixedData(content, schm);
+
+  // imprimir encabezado
+  for (size_t i = 0; i < schm.fields.size(); ++i) {
+    cout << schm.fields[i].field_name;
+    if (i + 1 < schm.fields.size()) cout << " | ";
+  }
+  cout << '\n';
+
+  for (const auto& row : recs) {
+    if (compare(row[idx], op, val, schm.fields[idx].type)) {
+      for (const auto& field : row) cout << field << " | ";
+      cout << '\n';
+    }
+  }
+}
+
+void storageManager::selectColumnsWhere(const vector<string>& cols, const string& col, const string& op, const string& val) {
+  if (!is_open()) {
+    std::cerr << "[ERROR] No hay tabla cargada.\n";
+    return;
+  }
+
+  int whereIdx = getFieldIndex(col, schm);
+  if (whereIdx == -1) {
+    std::cerr << "[ERROR] Columna de condición no existe: " << col << "\n";
+    return;
+  }
+
+  vector<int> colIndices;
+  for (const auto& c : cols) {
+    int idx = getFieldIndex(c, schm);
+    if (idx == -1) {
+      std::cerr << "[ERROR] Columna no existe: " << c << "\n";
+      return;
+    }
+    colIndices.push_back(idx);
+  }
+
+  File table(tableName, 'r');
+  string content = table.accessBlock();
+  while (table.nextBlock()) content += table.accessBlock();
+
+  RecordManagerFixed rm(tableName);
+  auto recs = rm.parseFixedData(content, schm);
+
+  // imprimir encabezado
+  for (size_t i = 0; i < colIndices.size(); ++i) {
+    cout << schm.fields[colIndices[i]].field_name;
+    if (i + 1 < colIndices.size()) cout << " | ";
+  }
+  cout << '\n';
+
+  for (const auto& row : recs) {
+    if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
+      for (const auto& idx : colIndices) cout << row[idx] << " | ";
+      cout << '\n';
+    }
   }
 }
 

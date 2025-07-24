@@ -190,10 +190,14 @@ void handle_select(const std::string &sql) {
   std::cout << " FROM " << tabla << " WHERE " << col << " " << op_found << " " << val << "\n";
 
   // Ejecutar
-  // if (selectAll)
-  //   stmg->selectWhere(col, op_found, val);
-  // else
-  //   stmg->selectColumnsWhere(columnas, col, op_found, val);
+  if (selectAll){
+    stmg->load(tabla);
+    stmg->selectWhere(col, op_found, val);
+  }
+  else {
+    stmg->load(tabla);
+    stmg->selectColumnsWhere(columnas, col, op_found, val);
+  } 
 }
 
 // Handler DELETE: "DELETE FROM table [WHERE cond]"

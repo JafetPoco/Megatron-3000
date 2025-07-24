@@ -16,8 +16,8 @@ public:
   
   void selectall();
   void selectColumns(const vector<string>& cols);
-// void selectWhere(const string& col,const string& op, const string& val);
+  void selectWhere(const string& col,const string& op, const string& val);
 
-// void selectColumnsWhere(const vector<string>& cols,const string& col, const string& op, const string& val);
+  void selectColumnsWhere(const vector<string>& cols,const string& col, const string& op, const string& val);
 };
 #endif
