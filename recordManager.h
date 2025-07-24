@@ -8,9 +8,10 @@
 using namespace std;
 
 class RecordManager {
-protected:
-  virtual std::string formatRow(vector<string>, Schema& sizes) = 0;
 public:
+  virtual std::string formatRow(vector<string>, Schema& sizes) = 0;
+  virtual std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema) = 0;
+  RecordManager() = default;
   ~RecordManager() = default;
 };
 
@@ -18,10 +19,11 @@ class RecordManagerFixed : public RecordManager{
 private:
   string tableName;
   void printHeader(std::string file);
-  std::string formatRow(vector<string>, Schema& sizes) override;
 public:
-  std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema);
-  void write(vector<string> records, string filename);
+  std::string formatRow(vector<string>, Schema& sizes) override;
+  std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema) override;
+  std::vector<Record> parseFixedData(const std::string& data, const Schema& schema);
+  void write(vector<string> records);
   RecordManagerFixed(string tableName) : tableName(tableName){}
 };
 

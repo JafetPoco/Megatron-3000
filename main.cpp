@@ -9,6 +9,7 @@
 #include "tableFiles.h"
 #include "globals.h"
 #include <iostream>
+#include <vector>
 #include "cli.h"
 using namespace std;
 
@@ -20,8 +21,8 @@ SchemaManager* schemas= nullptr;
 size_t blockCapacity;
 
 int main() {
-  // disk = new Disk("Megatron", 8,8,8,512,4); 
-  disk = new Disk("Megatron");
+  disk = new Disk("Megatron", 8,8,8,512,4); 
+  // disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   File::set_capacity(blockCapacity);
   //cerr<<disk->getTotalSectors()<<endl;
@@ -31,10 +32,17 @@ int main() {
   bufferPool = new Clock(5);
   schemas = new SchemaManager;
 
-  bufferPool->clearBuffer();
-  // main_cli();
-  RecordManager* rm = new RecordManagerFixed("titanic");
+
+  schemas->uploadCsv("titanic.csv", "titanic");
+  RecordManagerFixed rm("titanic");
   CSVProcessor csv("titanic.csv");
-  // csv.process();
-  auto test =csv.getData();
+  vector<Record> test =csv.getData();
+  Schema schm = schemas->getSchema("titanic");
+  auto formatted = rm.formatRows(test, schm);
+  for (auto& i : formatted) {
+    cout<<i<<endl;
+  }
+  rm.write(formatted);
+  bufferPool->clearBuffer();
+  main_cli();
 }

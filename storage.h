@@ -3,10 +3,14 @@
 #include "recordManager.h"
 #include "schema.h"
 class storageManager {
-  string tableName;
+  string tableName; //current
   RecordManager* rm;
-  public:
-    storageManager(string name);
-    void select();
+public:
+  storageManager();
+  bool uploadCSV(string csvFilename, string tableName);
+  bool load(string relationname);
+  void reset();
+  
+  void select();
 };
 #endif
