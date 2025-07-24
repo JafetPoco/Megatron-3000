@@ -382,7 +382,7 @@ void handle_disk_command(const std::string &str) {
     }
     delete disk;
     // Recreate disk with default parameters
-    disk = new Disk("Megatron", 8,8,8,512,4);
+    disk = new Disk("Megatron", 16,32,64,512,8);
     cout<<"Se apagara el sistema\n";
     exit(0);
   }  else if (subcmd == "tree") {
