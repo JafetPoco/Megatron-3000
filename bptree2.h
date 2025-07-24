@@ -13,13 +13,13 @@ struct Node {
   vector<int> keys;
   vector<Node*> children;
   Node* next;
-  int order;
 
   Node(bool leaf = false) : isLeaf(leaf), next(nullptr) {}
 };
 
 class BPlusTree {
   Node* root;
+  int order;
 
 public:
   BPlusTree(int o) : root(nullptr), order(o) {}

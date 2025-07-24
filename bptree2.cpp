@@ -11,6 +11,7 @@ bool BPlusTree::readSerialized(const std::string &serialized){
   while(ss >> val){
     insert(stoi(val));
   }
+  return true;
 }
 
 void BPlusTree::insert(int key) {
@@ -108,7 +109,7 @@ int BPlusTree::insertInternal(Node* node, int key, Node*& newChild) {
   }
 }
 
-void removeInternal(Node* node, int key) {
+void BPlusTree::removeInternal(Node* node, int key) {
   if (node->isLeaf) {
     auto it = find(node->keys.begin(), node->keys.end(), key);
     if (it != node->keys.end()) node->keys.erase(it);
@@ -168,29 +169,4 @@ void removeInternal(Node* node, int key) {
       }
     }
   }
-}
-
-int main() {
-  BPlusTree tree;
-
-  string input = "100 200 300 50 420 500 250 260 10 20 210 92 93 94 96 97";
-
-  for (int x : datos) {
-    cout << "Insertar: " << x << "\n";
-    tree.insert(x);
-  }
-
-  tree.print();
-
-  // Prueba de eliminación
-  cout << "\nEliminar: 210, 260, 50\n";
-  tree.remove(210);
-  tree.remove(260);
-  tree.remove(50);
-  tree.remove(200);
-  tree.remove(250);
-
-  tree.print();
-
-  return 0;
 }
