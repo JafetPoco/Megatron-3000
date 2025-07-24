@@ -2,11 +2,12 @@
 #define STORAGE_MANAGER_H
 #include "recordManager.h"
 #include "schema.h"
+#include "index.h"
 class storageManager {
   string tableName; //current
   RecordManager* rm;
   Schema schm;
-  // Index ind;
+  IndexManager indexManager;
 public:
   storageManager() = default;
   bool uploadCSV(string csvFilename, string tableName);

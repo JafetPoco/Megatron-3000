@@ -49,6 +49,7 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
   int recordSize = records[0].size();
   int blockCapacity = file.getCapacity();
   int maxPerBlock = blockCapacity / recordSize;
+  cout<<maxPerBlock<<endl;
 
   size_t totalRecords = records.size();
   size_t written = 0;

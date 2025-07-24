@@ -74,20 +74,30 @@ void storageManager::selectall() {
     cout<<"No se abrio una tabla\n";
     return;
   }
-  size_t size =schemas->getRecordSize(tableName);
+  size_t size = schemas->getRecordSize(tableName);
+  cout<<"SIZE: "<<size<<endl;
   File table(tableName);
   string content = table.accessBlock();
-  while (table.nextBlock()) {
-    content += table.accessBlock();
-  }
+  // cout<<content<<endl;
   for (size_t i = 0; i < schm.fields.size(); ++i) {
     cout << schm.fields[i].field_name;
     if (i + 1 < schm.fields.size()) cout << " | ";
   }
   cout << '\n';
-  for (size_t i = 0; i + size<= content.size(); i += size) {
-    cout << content.substr(i, size) << '\n';
-  }
+  RecordManagerFixed rm(tableName);
+  do {
+    if (content[content.size()-1] == '\n') content.pop_back();
+    auto recs = rm.parseFixedData(content, schm);
+    for (auto&i : recs) {
+      for (auto& f : i) {
+        cout<< f<<" ";
+      }
+      cout<<endl;
+    }
+    content = table.accessBlock();
+  } while (table.nextBlock());
+
+  table.close(); 
 }
 
 bool storageManager::load(string relationname) {
@@ -125,7 +135,9 @@ void storageManager::selectColumns(const vector<string>& cols) {
   }
   File table(tableName, 'r');
   string content = table.accessBlock();
-  while (table.nextBlock()) { content+=table.accessBlock(); }
+  while (table.nextBlock()) { 
+    content+=table.accessBlock();
+  }
   RecordManagerFixed rm(tableName);
 
   auto recs = rm.parseFixedData(content, schm);
@@ -150,6 +162,9 @@ void storageManager::selectWhere(const string& col, const string& op, const stri
     return;
   }
 
+  indexManager.loadAllIndices(tableName);
+  auto& index = indexManager.getIndex(tableName, col);
+  vector<int> matchIndices = index.search(op, val);
   File table(tableName, 'r');
   string content = table.accessBlock();
   while (table.nextBlock()) content += table.accessBlock();
@@ -157,16 +172,12 @@ void storageManager::selectWhere(const string& col, const string& op, const stri
   RecordManagerFixed rm(tableName);
   auto recs = rm.parseFixedData(content, schm);
 
-  // imprimir encabezado
-  for (size_t i = 0; i < schm.fields.size(); ++i) {
-    cout << schm.fields[i].field_name;
-    if (i + 1 < schm.fields.size()) cout << " | ";
-  }
+  for (const auto& f : schm.fields) cout << f.field_name << " | ";
   cout << '\n';
 
-  for (const auto& row : recs) {
-    if (compare(row[idx], op, val, schm.fields[idx].type)) {
-      for (const auto& field : row) cout << field << " | ";
+  for (size_t i = 0; i < recs.size(); ++i) {
+    if (matchIndices.empty() || compare(recs[i][idx], op, val, schm.fields[idx].type)) {
+      for (const auto& val : recs[i]) cout << val << " | ";
       cout << '\n';
     }
   }
@@ -194,6 +205,10 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
     colIndices.push_back(idx);
   }
 
+  indexManager.loadAllIndices(tableName);
+  auto& index = indexManager.getIndex(tableName, col);
+  vector<int> matchIndices = index.search(op, val);
+
   File table(tableName, 'r');
   string content = table.accessBlock();
   while (table.nextBlock()) content += table.accessBlock();
@@ -201,18 +216,16 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
   RecordManagerFixed rm(tableName);
   auto recs = rm.parseFixedData(content, schm);
 
-  // imprimir encabezado
   for (size_t i = 0; i < colIndices.size(); ++i) {
     cout << schm.fields[colIndices[i]].field_name;
     if (i + 1 < colIndices.size()) cout << " | ";
   }
   cout << '\n';
 
-  for (const auto& row : recs) {
-    if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
-      for (const auto& idx : colIndices) cout << row[idx] << " | ";
+  for (size_t i = 0; i < recs.size(); ++i) {
+    if (matchIndices.empty() || compare(recs[i][whereIdx], op, val, schm.fields[whereIdx].type)) {
+      for (auto idx : colIndices) cout << recs[i][idx] << " | ";
       cout << '\n';
     }
   }
 }
-

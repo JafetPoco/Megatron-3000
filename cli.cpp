@@ -367,10 +367,22 @@ void handle_disk_command(const std::string &str) {
     disk->printDiskInfo();
   } else if (subcmd == "reset") {
     cout << "[DISK] Reiniciando disco...\n";
+    cout<<"Estas seguro de reiniciar el disco? Esta accion no se puede deshacer (y/n)\n";
+    char opt;
+    cin >>opt;
+    if (opt != 'Y' && opt!='y') {
+      cout<<"No se reinicia disco\n";
+      return;
+    }
     delete disk;
     // Recreate disk with default parameters
     disk = new Disk("Megatron", 8,8,8,512,4);
-  } else {
+    cout<<"Se apagara el sistema\n";
+    exit(0);
+  }  else if (subcmd == "tree") {
+    disk->printDiskTree();
+  }
+  else {
     std::cerr << "Error: subcomando disk desconocido\n";
   }
 }
