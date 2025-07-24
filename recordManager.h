@@ -24,7 +24,7 @@ public:
   std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema) override;
   std::vector<Record> parseFixedData(const std::string& data, const Schema& schema);
   void write(vector<string> records);
-  RecordManagerFixed(string tableName) : tableName(tableName){}
+  RecordManagerFixed(string tableName);
 };
 
 // class RecordManagerVariable : public RecordManager{

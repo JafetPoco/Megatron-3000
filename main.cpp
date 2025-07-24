@@ -9,6 +9,7 @@
 #include "tableFiles.h"
 #include "globals.h"
 #include <iostream>
+#include "storage.h"
 #include <vector>
 #include "cli.h"
 using namespace std;
@@ -18,6 +19,7 @@ FreeBlockManager* freeBlock=nullptr;
 TableFiles* tableFile=nullptr;
 BufPool* bufferPool = nullptr;
 SchemaManager* schemas= nullptr;
+storageManager* stmg=nullptr;
 size_t blockCapacity;
 
 int main() {
@@ -31,18 +33,6 @@ int main() {
   tableFile = new TableFiles(); //carga si existe el disco
   bufferPool = new Clock(5);
   schemas = new SchemaManager;
-
-
-  schemas->uploadCsv("titanic.csv", "titanic");
-  RecordManagerFixed rm("titanic");
-  CSVProcessor csv("titanic.csv");
-  vector<Record> test =csv.getData();
-  Schema schm = schemas->getSchema("titanic");
-  auto formatted = rm.formatRows(test, schm);
-  for (auto& i : formatted) {
-    cout<<i<<endl;
-  }
-  rm.write(formatted);
-  bufferPool->clearBuffer();
+  stmg = new storageManager;
   main_cli();
 }

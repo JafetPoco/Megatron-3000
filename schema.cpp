@@ -311,7 +311,7 @@ void SchemaManager::persist(){
     writeCont+=oss.str()+"\n";
   }
 
-  std::cout<<writeCont;
+  // std::cout<<writeCont;
   File schemafile("schema", 'w');
   if (writeCont.size() > schemafile.getCapacity()) {
     auto chunks=splitStringChunks(writeCont, schemafile.getCapacity());

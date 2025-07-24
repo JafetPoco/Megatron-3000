@@ -5,8 +5,10 @@
 class storageManager {
   string tableName; //current
   RecordManager* rm;
+  Schema schm;
+  // Index ind;
 public:
-  storageManager();
+  storageManager() = default;
   bool uploadCSV(string csvFilename, string tableName);
   bool load(string relationname);
   void reset();

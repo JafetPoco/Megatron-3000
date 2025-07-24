@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "storage.h"
 #include "file.h"
 #include "cli.h"
 #include "block.h"
@@ -190,6 +191,7 @@ void handle_addcsv(const std::string &sql) {
   std::string tabla = parts[2];
   std::cout << "Importar CSV: archivo=" << archivo << " | tabla=" << tabla
             << std::endl;
+  stmg->uploadCSV(archivo, tabla);
 }
 
 void handle_help(const std::string&) {

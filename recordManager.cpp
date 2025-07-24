@@ -6,6 +6,10 @@
 #include <iostream>
 #include <vector>
 
+RecordManagerFixed::RecordManagerFixed(string tableName) : tableName(tableName){
+  File file(tableName);
+  file.close();
+}
 std::string RecordManagerFixed::formatRow(vector<string> row, Schema &schema) {
   stringstream ss;
   for (size_t i = 0; i < schema.fields.size(); ++i) {
