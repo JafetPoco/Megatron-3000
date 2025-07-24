@@ -1,29 +1,40 @@
 #ifndef RECORD_MAN_H
 #define RECORD_MAN_H
 
-#include "schem.h"
+#include "schema.h"
+#include "hash.h"
+#include <vector>
+
+using namespace std;
 
 class RecordManager {
 protected:
-  Schema *sh;
+  virtual std::string formatRow(vector<string>) = 0;
 public:
-  virtual void addToSchema(std::string firstsRow, std::string tableName) = 0;
   virtual void select(std::string tableName) = 0;
-  //virtual void where() = 0;
-  //virtual void insert() = 0;
-  virtual void readCSV(std::string file) = 0; 
+  // virtual void where() = 0;
+  // virtual void insert() = 0;
   ~RecordManager() = default;
 };
 
 class RecordManagerFixed : public RecordManager{
 private:
-  std::string formatRow(std::string row);
+  std::string formatRow(vector<string>) override;
   void printHeader(std::string file);
 public:
-  RecordManagerFixed();
-  void addToSchema(std::string firstsRow, std::string tableName);
-  void readCSV(std::string file) override;
+  RecordManagerFixed(string tableName);
   ~RecordManagerFixed() = default;
+  void select(std::string tableName) override;
+};
+
+class RecordManagerVariable : public RecordManager{
+private:
+  std::string formatRow(vector<string>) override;
+  void printHeader(std::string file);
+public:
+  RecordManagerVariable();
+  ~RecordManagerVariable() = default;
+  void addToSchema(std::string firstsRow, std::string tableName);
   void select(std::string tableName) override;
 };
 

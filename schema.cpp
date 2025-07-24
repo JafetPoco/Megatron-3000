@@ -227,7 +227,8 @@ Schema SchemaManager::getSchema(string schemaName) {
       return i;
     }
   }
-  throw std::runtime_error("Schema not found: " + schemaName);
+  // throw std::runtime_error("Schema not found: " + schemaName);
+  return { "null" , {} };
 }
 
 void SchemaManager::printSchema(){
