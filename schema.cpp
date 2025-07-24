@@ -111,6 +111,30 @@ void CSVProcessor::process() {
   }
 }
 
+std::vector<Record> CSVProcessor::getData() {
+  std::vector<Record> records;
+  std::ifstream in(filename_);
+
+  if (!in.is_open()) {
+    throw std::runtime_error("No se pudo abrir: " + filename_);
+  }
+
+  std::string line;
+  bool isHeader = true;
+
+  while (std::getline(in, line)) {
+    if (isHeader) {
+      isHeader = false;
+      continue; // saltar cabecera
+    }
+
+    auto fields = parseLine(line);
+    records.push_back(fields);
+  }
+
+  return records;
+}
+
 const std::vector<Field>& CSVProcessor::getFields() const {
   return fields_;
 }
