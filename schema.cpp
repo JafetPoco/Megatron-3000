@@ -6,8 +6,8 @@
 #include "bufPool.h"
 #include "file.h"
 
-#define DEBUG
-#define VERBOSE
+// #define DEBUG
+// #define VERBOSE
 #define BOLD        "\033[1m"
 #define UNDERLINE   "\033[4m"
 std::string fieldTypeToString(FieldType type) {
@@ -71,6 +71,9 @@ SchemaManager::SchemaManager() {
   while (schemafile.nextBlock()) {
     content += schemafile.accessBlock();
   }
+#ifdef DEBUG
+  std::cout<<"SCHEMA: loading\n"<<content<<std::endl;
+#endif
   schemas = parseSchemas(content);
 }
 
@@ -298,36 +301,43 @@ std::vector<std::string> splitStringChunks(const std::string& input, size_t chun
     return result;
 }
 
-void SchemaManager::persist(){
+void SchemaManager::persist() {
   string writeCont;
+
+  // Generar contenido serializado
   for (auto &schema : schemas) {
     std::ostringstream oss;
     oss << schema.schemaName;
     for (const auto& field : schema.fields) {
-        oss << "#" << field.field_name
-            << "#" << fieldTypeToString(field.type)
-            << "#" << field.size;
+      oss << "#" << field.field_name
+          << "#" << fieldTypeToString(field.type)
+          << "#" << field.size;
     }
-    writeCont+=oss.str()+"\n";
+    writeCont += oss.str() + "\n";
   }
 
-  // std::cout<<writeCont;
+  // Crear archivo
   File schemafile("schema", 'w');
-  if (writeCont.size() > schemafile.getCapacity()) {
-    auto chunks=splitStringChunks(writeCont, schemafile.getCapacity());
-    for (auto& chunk: chunks) {
-      string& payload=schemafile.accessBlock();
-      payload = chunk;
-      if (!schemafile.nextBlock()) schemafile.addBlock();
+
+  // Dividir en chunks
+  auto chunks = splitStringChunks(writeCont, schemafile.getCapacity());
+
+  // Escribir en bloques
+  for (size_t i = 0; i < chunks.size(); ++i) {
+    string& payload = schemafile.accessBlock();
+    payload = chunks[i];
+
+    // Si hay más por escribir, avanza o agrega nuevo bloque
+    if (i + 1 < chunks.size()) {
+      if (!schemafile.nextBlock()) {
+        schemafile.addBlock();
+        schemafile.nextBlock(); // necesario para posicionarse en el nuevo
+      }
     }
   }
-  else {
-    string& payload = schemafile.accessBlock();
-    payload=writeCont;
-  }
+
   schemafile.close();
 }
-
 size_t SchemaManager::getRecordSize(string schemaName) {
   Schema schm = getSchema(schemaName);
   size_t size = 0;

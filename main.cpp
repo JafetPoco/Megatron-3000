@@ -23,8 +23,8 @@ storageManager* stmg=nullptr;
 size_t blockCapacity;
 
 int main() {
-  disk = new Disk("Megatron", 8,8,8,512,4); 
-  // disk = new Disk("Megatron");
+  // disk = new Disk("Megatron", 8,8,8,512,4); 
+  disk = new Disk("Megatron");
   blockCapacity = disk->info().sectorSize * disk->info().blockLength;
   File::set_capacity(blockCapacity);
   //cerr<<disk->getTotalSectors()<<endl;

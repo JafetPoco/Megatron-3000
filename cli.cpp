@@ -93,6 +93,11 @@ int main_cli() {
       handle_file_command(line);
       continue;
     }
+
+    if (line.rfind("ls", 0) == 0) {
+      handle_file_list(line);
+      continue;
+    }
     // Extraer comando inicial
     std::stringstream ss(line);
     std::string cmd;
@@ -542,4 +547,8 @@ void handle_hashd_command(const std::string &str, Directory &d) {
   } catch (const std::out_of_range &e) {
     std::cerr << "Error: número fuera de rango\n";
   }
+}
+
+void handle_file_list(const string& line) {
+  tableFile->showTable();
 }
