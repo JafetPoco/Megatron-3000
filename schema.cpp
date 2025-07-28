@@ -23,6 +23,20 @@ std::string fieldTypeToString(FieldType type) {
       return "UNKNOWN";
   }
 }
+FieldType stringToFieldType(std::string s) {
+    if (s == "int") {
+        return FieldType::INT;
+    }
+    else if (s == "string" || s == "str" || s == "varchar") {
+        return FieldType::STRING;
+    }
+    else if (s == "double" || s == "float" || s == "real") {
+        return FieldType::DOUBLE;
+    }
+    else {
+        throw std::invalid_argument("Unknown FieldType string: '" + s + "'");
+    }
+}
 FieldType parseType(const std::string& value) {
   if (value.empty()) {
     return FieldType::INT;  // No alteramos el tipo si está vacío
@@ -106,8 +120,8 @@ std::vector<Schema> SchemaManager::parseSchemas(const std::string &input) {
     for (size_t i = 1; i + 2 < tokens.size(); i += 3) {
       Field f;
       f.field_name = tokens[i];
-      f.type = parseType(tokens[i + 1]);
-      // f.type = FieldType::INT;
+      f.type = stringToFieldType(tokens[i+1]);
+      std::cout<<fieldTypeToString(f.type)<<' ';
       f.size = std::stoi(tokens[i + 2]);
       schema.fields.push_back(f);
     }

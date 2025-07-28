@@ -1,8 +1,16 @@
 #include "csv.h"
-/*
- * CSVProcessor implementation 
- * 
- * */
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
+#include <sstream>
+
+// trim helper
+static inline std::string trim(const std::string& s) {
+    size_t start = s.find_first_not_of(" \t\r\n");
+    if (start == std::string::npos) return "";
+    size_t end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
+}
 
 CSVProcessor::CSVProcessor(const std::string& filename)
   : filename_(filename)
@@ -15,23 +23,39 @@ void CSVProcessor::process() {
   }
 
   std::string line;
-  // Leer cabecera
+  // 1) Leer cabecera
   if (!std::getline(in, line)) return;
   auto headers = parseLine(line);
+
+  // 2) Inicializar campos
+  fields_.clear();
   fields_.resize(headers.size());
   for (size_t i = 0; i < headers.size(); ++i) {
-    fields_[i].field_name = headers[i];
+    fields_[i].field_name = trim(headers[i]);
+    fields_[i].size       = 0;
+    fields_[i].type       = FieldType::INT;  // arranca como INT
   }
 
-  // Leer resto de filas
+  // 3) Leer resto de filas
   records_.clear();
   while (std::getline(in, line)) {
-    auto values = parseLine(line);
-    records_.push_back(values);  // no need to copy again later
-    for (size_t i = 0; i < values.size() && i < fields_.size(); ++i) {
-      const auto& v = values[i];
+    auto rawValues = parseLine(line);
+    records_.push_back(rawValues);
+
+    // para cada celda...
+    for (size_t i = 0; i < rawValues.size() && i < fields_.size(); ++i) {
+      std::string v = trim(rawValues[i]);
+      if (v.empty()) {
+        // no inferimos nada en celdas vacías
+        continue;
+      }
+      // actualizar tamaño de ancho de columna
       fields_[i].size = std::max(fields_[i].size, v.length());
-      fields_[i].type = std::max(fields_[i].type, inferValueType(v));
+      // inferir tipo y actualizar sólo si es "mayor"
+      FieldType inferred = inferValueType(v);
+      if (inferred > fields_[i].type) {
+        fields_[i].type = inferred;
+      }
     }
   }
 }
@@ -39,7 +63,6 @@ void CSVProcessor::process() {
 const std::vector<Record>& CSVProcessor::getData() const {
     return records_;
 }
-
 
 const std::vector<Field>& CSVProcessor::getFields() const {
   return fields_;
@@ -72,34 +95,24 @@ std::vector<std::string> CSVProcessor::parseLine(const std::string& line) const 
 }
 
 FieldType CSVProcessor::inferValueType(const std::string& value) const {
-  if (value.empty()) {
-    return FieldType::INT;  // No alteramos el tipo si está vacío
-  }
-
-  // 1) Intentar INT
+  // 1) INT
   try {
     size_t idx = 0;
     std::stol(value, &idx);
     if (idx == value.size()) {
       return FieldType::INT;
     }
-  } catch (...) {
-    // no es INT
-  }
+  } catch (...) { }
 
-  // 2) Intentar DOUBLE
+  // 2) DOUBLE
   try {
     size_t idx = 0;
     std::stod(value, &idx);
     if (idx == value.size()) {
       return FieldType::DOUBLE;
     }
-  } catch (...) {
-    // no es DOUBLE
-  }
+  } catch (...) { }
 
-  // 3) Si falla todo, STRING
+  // 3) STRING
   return FieldType::STRING;
 }
-
-
