@@ -1,42 +1,69 @@
-#include "csv.h"
 #include "storage.h"
+#include "csv.h"
 #include "file.h"
 #include "globals.h"
 #include "recordManager.h"
 #include "schema.h"
 #include <iostream>
 
-bool compare(const string& left, const string& op, const string& right, FieldType type) {
+inline std::string trim(const std::string &s) {
+  size_t start = s.find_first_not_of(" \t\r\n");
+  if (start == std::string::npos)
+    return "";
+  size_t end = s.find_last_not_of(" \t\r\n");
+  return s.substr(start, end - start + 1);
+}
+
+bool compare(const string &left, const string &op, const string &right,
+             FieldType type) {
   if (type == FieldType::INT) {
     int l = stoi(left), r = stoi(right);
-    if (op == "=") return l == r;
-    if (op == "!=") return l != r;
-    if (op == "<") return l < r;
-    if (op == "<=") return l <= r;
-    if (op == ">") return l > r;
-    if (op == ">=") return l >= r;
+    if (op == "=")
+      return l == r;
+    if (op == "!=")
+      return l != r;
+    if (op == "<")
+      return l < r;
+    if (op == "<=")
+      return l <= r;
+    if (op == ">")
+      return l > r;
+    if (op == ">=")
+      return l >= r;
   } else if (type == FieldType::DOUBLE) {
     double l = stod(left), r = stod(right);
-    if (op == "=") return l == r;
-    if (op == "!=") return l != r;
-    if (op == "<") return l < r;
-    if (op == "<=") return l <= r;
-    if (op == ">") return l > r;
-    if (op == ">=") return l >= r;
+    if (op == "=")
+      return l == r;
+    if (op == "!=")
+      return l != r;
+    if (op == "<")
+      return l < r;
+    if (op == "<=")
+      return l <= r;
+    if (op == ">")
+      return l > r;
+    if (op == ">=")
+      return l >= r;
   } else {
-    if (op == "=") return left == right;
-    if (op == "!=") return left != right;
-    if (op == "<") return left < right;
-    if (op == "<=") return left <= right;
-    if (op == ">") return left > right;
-    if (op == ">=") return left >= right;
+    if (op == "=")
+      return left == right;
+    if (op == "!=")
+      return left != right;
+    if (op == "<")
+      return left < right;
+    if (op == "<=")
+      return left <= right;
+    if (op == ">")
+      return left > right;
+    if (op == ">=")
+      return left >= right;
   }
   return false;
 }
 
 bool storageManager::uploadCSV(string csvfile, string tableName) {
   try {
-    cout<<"Subiendo csv "<<csvfile<<" con nombre "<<tableName<<endl;
+    cout << "Subiendo csv " << csvfile << " con nombre " << tableName << endl;
     schemas->uploadCsv(csvfile, tableName);
     RecordManagerFixed rm(tableName);
 
@@ -44,13 +71,13 @@ bool storageManager::uploadCSV(string csvfile, string tableName) {
     csv.process();
     vector<Record> test = csv.getData();
 
-    schm= schemas->getSchema(tableName);
+    schm = schemas->getSchema(tableName);
     auto formatted = rm.formatRows(test, schm);
     rm.write(formatted);
     tableName = tableName;
 
     return true;
-  } catch (const std::exception& e) {
+  } catch (const std::exception &e) {
     std::cerr << "storageManager::uploadCSV - Error: " << e.what() << std::endl;
     return false;
   } catch (...) {
@@ -68,12 +95,12 @@ bool storageManager::is_open() const {
 
 void storageManager::reset() {
   tableName = "";
-  schm = { "", {} };
+  schm = {"", {}};
 }
 
 void storageManager::selectall() {
   if (!is_open()) {
-    cout<<"No se abrio una tabla\n";
+    cout << "No se abrio una tabla\n";
     return;
   }
   size_t size = schemas->getRecordSize(tableName);
@@ -82,7 +109,8 @@ void storageManager::selectall() {
   string content = table.accessBlock();
   for (size_t i = 0; i < schm.fields.size(); ++i) {
     cout << schm.fields[i].field_name;
-    if (i + 1 < schm.fields.size()) cout << " | ";
+    if (i + 1 < schm.fields.size())
+      cout << " | ";
   }
   cout << '\n';
   RecordManagerFixed rm(tableName);
@@ -90,15 +118,15 @@ void storageManager::selectall() {
     content = table.accessBlock();
     auto recs = rm.parseFixedData(content, schm);
     // cout<<recs.size()<<endl;
-    for (auto&i : recs) {
-      for (auto& f : i) {
-        cout<< f<<" ";
+    for (auto &i : recs) {
+      for (auto &f : i) {
+        cout << f << "|";
       }
-      cout<<endl;
+      cout << endl;
     }
   } while (table.nextBlock());
 
-  table.close(); 
+  table.close();
 }
 
 bool storageManager::load(string relationname) {
@@ -110,7 +138,7 @@ bool storageManager::load(string relationname) {
   return true;
 }
 
-int getFieldIndex(const std::string& name, const Schema& schm) {
+int getFieldIndex(const std::string &name, const Schema &schm) {
   for (size_t i = 0; i < schm.fields.size(); ++i) {
     if (schm.fields[i].field_name == name) {
       return static_cast<int>(i);
@@ -119,7 +147,7 @@ int getFieldIndex(const std::string& name, const Schema& schm) {
   return -1; // No encontrado
 }
 
-void storageManager::selectColumns(const vector<string>& cols) {
+void storageManager::selectColumns(const vector<string> &cols) {
   if (!is_open()) {
     std::cerr << "[ERROR] No hay ninguna tabla cargada.\n";
     return;
@@ -127,7 +155,7 @@ void storageManager::selectColumns(const vector<string>& cols) {
 
   // Buscar índices de las columnas a mostrar
   vector<int> indices;
-  for (const auto& col : cols) {
+  for (const auto &col : cols) {
     int idx = getFieldIndex(col, schm);
     if (idx == -1) {
       std::cerr << "[ERROR] Columna no existe: " << col << "\n";
@@ -139,7 +167,8 @@ void storageManager::selectColumns(const vector<string>& cols) {
   // Imprimir encabezados
   for (size_t i = 0; i < indices.size(); ++i) {
     std::cout << schm.fields[indices[i]].field_name;
-    if (i + 1 < indices.size()) std::cout << " | ";
+    if (i + 1 < indices.size())
+      std::cout << " | ";
   }
   std::cout << '\n';
 
@@ -150,14 +179,16 @@ void storageManager::selectColumns(const vector<string>& cols) {
 
   do {
     content = table.accessBlock();
-    if (content.empty()) continue;
+    if (content.empty())
+      continue;
 
     auto recs = rm.parseFixedData(content, schm);
 
-    for (const auto& rec : recs) {
+    for (const auto &rec : recs) {
       for (size_t i = 0; i < indices.size(); ++i) {
         std::cout << rec[indices[i]];
-        if (i + 1 < indices.size()) std::cout << " | ";
+        if (i + 1 < indices.size())
+          std::cout << " | ";
       }
       std::cout << '\n';
     }
@@ -167,7 +198,8 @@ void storageManager::selectColumns(const vector<string>& cols) {
   table.close();
 }
 
-void storageManager::selectWhere(const string& col, const string& op, const string& val) {
+void storageManager::selectWhere(const std::string &col, const std::string &op,
+                                 const std::string &val) {
   if (!is_open()) {
     std::cerr << "[ERROR] No hay tabla cargada.\n";
     return;
@@ -180,28 +212,36 @@ void storageManager::selectWhere(const string& col, const string& op, const stri
   }
 
   File table(tableName, 'r');
-  string content = table.accessBlock();
-  while (table.nextBlock()) content += table.accessBlock();
-
   RecordManagerFixed rm(tableName);
-  auto recs = rm.parseFixedData(content, schm);
 
-  // imprimir encabezado
+  // Encabezado
   for (size_t i = 0; i < schm.fields.size(); ++i) {
-    cout << schm.fields[i].field_name;
-    if (i + 1 < schm.fields.size()) cout << " | ";
+    std::cout << schm.fields[i].field_name
+              << (i + 1 < schm.fields.size() ? " | " : "");
   }
-  cout << '\n';
+  std::cout << '\n';
 
-  for (const auto& row : recs) {
-    if (compare(row[idx], op, val, schm.fields[idx].type)) {
-      for (const auto& field : row) cout << field << " | ";
-      cout << '\n';
+  // Leer y procesar bloque a bloque
+  do {
+    std::string block = table.accessBlock();
+    auto recs = rm.parseFixedData(block, schm);
+    for (auto &row : recs) {
+      if (compare(row[idx], op, val, schm.fields[idx].type)) {
+        for (auto &f : row) {
+          std::cout << trim(f) << " | ";
+        }
+        std::cout << '\n';
+      }
     }
-  }
+  } while (table.nextBlock());
+
+  table.close();
 }
 
-void storageManager::selectColumnsWhere(const vector<string>& cols, const string& col, const string& op, const string& val) {
+void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
+                                        const std::string &col,
+                                        const std::string &op,
+                                        const std::string &val) {
   if (!is_open()) {
     std::cerr << "[ERROR] No hay tabla cargada.\n";
     return;
@@ -213,8 +253,8 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
     return;
   }
 
-  vector<int> colIndices;
-  for (const auto& c : cols) {
+  std::vector<int> colIndices;
+  for (auto &c : cols) {
     int idx = getFieldIndex(c, schm);
     if (idx == -1) {
       std::cerr << "[ERROR] Columna no existe: " << c << "\n";
@@ -224,24 +264,28 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
   }
 
   File table(tableName, 'r');
-  string content = table.accessBlock();
-  while (table.nextBlock()) content += table.accessBlock();
-
   RecordManagerFixed rm(tableName);
-  auto recs = rm.parseFixedData(content, schm);
 
-  // imprimir encabezado
+  // Encabezado de columnas seleccionadas
   for (size_t i = 0; i < colIndices.size(); ++i) {
-    cout << schm.fields[colIndices[i]].field_name;
-    if (i + 1 < colIndices.size()) cout << " | ";
+    std::cout << schm.fields[colIndices[i]].field_name
+              << (i + 1 < colIndices.size() ? " | " : "");
   }
-  cout << '\n';
+  std::cout << '\n';
 
-  for (const auto& row : recs) {
-    if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
-      for (const auto& idx : colIndices) cout << row[idx] << " | ";
-      cout << '\n';
+  // Leer bloque a bloque
+  do {
+    std::string block = table.accessBlock();
+    auto recs = rm.parseFixedData(block, schm);
+    for (auto &row : recs) {
+      if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
+        for (auto idx : colIndices) {
+          std::cout << trim(row[idx]) << " | ";
+        }
+        std::cout << '\n';
+      }
     }
-  }
-}
+  } while (table.nextBlock());
 
+  table.close();
+}
