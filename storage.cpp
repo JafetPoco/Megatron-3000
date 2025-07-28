@@ -1,3 +1,4 @@
+#include "csv.h"
 #include "storage.h"
 #include "file.h"
 #include "globals.h"
@@ -178,9 +179,6 @@ void storageManager::selectWhere(const string& col, const string& op, const stri
     return;
   }
 
-  indexManager.loadAllIndices(tableName);
-  auto& index = indexManager.getIndex(tableName, col);
-  vector<int> matchIndices = index.search(op, val);
   File table(tableName, 'r');
   string content = table.accessBlock();
   while (table.nextBlock()) content += table.accessBlock();
@@ -188,12 +186,16 @@ void storageManager::selectWhere(const string& col, const string& op, const stri
   RecordManagerFixed rm(tableName);
   auto recs = rm.parseFixedData(content, schm);
 
-  for (const auto& f : schm.fields) cout << f.field_name << " | ";
+  // imprimir encabezado
+  for (size_t i = 0; i < schm.fields.size(); ++i) {
+    cout << schm.fields[i].field_name;
+    if (i + 1 < schm.fields.size()) cout << " | ";
+  }
   cout << '\n';
 
-  for (size_t i = 0; i < recs.size(); ++i) {
-    if (matchIndices.empty() || compare(recs[i][idx], op, val, schm.fields[idx].type)) {
-      for (const auto& val : recs[i]) cout << val << " | ";
+  for (const auto& row : recs) {
+    if (compare(row[idx], op, val, schm.fields[idx].type)) {
+      for (const auto& field : row) cout << field << " | ";
       cout << '\n';
     }
   }
@@ -221,10 +223,6 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
     colIndices.push_back(idx);
   }
 
-  indexManager.loadAllIndices(tableName);
-  auto& index = indexManager.getIndex(tableName, col);
-  vector<int> matchIndices = index.search(op, val);
-
   File table(tableName, 'r');
   string content = table.accessBlock();
   while (table.nextBlock()) content += table.accessBlock();
@@ -232,16 +230,18 @@ void storageManager::selectColumnsWhere(const vector<string>& cols, const string
   RecordManagerFixed rm(tableName);
   auto recs = rm.parseFixedData(content, schm);
 
+  // imprimir encabezado
   for (size_t i = 0; i < colIndices.size(); ++i) {
     cout << schm.fields[colIndices[i]].field_name;
     if (i + 1 < colIndices.size()) cout << " | ";
   }
   cout << '\n';
 
-  for (size_t i = 0; i < recs.size(); ++i) {
-    if (matchIndices.empty() || compare(recs[i][whereIdx], op, val, schm.fields[whereIdx].type)) {
-      for (auto idx : colIndices) cout << recs[i][idx] << " | ";
+  for (const auto& row : recs) {
+    if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
+      for (const auto& idx : colIndices) cout << row[idx] << " | ";
       cout << '\n';
     }
   }
 }
+

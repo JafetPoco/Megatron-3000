@@ -34,6 +34,9 @@ int main() {
   bufferPool = new Clock(5);
   schemas = new SchemaManager;
   stmg = new storageManager;
+  if (!tableFile->findFile("schema") || !tableFile->findFile("elect")) {
+    stmg->uploadCSV("elect.csv", "elect");
+  }
   main_cli();
   bufferPool->clearBuffer();
 }
