@@ -41,6 +41,7 @@ bool storageManager::uploadCSV(string csvfile, string tableName) {
     RecordManagerFixed rm(tableName);
 
     CSVProcessor csv(csvfile);
+    csv.process();
     vector<Record> test = csv.getData();
 
     schm= schemas->getSchema(tableName);
@@ -76,10 +77,9 @@ void storageManager::selectall() {
     return;
   }
   size_t size = schemas->getRecordSize(tableName);
-  cout<<"SIZE: "<<size<<endl;
+  // cout<<"SIZE: "<<size<<endl;
   File table(tableName);
   string content = table.accessBlock();
-  // cout<<content<<endl;
   for (size_t i = 0; i < schm.fields.size(); ++i) {
     cout << schm.fields[i].field_name;
     if (i + 1 < schm.fields.size()) cout << " | ";
@@ -88,8 +88,8 @@ void storageManager::selectall() {
   RecordManagerFixed rm(tableName);
   do {
     content = table.accessBlock();
-    if (content[content.size()-1] == '\n') content.pop_back();
     auto recs = rm.parseFixedData(content, schm);
+    // cout<<recs.size()<<endl;
     for (auto&i : recs) {
       for (auto& f : i) {
         cout<< f<<" ";

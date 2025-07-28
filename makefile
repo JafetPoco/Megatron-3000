@@ -4,7 +4,7 @@ TARGET = megatron
 # Compilador
 CXX = g++
 # Opciones de compilación
-CXXFLAGS = -std=c++17 -Wall -lreadline
+CXXFLAGS = -std=c++17 -Wall -lreadline -Oz
 
 # Carpeta de compilación
 OBJDIR = build

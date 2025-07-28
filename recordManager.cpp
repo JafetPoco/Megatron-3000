@@ -49,7 +49,6 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
   int recordSize = records[0].size();
   int blockCapacity = file.getCapacity();
   int maxPerBlock = blockCapacity / recordSize;
-  cout<<maxPerBlock<<endl;
 
   size_t totalRecords = records.size();
   size_t written = 0;
@@ -82,30 +81,31 @@ void RecordManagerFixed::write(std::vector<std::string> records) {
   file.close();
 }
 
-std::vector<Record> RecordManagerFixed::parseFixedData(const std::string &data,
+std::vector<Record> RecordManagerFixed::parseFixedData(std::string data,
                                                        const Schema &schema) {
   std::vector<Record> records;
-  size_t recordSize = 0;
-
-  for (const auto &field : schema.fields) {
-    recordSize += field.size;
+  while (!data.empty() && data.back() == '\0') {
+    data.pop_back();
   }
 
-  size_t offset = 0;
-  while (offset + recordSize <= data.size()) {
+  size_t recordSize = schemas->getRecordSize(schema.schemaName);
+  size_t recordCount = data.size() / recordSize;
+  // cout<<data.size()<<"\n\n*************\n\n"<<recordCount<<endl;
+
+  for (size_t i = 0; i < recordCount; ++i) {
     Record record;
+    size_t baseOffset = i * recordSize;
     size_t fieldOffset = 0;
 
     for (const auto &field : schema.fields) {
-      std::string fieldValue = data.substr(offset + fieldOffset, field.size);
-      // Remover espacios finales
-      fieldValue.erase(fieldValue.find_last_not_of(' ') + 1);
+      std::string fieldValue = data.substr(baseOffset + fieldOffset, field.size);
+      // Remove trailing spaces
+      // fieldValue.erase(fieldValue.find_last_not_of(' ') + 1);
       record.push_back(fieldValue);
       fieldOffset += field.size;
     }
 
     records.push_back(record);
-    offset += recordSize;
   }
 
   return records;

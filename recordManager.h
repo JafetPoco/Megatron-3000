@@ -22,7 +22,7 @@ private:
 public:
   std::string formatRow(vector<string>, Schema& sizes) override;
   std::vector<std::string> formatRows(const std::vector<Record>& records, Schema& schema) override;
-  std::vector<Record> parseFixedData(const std::string& data, const Schema& schema);
+  std::vector<Record> parseFixedData(std::string data, const Schema& schema);
   void write(vector<string> records);
   RecordManagerFixed(string tableName);
 };

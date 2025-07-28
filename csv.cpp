@@ -21,44 +21,25 @@ void CSVProcessor::process() {
   fields_.resize(headers.size());
   for (size_t i = 0; i < headers.size(); ++i) {
     fields_[i].field_name = headers[i];
-    // size y type ya inicializados
   }
 
   // Leer resto de filas
+  records_.clear();
   while (std::getline(in, line)) {
     auto values = parseLine(line);
+    records_.push_back(values);  // no need to copy again later
     for (size_t i = 0; i < values.size() && i < fields_.size(); ++i) {
       const auto& v = values[i];
       fields_[i].size = std::max(fields_[i].size, v.length());
-      // inferir tipo
       fields_[i].type = std::max(fields_[i].type, inferValueType(v));
     }
   }
 }
 
-std::vector<Record> CSVProcessor::getData() {
-  std::vector<Record> records;
-  std::ifstream in(filename_);
-
-  if (!in.is_open()) {
-    throw std::runtime_error("No se pudo abrir: " + filename_);
-  }
-
-  std::string line;
-  bool isHeader = true;
-
-  while (std::getline(in, line)) {
-    if (isHeader) {
-      isHeader = false;
-      continue; // saltar cabecera
-    }
-
-    auto fields = parseLine(line);
-    records.push_back(fields);
-  }
-
-  return records;
+const std::vector<Record>& CSVProcessor::getData() const {
+    return records_;
 }
+
 
 const std::vector<Field>& CSVProcessor::getFields() const {
   return fields_;
