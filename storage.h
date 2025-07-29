@@ -1,13 +1,14 @@
 #ifndef STORAGE_MANAGER_H
 #define STORAGE_MANAGER_H
+#include "bptree2.h"
 #include "recordManager.h"
 #include "schema.h"
-#include "index.h"
+#include <memory>
 class storageManager {
   string tableName; //current
   RecordManager* rm;
   Schema schm;
-  IndexManager indexManager;
+  shared_ptr<BPlusTree> index;
 public:
   storageManager() = default;
   bool uploadCSV(string csvFilename, string tableName);

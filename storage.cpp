@@ -1,10 +1,12 @@
 #include "storage.h"
+#include "bptree2.h"
 #include "csv.h"
 #include "file.h"
 #include "globals.h"
 #include "recordManager.h"
 #include "schema.h"
 #include <iostream>
+#include <memory>
 
 inline std::string trim(const std::string &s) {
   size_t start = s.find_first_not_of(" \t\r\n");
@@ -45,6 +47,7 @@ bool compare(const string &left, const string &op, const string &right,
     if (op == ">=")
       return l >= r;
   } else {
+    cout<<left<<" "<<right<<endl;
     if (op == "=")
       return left == right;
     if (op == "!=")
@@ -135,6 +138,15 @@ bool storageManager::load(string relationname) {
   }
   schm = schemas->getSchema(relationname);
   tableName = relationname;
+
+  //load btree
+  // File tree(relationname+"_btree");
+  // index = make_shared<BPlusTree>(15);
+  // string content;
+  // do {
+  //   content+=tree.accessBlock();
+  // } while (tree.nextBlock());
+  // index->readSerialized(content);
   return true;
 }
 

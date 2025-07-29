@@ -121,7 +121,9 @@ std::vector<Schema> SchemaManager::parseSchemas(const std::string &input) {
       Field f;
       f.field_name = tokens[i];
       f.type = stringToFieldType(tokens[i+1]);
+#ifdef DEBUG
       std::cout<<fieldTypeToString(f.type)<<' ';
+#endif
       f.size = std::stoi(tokens[i + 2]);
       schema.fields.push_back(f);
     }
