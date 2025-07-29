@@ -3,14 +3,16 @@
 #include "bptree2.h"
 #include "recordManager.h"
 #include "schema.h"
+#include "index.h"
 #include <memory>
 class storageManager {
   string tableName; //current
   RecordManager* rm;
   Schema schm;
-  shared_ptr<BPlusTree> index;
+  IndexManager im;
 public:
   storageManager() = default;
+  ~storageManager();
   bool uploadCSV(string csvFilename, string tableName);
   bool load(string relationname);
   void reset();

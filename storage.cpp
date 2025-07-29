@@ -8,6 +8,9 @@
 #include <iostream>
 #include <memory>
 
+storageManager::~storageManager() {
+  im.persist();
+}
 inline std::string trim(const std::string &s) {
   size_t start = s.find_first_not_of(" \t\r\n");
   if (start == std::string::npos)
@@ -66,10 +69,11 @@ bool compare(const string &left, const string &op, const string &right,
 
 bool storageManager::uploadCSV(string csvfile, string tableName) {
   try {
-    cout << "Subiendo csv " << csvfile << " con nombre " << tableName << endl;
+    cout << "Subiendo csv " << csvfile << " con nombre " << tableName << '\n';
     schemas->uploadCsv(csvfile, tableName);
-    RecordManagerFixed rm(tableName);
 
+    // Escribimos los registros en disco
+    RecordManagerFixed rm(tableName);
     CSVProcessor csv(csvfile);
     csv.process();
     vector<Record> test = csv.getData();
@@ -77,18 +81,24 @@ bool storageManager::uploadCSV(string csvfile, string tableName) {
     schm = schemas->getSchema(tableName);
     auto formatted = rm.formatRows(test, schm);
     rm.write(formatted);
-    tableName = tableName;
 
+    // ¡Aquí integramos el índice!
+    IndexManager idxMgr;
+    idxMgr.createIndex(tableName, schm);
+    // (internamente, createIndex ya llama a persist())
+
+    // Guardamos el nombre de la tabla en el storageManager
+    this->tableName = tableName;
     return true;
+
   } catch (const std::exception &e) {
-    std::cerr << "storageManager::uploadCSV - Error: " << e.what() << std::endl;
+    std::cerr << "storageManager::uploadCSV - Error: " << e.what() << '\n';
     return false;
   } catch (...) {
     std::cerr << "storageManager::uploadCSV - Error desconocido\n";
     return false;
   }
 }
-
 bool storageManager::is_open() const {
   if (tableName.empty() || schm.fields.size() == 0) {
     return false;
@@ -125,7 +135,7 @@ void storageManager::selectall() {
       for (auto &f : i) {
         cout << f << "|";
       }
-      cout << endl;
+      cout << '\n';
     }
   } while (table.nextBlock());
 
@@ -292,7 +302,7 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
     for (auto &row : recs) {
       if (compare(trim(row[whereIdx]), op, val, schm.fields[whereIdx].type)) {
         for (auto idx : colIndices) {
-          std::cout << trim(row[idx]) << " | ";
+          std::cout << (row[idx]) << " | ";
         }
         std::cout << '\n';
       }
