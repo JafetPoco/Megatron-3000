@@ -47,7 +47,7 @@ bool compare(const string &left, const string &op, const string &right,
     if (op == ">=")
       return l >= r;
   } else {
-    cout<<left<<" "<<right<<endl;
+    // cout<<left<<" "<<right<<endl;
     if (op == "=")
       return left == right;
     if (op == "!=")
@@ -238,9 +238,9 @@ void storageManager::selectWhere(const std::string &col, const std::string &op,
     std::string block = table.accessBlock();
     auto recs = rm.parseFixedData(block, schm);
     for (auto &row : recs) {
-      if (compare(row[idx], op, val, schm.fields[idx].type)) {
+      if (compare(trim(row[idx]), op, val, schm.fields[idx].type)) {
         for (auto &f : row) {
-          std::cout << trim(f) << " | ";
+          std::cout << (f) << " | ";
         }
         std::cout << '\n';
       }
@@ -290,7 +290,7 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
     std::string block = table.accessBlock();
     auto recs = rm.parseFixedData(block, schm);
     for (auto &row : recs) {
-      if (compare(row[whereIdx], op, val, schm.fields[whereIdx].type)) {
+      if (compare(trim(row[whereIdx]), op, val, schm.fields[whereIdx].type)) {
         for (auto idx : colIndices) {
           std::cout << trim(row[idx]) << " | ";
         }
