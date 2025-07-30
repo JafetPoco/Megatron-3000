@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 def generate_sensor_data_csv(
     filename="sensor_data.csv",
-    num_rows=100000,
+    num_rows=200000,
     timestamp_format="unix",
     num_sensors=20
 ):

@@ -236,14 +236,13 @@ void storageManager::selectWhere(const std::string &col, const std::string &op,
   File table(tableName, 'r');
   RecordManagerFixed rm(tableName);
 
-  // Encabezado
+  //header tabla
   for (size_t i = 0; i < schm.fields.size(); ++i) {
     std::cout << schm.fields[i].field_name
               << (i + 1 < schm.fields.size() ? " | " : "");
   }
   std::cout << '\n';
 
-  // Leer y procesar bloque a bloque
   do {
     std::string block = table.accessBlock();
     auto recs = rm.parseFixedData(block, schm);
@@ -288,14 +287,12 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
   File table(tableName, 'r');
   RecordManagerFixed rm(tableName);
 
-  // Encabezado de columnas seleccionadas
   for (size_t i = 0; i < colIndices.size(); ++i) {
     std::cout << schm.fields[colIndices[i]].field_name
               << (i + 1 < colIndices.size() ? " | " : "");
   }
   std::cout << '\n';
 
-  // Leer bloque a bloque
   do {
     std::string block = table.accessBlock();
     auto recs = rm.parseFixedData(block, schm);

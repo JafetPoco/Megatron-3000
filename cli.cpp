@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "bufPool.h"
 #include "storage.h"
 #include "file.h"
 #include "cli.h"
@@ -385,10 +386,25 @@ void handle_disk_command(const std::string &str) {
     disk = new Disk("Megatron", 16,32,64,512,8);
     cout<<"Se apagara el sistema\n";
     exit(0);
-  }  else if (subcmd == "tree") {
+  } else if (subcmd == "tree") {
     disk->printDiskTree();
-  }
-  else {
+  } else if (subcmd == "free") {
+    size_t occupiedBlocks = freeBlock->freeBlockCount();
+    auto info = disk->info();
+
+    size_t totalBlocks = disk->getTotalSectors() / info.blockLength;
+    size_t freeBlocks = totalBlocks - occupiedBlocks;
+
+    size_t blockSizeBytes = info.sectorSize * info.blockLength;
+    double totalMB = (totalBlocks * blockSizeBytes) / (1024.0 * 1024.0);
+    double usedMB  = (occupiedBlocks * blockSizeBytes) / (1024.0 * 1024.0);
+    double freeMB  = (freeBlocks * blockSizeBytes) / (1024.0 * 1024.0);
+
+    std::cout << std::fixed << std::setprecision(2);
+    std::cout << "Espacio total:   " << totalMB << " MB\n";
+    std::cout << "Espacio usado:   " << usedMB  << " MB\n";
+    std::cout << "Espacio libre:   " << freeMB  << " MB\n";
+  } else {
     std::cerr << "Error: subcomando disk desconocido\n";
   }
 }
