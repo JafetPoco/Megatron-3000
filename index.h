@@ -33,31 +33,45 @@ public:
 
   // Carga el índice de disco; si ya estaba cargada la misma tabla, no hace
   // nada.
-  void loadIndex(const std::string &tableName) {
-    cout<<"IM: Cargando indice "<<tableName<<'\n';
-    if (tableName == curTable)
-      return;
-    delete tree;
-    tree = new BPlusTree(16);
-    curTable = tableName;
+void loadIndex(const std::string &tableName) {
+  cout << "IM: Cargando índice para la tabla '" << tableName << "'\n";
 
-    File f(tableName + "tree");
-    if (!f.isOpen())
-      return;
-
-    std::string serial;
-    do {
-      string tmp = f.accessBlock();
-      trim(tmp);
-      serial += tmp;
-    } while (f.nextBlock());
-    f.close();
-
-    if (!tree->readSerialized(serial)) {
-      std::cerr << "[WARN] No se pudo deserializar índice de " << tableName
-                << std::endl;
-    }
+  if (tableName == curTable) {
+    cout << "IM: Ya está cargada esta tabla, se omite.\n";
+    return;
   }
+
+  delete tree;
+  tree = new BPlusTree(16);
+  curTable = tableName;
+
+  std::string filePath = tableName + "tree";
+  File f(filePath);
+  if (!f.isOpen()) {
+    cerr << "[WARN] No se pudo abrir el archivo: " << filePath << '\n';
+    return;
+  }
+
+  cout << "IM: Archivo abierto correctamente: " << filePath << '\n';
+
+  std::string serial;
+  do {
+    string tmp = f.accessBlock();
+    trim(tmp);
+    serial += tmp;
+  } while (f.nextBlock());
+
+  f.close();
+
+  cout << "IM: Contenido serializado leido (longitud " << serial.size() << "):\n";
+  cout << serial << '\n';
+
+  if (!tree->readSerialized(serial)) {
+    cerr << "[WARN] No se pudo deserializar índice de " << tableName << '\n';
+  } else {
+    cout << "IM: Índice deserializado correctamente.\n";
+  }
+}
 
   // Crea el índice sobre la primera columna (campo 0) de la tabla.
   // Requiere que la tabla ya exista en disco y que su esquema esté cargado.

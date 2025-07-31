@@ -166,8 +166,7 @@ bool BPlusTree::readSerialized(const std::string &serialized){
       ss >> value;
       insert({key, stoi(value)});
     } catch (exception& e) {
-      cout<<value[0]+0<< ' '<<e.what()<<endl;
-      return false;
+      break;
     }
   }
   return true;
