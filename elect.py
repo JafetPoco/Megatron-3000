@@ -69,4 +69,55 @@ def generate_sensor_data_csv(
 
     print(f"CSV generado: '{filename}' ({num_rows} filas).")
 
-generate_sensor_data_csv()
+import csv, random, sys, subprocess
+
+def generate_electricidad_csv(filename="electricidad.csv", num_rows=100):
+    with open(filename, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            "rownames", "cost", "output", "labor", "laborshare",
+            "capital", "capitalshare", "fuel", "fuelshare"
+        ])
+
+        for i in range(1, num_rows + 1):
+            output = random.randint(2, 10)
+            labor = round(random.uniform(1.5, 3.5), 2)
+            capital = random.randint(150, 200)
+            fuel = round(random.uniform(15, 40), 1)
+
+            laborshare = round(random.uniform(0.1, 0.4), 4)
+            capitalshare = round(random.uniform(0.4, 0.7), 4)
+            fuelshare = round(1.0 - laborshare - capitalshare, 4)
+            fuelshare = max(0.0, min(fuelshare, 1.0))
+
+            cost = round(
+                labor * laborshare +
+                capital * capitalshare +
+                fuel * fuelshare, 3
+            )
+
+            writer.writerow([
+                i, cost, output, labor, laborshare,
+                capital, capitalshare, fuel, fuelshare
+            ])
+
+    try:
+        subprocess.run(["dos2unix", filename], check=True)
+        print(f"Archivo '{filename}' convertido a formato Unix.")
+    except Exception as e:
+        print(f"Error al ejecutar dos2unix: {e}")
+
+    print(f"CSV generado: '{filename}' ({num_rows} filas).")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Uso: python elect.py <número_de_filas>")
+        sys.exit(1)
+
+    try:
+        num_rows = int(sys.argv[1])
+    except ValueError:
+        print("Error: el argumento debe ser un número entero.")
+        sys.exit(1)
+
+    generate_electricidad_csv(num_rows=num_rows)
