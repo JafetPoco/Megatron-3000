@@ -34,10 +34,10 @@ public:
   // Carga el índice de disco; si ya estaba cargada la misma tabla, no hace
   // nada.
 void loadIndex(const std::string &tableName) {
-  cout << "IM: Cargando índice para la tabla '" << tableName << "'\n";
+  // cout << "IM: Cargando índice para la tabla '" << tableName << "'\n";
 
   if (tableName == curTable) {
-    cout << "IM: Ya está cargada esta tabla, se omite.\n";
+    // cout << "IM: Ya está cargada esta tabla, se omite.\n";
     return;
   }
 
@@ -52,7 +52,7 @@ void loadIndex(const std::string &tableName) {
     return;
   }
 
-  cout << "IM: Archivo abierto correctamente: " << filePath << '\n';
+  // cout << "IM: Archivo abierto correctamente: " << filePath << '\n';
 
   std::string serial;
   do {
@@ -63,13 +63,13 @@ void loadIndex(const std::string &tableName) {
 
   f.close();
 
-  cout << "IM: Contenido serializado leido (longitud " << serial.size() << "):\n";
-  cout << serial << '\n';
+  // cout << "IM: Contenido serializado leido (longitud " << serial.size() << "):\n";
+  // cout << serial << '\n';
 
   if (!tree->readSerialized(serial)) {
     cerr << "[WARN] No se pudo deserializar índice de " << tableName << '\n';
   } else {
-    cout << "IM: Índice deserializado correctamente.\n";
+    // cout << "IM: Índice deserializado correctamente.\n";
   }
 }
 

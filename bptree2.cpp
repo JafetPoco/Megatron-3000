@@ -195,3 +195,25 @@ std::string BPlusTree::getSerialized() const {
 
   return ss.str();
 }
+
+Value BPlusTree::search(int key) const {
+  if (!root) return {0, 0};
+
+  Node* node = root;
+
+  while (!node->isLeaf) {
+    Value probe{key, 0};
+    auto it = upper_bound(node->keys.begin(), node->keys.end(), probe);
+    int idx = it - node->keys.begin();
+    node = node->children[idx];
+  }
+
+  for (const auto& val : node->keys) {
+    if (val.key == key) {
+      return val;
+    }
+  }
+
+  return {0, 0};
+}
+

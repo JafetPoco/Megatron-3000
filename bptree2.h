@@ -29,6 +29,7 @@ class BPlusTree {
 
   void insert(Value val);
   void remove(int key);
+  Value search(int key) const;
   void print();
 
   bool readSerialized(const std::string &serialized);

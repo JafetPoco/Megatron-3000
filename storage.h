@@ -10,6 +10,13 @@ class storageManager {
   RecordManager* rm;
   Schema schm;
   IndexManager im;
+  void selectwithindexcolumns(const std::vector<std::string> &cols,
+                                            const std::string &col,
+                                            const std::string &op,
+                                            const std::string &val);
+  void selectwithindex(const std::string &col,
+                                     const std::string &op,
+                                     const std::string &val);
 public:
   storageManager();
   ~storageManager();

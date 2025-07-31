@@ -7,6 +7,8 @@
 #include "schema.h"
 #include <iostream>
 #include <memory>
+#include <string>
+#include <vector>
 
 storageManager::storageManager() {
   this->tableName = "sens";
@@ -155,14 +157,6 @@ bool storageManager::load(string relationname) {
   tableName = relationname;
   im.loadIndex(relationname);
 
-  //load btree
-  // File tree(relationname+"_btree");
-  // index = make_shared<BPlusTree>(15);
-  // string content;
-  // do {
-  //   content+=tree.accessBlock();
-  // } while (tree.nextBlock());
-  // index->readSerialized(content);
   return true;
 }
 
@@ -238,6 +232,10 @@ void storageManager::selectWhere(const std::string &col, const std::string &op,
     std::cerr << "[ERROR] Columna no existe: " << col << "\n";
     return;
   }
+  else if (idx == 0 && op == "="/* && op == "<" && op == ">"*/) {
+    selectwithindex(col, op, val);
+    return;
+  }
 
   File table(tableName, 'r');
   RecordManagerFixed rm(tableName);
@@ -279,6 +277,10 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
     std::cerr << "[ERROR] Columna de condición no existe: " << col << "\n";
     return;
   }
+  if (whereIdx == 0 && op == "=") {
+    selectwithindexcolumns(cols, col, op, val);
+    return;
+  }
 
   std::vector<int> colIndices;
   for (auto &c : cols) {
@@ -318,3 +320,111 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
 BPlusTree* storageManager::getTree() {
   return this->im.getIndex();
 }
+
+void storageManager::selectwithindex(const std::string &col,
+                                     const std::string &op,
+                                     const std::string &val) {
+  BPlusTree* index = im.getIndex();
+  if (!index) {
+    std::cerr << "[ERROR] No hay índice cargado.\n";
+    return;
+  }
+  if (op != "=") {
+    std::cerr << "[ERROR] El índice solo soporta comparaciones '='.\n";
+    return;
+  }
+  int key;
+  try {
+    key = std::stoi(val);
+  } catch (...) {
+    std::cerr << "[ERROR] Valor inválido para búsqueda: " << val << "\n";
+    return;
+  }
+  Value res = index->search(key);
+  if (res.position == -1) {
+    std::cout << "[INFO] Clave no encontrada: " << key << "\n";
+    return;
+  }
+  std::string content = bufferPool->requestPage(res.position, 'r').substr(4);
+
+  RecordManagerFixed rm(this->tableName);
+  std::vector<std::vector<std::string>> recs = rm.parseFixedData(content, schm);
+  cout<<"RECS size: "<<recs.size()<<endl;
+
+  for (size_t i = 0; i < schm.fields.size(); ++i) {
+    std::cout << schm.fields[i].field_name
+              << (i + 1 < schm.fields.size() ? " | " : "\n");
+  }
+
+  for (const auto& row : recs) {
+    if (row.size() > 0 && stoi(trim(row[0])) == stoi(trim(val))) {
+      for (const auto& field : row) {
+        std::cout << field << " | ";
+      }
+      std::cout << '\n';
+      return;
+    }
+  }
+
+  std::cout << "[INFO] Registro no encontrado en la página indicada.\n";
+}
+
+void storageManager::selectwithindexcolumns(const std::vector<std::string> &cols,
+                                            const std::string &col,
+                                            const std::string &op,
+                                            const std::string &val) {
+  BPlusTree* index = im.getIndex();
+  if (!index) {
+    std::cerr << "[ERROR] No hay índice cargado.\n";
+    return;
+  }
+  if (op != "=") {
+    std::cerr << "[ERROR] El índice solo soporta comparaciones '='.\n";
+    return;
+  }
+
+  int key;
+  try {
+    key = std::stoi(val);
+  } catch (...) {
+    std::cerr << "[ERROR] Valor inválido para búsqueda: " << val << "\n";
+    return;
+  }
+
+  Value res = index->search(key);
+  if (res.position == -1) {
+    std::cout << "[INFO] Clave no encontrada: " << key << "\n";
+    return;
+  }
+
+  std::string content = bufferPool->requestPage(res.position, 'r').substr(4);
+
+  RecordManagerFixed rm(this->tableName);
+  std::vector<std::vector<std::string>> recs = rm.parseFixedData(content, schm);
+
+  // Imprimir encabezados solo si son válidos
+  std::vector<int> colIndexes;
+  for (const auto& name : cols) {
+    int idx = getFieldIndex(name, schm);
+    if (idx == -1) {
+      std::cerr << "[WARN] Columna no encontrada: " << name << "\n";
+    } else {
+      colIndexes.push_back(idx);
+      std::cout << name << " | ";
+    }
+  }
+  std::cout << '\n';
+
+  for (const auto& row : recs) {
+    if (row.size() > 0 && stoi(trim(row[0])) == stoi(trim(val))) {
+      for (int i : colIndexes) {
+        std::cout << row[i] << " | ";
+      }
+      std::cout << '\n';
+      return;
+    }
+  }
+
+  std::cout << "[INFO] Registro no encontrado en la página indicada.\n";
+}
+

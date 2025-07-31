@@ -1,13 +1,13 @@
-#include <algorithm>
-#include "bptree2.h"
-#include "bufPool.h"
-#include "storage.h"
-#include "file.h"
 #include "cli.h"
 #include "block.h"
+#include "bptree2.h"
+#include "bufPool.h"
 #include "disk.h"
+#include "file.h"
 #include "globals.h"
 #include "schema.h"
+#include "storage.h"
+#include <algorithm>
 #include <iostream>
 #include <readline/history.h>
 #include <readline/readline.h>
@@ -18,11 +18,9 @@
 
 using SQLHandler = void (*)(const std::string &);
 static const std::unordered_map<std::string, SQLHandler> sql_handlers = {
-    {"select", handle_select},
-    {"delete", handle_delete},
-    {"insert", handle_insert},
-    {"addcsv", handle_addcsv},
-    { "help", handle_help },
+    {"select", handle_select}, {"delete", handle_delete},
+    {"insert", handle_insert}, {"addcsv", handle_addcsv},
+    {"help", handle_help},
 };
 
 std::string to_lower(const std::string &s) {
@@ -48,11 +46,12 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 int main_cli() {
   using_history();
-  //maximo de entradas en el historial
+  // maximo de entradas en el historial
   stifle_history(15);
 
-  std::cout << "Megatron 3000 "<< std::endl;
-  std::cout << "escribir \"help\" para ver los comandos disponibles" << std::endl;
+  std::cout << "Megatron 3000 " << std::endl;
+  std::cout << "escribir \"help\" para ver los comandos disponibles"
+            << std::endl;
 
   while (true) {
     char *raw = readline("> ");
@@ -62,35 +61,35 @@ int main_cli() {
     free(raw);
     if (line.empty())
       continue;
-    //COMANDOS
+    // COMANDOS
     if (to_lower(line) == "exit")
       break;
     add_history(line.c_str());
 
-    //addcsv
+    // addcsv
     if (line.rfind("addcsv", 0) == 0) {
       handle_addcsv(line);
       continue;
     }
-    //disk ops
+    // disk ops
     if (line.rfind("disk", 0) == 0) {
       handle_disk_command(line);
       continue;
     }
 
-    //buffer
+    // buffer
     if (line.rfind("buffer", 0) == 0) {
       handle_buffer_command(line);
       continue;
     }
 
-    //schema
+    // schema
     if (line.rfind("schema", 0) == 0) {
       handle_schema_command(line);
       continue;
     }
 
-    //schema
+    // schema
     if (line.rfind("file", 0) == 0) {
       handle_file_command(line);
       continue;
@@ -124,13 +123,15 @@ int main_cli() {
 void handle_select(const std::string &sql) {
   auto lower_sql = to_lower(sql);
   if (lower_sql.find("from") == std::string::npos) {
-    std::cerr << "[ERROR] Uso: SELECT columna1,columna2 FROM <tabla> [WHERE columna operador valor]\n";
+    std::cerr << "[ERROR] Uso: SELECT columna1,columna2 FROM <tabla> [WHERE "
+                 "columna operador valor]\n";
     return;
   }
 
   size_t select_pos = lower_sql.find("select") + 6;
   size_t from_pos = lower_sql.find("from");
-  std::string columnas_raw = trim(sql.substr(select_pos, from_pos - select_pos));
+  std::string columnas_raw =
+      trim(sql.substr(select_pos, from_pos - select_pos));
 
   size_t where_pos = lower_sql.find("where");
   std::string tabla, condicion;
@@ -146,7 +147,8 @@ void handle_select(const std::string &sql) {
   bool selectAll = columnas_raw == "*";
   if (!selectAll) {
     columnas = split(columnas_raw, ',');
-    for (auto &col : columnas) col = trim(col);
+    for (auto &col : columnas)
+      col = trim(col);
   }
 
   // Si no hay condición WHERE
@@ -154,7 +156,7 @@ void handle_select(const std::string &sql) {
     if (selectAll) {
       std::cout << "[EXEC] SELECT * FROM " << tabla << "\n";
       if (!stmg->load(tabla)) {
-        cout<<"[EXEC] No existe la tabla "<<tabla<<endl;
+        cout << "[EXEC] No existe la tabla " << tabla << endl;
         return;
       }
       stmg->selectall();
@@ -164,7 +166,7 @@ void handle_select(const std::string &sql) {
         std::cout << columnas[i] << (i + 1 < columnas.size() ? ", " : "");
       std::cout << " FROM " << tabla << "\n";
       if (!stmg->load(tabla)) {
-        cout<<"[EXEC] No existe la tabla "<<tabla<<endl;
+        cout << "[EXEC] No existe la tabla " << tabla << endl;
         return;
       }
       stmg->selectColumns(columnas);
@@ -176,7 +178,7 @@ void handle_select(const std::string &sql) {
   std::vector<std::string> ops = {"<=", ">=", "!=", "=", "<", ">"};
   std::string op_found;
   size_t op_pos = std::string::npos;
-  for (const auto& op : ops) {
+  for (const auto &op : ops) {
     op_pos = condicion.find(op);
     if (op_pos != std::string::npos) {
       op_found = op;
@@ -194,22 +196,23 @@ void handle_select(const std::string &sql) {
 
   // Mostrar el comando a ejecutar
   std::cout << "[EXEC] SELECT ";
-  if (selectAll) std::cout << "*";
+  if (selectAll)
+    std::cout << "*";
   else {
     for (size_t i = 0; i < columnas.size(); ++i)
       std::cout << columnas[i] << (i + 1 < columnas.size() ? ", " : "");
   }
-  std::cout << " FROM " << tabla << " WHERE " << col << " " << op_found << " " << val << "\n";
+  std::cout << " FROM " << tabla << " WHERE " << col << " " << op_found << " "
+            << val << "\n";
 
   // Ejecutar
-  if (selectAll){
+  if (selectAll) {
     stmg->load(tabla);
     stmg->selectWhere(col, op_found, val);
-  }
-  else {
+  } else {
     stmg->load(tabla);
     stmg->selectColumnsWhere(columnas, col, op_found, val);
-  } 
+  }
 }
 
 // Handler DELETE: "DELETE FROM table [WHERE cond]"
@@ -273,14 +276,16 @@ void handle_addcsv(const std::string &sql) {
   stmg->uploadCSV(archivo, tabla);
 }
 
-void handle_help(const std::string&) {
+void handle_help(const std::string &) {
   std::cout << "Comandos soportados:\n\n";
 
   std::cout << "SQL:\n";
   std::cout << "  SELECT columnas FROM tabla [WHERE condición];\n";
   std::cout << "  DELETE FROM tabla [WHERE condición];\n";
-  std::cout << "  INSERT INTO tabla (col1, col2, ...) VALUES (val1, val2, ...);\n";
-  std::cout << "  addcsv archivo.csv tabla       # Importar CSV en una tabla\n\n";
+  std::cout
+      << "  INSERT INTO tabla (col1, col2, ...) VALUES (val1, val2, ...);\n";
+  std::cout
+      << "  addcsv archivo.csv tabla       # Importar CSV en una tabla\n\n";
 
   std::cout << "Comandos especiales:\n";
 
@@ -288,25 +293,34 @@ void handle_help(const std::string&) {
   std::cout << "  disk open sector <n>          # Abrir sector desde disco\n";
   std::cout << "  disk info                     # Mostrar info del disco\n\n";
 
-  std::cout << "  buffer show                   # Mostrar contenido del buffer pool\n";
+  std::cout << "  buffer show                   # Mostrar contenido del buffer "
+               "pool\n";
   std::cout << "  buffer clear                  # reinicia\n";
-  std::cout << "  buffer read <n>               # Leer página/bloque en buffer\n";
-  std::cout << "  buffer type                   # Mostrar estrategia de reemplazo\n";
+  std::cout
+      << "  buffer read <n>               # Leer página/bloque en buffer\n";
+  std::cout
+      << "  buffer type                   # Mostrar estrategia de reemplazo\n";
   std::cout << "  buffer stats                  # Estadísticas del buffer\n\n";
 
   std::cout << "B+ Tree:\n";
-  std::cout << "  .btree insert <clave> <pos>   # Insertar clave con posición\n";
+  std::cout
+      << "  .btree insert <clave> <pos>   # Insertar clave con posición\n";
   std::cout << "  .btree delete <clave>         # Eliminar clave\n";
   std::cout << "  .btree print                  # Mostrar árbol\n";
-  std::cout << "  .btree save                   # Serializar árbol (getSerialized)\n";
-  std::cout << "  .btree load <cadena>          # Cargar árbol serializado (readSerialized)\n\n";
+  std::cout
+      << "  .btree save                   # Serializar árbol (getSerialized)\n";
+  std::cout << "  .btree load <cadena>          # Cargar árbol serializado "
+               "(readSerialized)\n\n";
 
-  std::cout << "  schema addcsv archivo tabla   # Registrar esquema a partir de CSV\n";
-  std::cout << "  schema print                  # Mostrar tablas registradas\n\n";
+  std::cout << "  schema addcsv archivo tabla   # Registrar esquema a partir "
+               "de CSV\n";
+  std::cout
+      << "  schema print                  # Mostrar tablas registradas\n\n";
 
   std::cout << "  file open <archivo>           # Abrir archivo\n";
   std::cout << "  file find <archivo>           # Buscar archivo\n";
-  std::cout << "  file size <archivo>           # Mostrar tamaño de archivo\n\n";
+  std::cout
+      << "  file size <archivo>           # Mostrar tamaño de archivo\n\n";
 
   std::cout << "General:\n";
   std::cout << "  help                           # Mostrar esta ayuda\n";
@@ -326,7 +340,7 @@ void handle_disk_command(const std::string &str) {
 
   const std::string &subcmd = parts[1];
 
-  //OPEN 
+  // OPEN
   if (subcmd == "open") {
     if (parts.size() < 3) {
       std::cerr << "Uso: disk open [block|sector] <número>\n";
@@ -347,7 +361,7 @@ void handle_disk_command(const std::string &str) {
 
         Block page(block_id);
 
-        std::cout << page.getData()<<'\n';
+        std::cout << page.getData() << '\n';
 
       } catch (const std::invalid_argument &e) {
         std::cerr << "Error: \"" << parts[3] << "\" no es un número válido.\n";
@@ -357,8 +371,7 @@ void handle_disk_command(const std::string &str) {
         return;
       }
 
-    } 
-    else if (entity == "sector") {
+    } else if (entity == "sector") {
       if (parts.size() < 4) {
         std::cerr << "Error: disk open sector requiere un número de sector\n";
         return;
@@ -368,7 +381,7 @@ void handle_disk_command(const std::string &str) {
         int sector_id = std::stoi(parts[3]);
         std::cout << "[DISK] Abrir sector " << sector_id << "\n";
 
-        std::cout <<disk->readSector(sector_id) <<"\n";
+        std::cout << disk->readSector(sector_id) << "\n";
 
       } catch (const std::invalid_argument &e) {
         std::cerr << "Error: \"" << parts[3] << "\" no es un número válido.\n";
@@ -379,7 +392,8 @@ void handle_disk_command(const std::string &str) {
       }
 
     } else {
-      std::cerr << "Error: entidad desconocida \"" << parts[2] << "\". Usa 'block' o 'sector'.\n";
+      std::cerr << "Error: entidad desconocida \"" << parts[2]
+                << "\". Usa 'block' o 'sector'.\n";
       return;
     }
   } else if (subcmd == "info") {
@@ -387,17 +401,18 @@ void handle_disk_command(const std::string &str) {
     disk->printDiskInfo();
   } else if (subcmd == "reset") {
     cout << "[DISK] Reiniciando disco...\n";
-    cout<<"Estas seguro de reiniciar el disco? Esta accion no se puede deshacer (y/n)\n";
+    cout << "Estas seguro de reiniciar el disco? Esta accion no se puede "
+            "deshacer (y/n)\n";
     char opt;
-    cin >>opt;
-    if (opt != 'Y' && opt!='y') {
-      cout<<"No se reinicia disco\n";
+    cin >> opt;
+    if (opt != 'Y' && opt != 'y') {
+      cout << "No se reinicia disco\n";
       return;
     }
     delete disk;
     // Recreate disk with default parameters
-    disk = new Disk("Megatron", 16,32,64,512,8);
-    cout<<"Se apagara el sistema\n";
+    disk = new Disk("Megatron", 16, 32, 64, 512, 8);
+    cout << "Se apagara el sistema\n";
     exit(0);
   } else if (subcmd == "tree") {
     disk->printDiskTree();
@@ -410,13 +425,13 @@ void handle_disk_command(const std::string &str) {
 
     size_t blockSizeBytes = info.sectorSize * info.blockLength;
     double totalMB = (totalBlocks * blockSizeBytes) / (1024.0 * 1024.0);
-    double usedMB  = (occupiedBlocks * blockSizeBytes) / (1024.0 * 1024.0);
-    double freeMB  = (freeBlocks * blockSizeBytes) / (1024.0 * 1024.0);
+    double usedMB = (occupiedBlocks * blockSizeBytes) / (1024.0 * 1024.0);
+    double freeMB = (freeBlocks * blockSizeBytes) / (1024.0 * 1024.0);
 
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "Espacio total:   " << totalMB << " MB\n";
-    std::cout << "Espacio usado:   " << usedMB  << " MB\n";
-    std::cout << "Espacio libre:   " << freeMB  << " MB\n";
+    std::cout << "Espacio usado:   " << usedMB << " MB\n";
+    std::cout << "Espacio libre:   " << freeMB << " MB\n";
   } else {
     std::cerr << "Error: subcomando disk desconocido\n";
   }
@@ -439,8 +454,8 @@ void handle_schema_command(const std::string &str) {
     const std::string &archivo = parts[2];
     const std::string &tabla = parts[3];
 
-    std::cout << "[SCHEMA] Agregar CSV: archivo=\"" << archivo
-              << "\", tabla=\"" << tabla << "\"\n";
+    std::cout << "[SCHEMA] Agregar CSV: archivo=\"" << archivo << "\", tabla=\""
+              << tabla << "\"\n";
     schemas->uploadCsv(archivo, tabla);
   } else if (subcmd == "print") {
     std::cout << "[SCHEMA] Mostrar todas las tablas registradas\n";
@@ -461,7 +476,7 @@ void handle_buffer_command(const std::string &str) {
 
   if (subcmd == "show") {
     std::cout << "[BUFFER] Mostrar contenido del buffer\n";
-    bufferPool->print(0,'y');
+    bufferPool->print(0, 'y');
   } else if (subcmd == "read") {
     if (parts.size() < 3) {
       std::cerr << "Uso: buffer read <bloque_id>\n";
@@ -470,21 +485,21 @@ void handle_buffer_command(const std::string &str) {
     try {
       int id = std::stoi(parts[2]);
       std::cout << "[BUFFER] Leer bloque " << id << "\n";
-      cout << bufferPool->requestPage(id, 'r') <<endl;
+      cout << bufferPool->requestPage(id, 'r') << endl;
     } catch (...) {
       std::cerr << "Error: bloque_id inválido.\n";
     }
 
   } else if (subcmd == "type") {
-    std::cout << "[BUFFER] política de reemplazo:"<<bufferPool->type()<<'\n';
+    std::cout << "[BUFFER] política de reemplazo:" << bufferPool->type()
+              << '\n';
   } else if (subcmd == "stats") {
     std::cout << "[BUFFER] estadísticas del buffer\n";
     bufferPool->printEstadistic();
   } else if (subcmd == "clear") {
     std::cout << "[BUFFER] limpiando\n";
     bufferPool->clearBuffer();
-  }
-  else {
+  } else {
     std::cerr << "Subcomando buffer desconocido\n";
   }
 }
@@ -505,23 +520,25 @@ void handle_file_command(const std::string &str) {
   } else if (subcmd == "find") {
     std::cout << "[FILE] Buscando archivo \"" << filename << "\"\n";
     if (tableFile->findFile(filename)) {
-      cout<<"Archivo "<<filename<< " existe en disco\n";
+      cout << "Archivo " << filename << " existe en disco\n";
     } else {
-      cout<<"Archivo "<<filename<< " NO existe en disco\n";
+      cout << "Archivo " << filename << " NO existe en disco\n";
     }
   } else if (subcmd == "size") {
     std::cout << "[FILE] Tamaño de archivo \"" << filename << "\"\n";
     File file(filename);
     int c = 1;
-    while (file.nextBlock()) { c++; }
-    cout<<"Tamaño de "<<filename<<": "<<c*file.getCapacity()<<'\n';
+    while (file.nextBlock()) {
+      c++;
+    }
+    cout << "Tamaño de " << filename << ": " << c * file.getCapacity() << '\n';
   } else {
     std::cerr << "Subcomando file desconocido\n";
   }
 }
 
 void handle_hashd_command(const std::string &str, Directory &d) {
-  //HASH DEBUG hashd
+  // HASH DEBUG hashd
   auto parts = split(str, ' ');
   if (parts.size() < 2) {
     std::cerr << "Uso: hashd <insert|delete|update|search|display> [args...]\n";
@@ -583,22 +600,20 @@ void handle_hashd_command(const std::string &str, Directory &d) {
   }
 }
 
-void handle_file_list(const string& line) {
-  tableFile->showTable();
-}
+void handle_file_list(const string &line) { tableFile->showTable(); }
 
 void handle_btree(const string &line) {
   auto parts = split(line, ' ');
   if (parts.size() < 2) {
-    cerr << "Uso: btree <insert|delete|print|load|save> [args...]\n";
+    cerr << "Uso: btree <insert|delete|print|load|save|search> [args...]\n";
     return;
   }
 
   const string &cmd = to_lower(parts[1]);
-  BPlusTree* tree = stmg->getTree();
+  BPlusTree *tree = stmg->getTree();
 
   if (!tree) {
-    cout<<"No se cargo un b+tree\n";
+    cout << "No se cargo un b+tree\n";
     return;
   }
 
@@ -631,11 +646,33 @@ void handle_btree(const string &line) {
         cerr << "Uso: btree load <string_serializado>\n";
         return;
       }
-      string data = line.substr(line.find(parts[2])); // capture full serialized string
+      string data =
+          line.substr(line.find(parts[2])); // capture full serialized string
       if (!tree->readSerialized(data)) {
         cerr << "Error al cargar árbol serializado.\n";
       }
 
+    } else if (cmd == "search") {
+      if (parts.size() < 3) {
+        std::cerr << "Uso: .btree search <clave:int>\n";
+        return;
+      }
+
+      try {
+        int key = std::stoi(parts[2]);
+        Value result = tree->search(key);
+        if (result.key == -1) {
+          std::cout << "[INFO] Clave no encontrada: " << key << '\n';
+        } else {
+          std::cout << "[OK] Clave: " << result.key
+                    << ", Posición: " << result.position << '\n';
+        }
+      } catch (const std::invalid_argument &) {
+        std::cerr << "[ERROR] Clave inválida (no es un entero): " << parts[2]
+                  << '\n';
+      } catch (const std::out_of_range &) {
+        std::cerr << "[ERROR] Clave fuera de rango: " << parts[2] << '\n';
+      }
     } else {
       cerr << "Comando btree no reconocido: " << cmd << '\n';
     }
