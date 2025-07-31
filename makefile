@@ -10,8 +10,7 @@ CXXFLAGS = -std=c++17 -Wall -lreadline -Oz
 OBJDIR = build
 
 # Archivos fuente
-SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp file.cpp schema.cpp cli.cpp recordManager.cpp storage.cpp csv.cpp bptree2.cpp
-
+SRCS = main.cpp disk.cpp block.cpp tableFiles.cpp freeBlockMan.cpp file.cpp bufPool.cpp hash.cpp file.cpp schema.cpp cli.cpp recordManager.cpp storage.cpp csv.cpp bptree2.cpp index.cpp
 # Archivos objeto en carpeta build/
 OBJS = $(SRCS:.cpp=.o)
 OBJS := $(addprefix $(OBJDIR)/, $(OBJS))
@@ -20,7 +19,7 @@ OBJS := $(addprefix $(OBJDIR)/, $(OBJS))
 all: $(TARGET)
 
 # Cómo construir el ejecutable
-$(TARGET): $(OBJS) index.h
+$(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 # Crear carpeta build y compilar cada .cpp
