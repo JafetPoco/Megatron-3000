@@ -75,7 +75,7 @@ def generate_electricidad_csv(filename="electricidad.csv", num_rows=100):
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([
-            "rownames", "cost", "output", "labor", "laborshare",
+            "row_id", "cost", "output", "labor", "laborshare",
             "capital", "capitalshare", "fuel", "fuelshare"
         ])
 

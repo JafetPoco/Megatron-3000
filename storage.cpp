@@ -341,7 +341,7 @@ void storageManager::selectwithindex(const std::string &col,
     return;
   }
   Value res = index->search(key);
-  if (res.position == -1) {
+  if (res.position == 0) {
     std::cout << "[INFO] Clave no encontrada: " << key << "\n";
     return;
   }

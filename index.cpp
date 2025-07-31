@@ -37,12 +37,14 @@ void IndexManager::loadIndex(const std::string &tableName) {
   std::string serial;
   do {
     string tmp = f.accessBlock();
-    tmp.erase(0, tmp.find_first_not_of(" \t\r\n"));
-    tmp.erase(tmp.find_last_not_of(" \t\r\n") + 1);
+    tmp.erase(0, tmp.find_first_not_of("\t\r\n"));
+    tmp.erase(tmp.find_last_not_of("\t\r\n") + 1);
     serial += tmp;
   } while (f.nextBlock());
 
   f.close();
+
+  cout<<serial<<endl<<endl;
 
   if (!tree->readSerialized(serial)) {
     cerr << "[WARN] No se pudo deserializar índice de " << tableName << '\n';
