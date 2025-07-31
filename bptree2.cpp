@@ -1,5 +1,6 @@
 #include "bptree2.h"
 #include <algorithm>
+#include <exception>
 #include <queue>
 #include <sstream>
 
@@ -160,9 +161,14 @@ bool BPlusTree::readSerialized(const std::string &serialized){
   istringstream ss(serialized);
   string value;
   while(ss >> value){
-    int key = stoi(value);
-    ss >> value;
-    insert({key, stoi(value)});
+    try {
+      int key = stoi(value);
+      ss >> value;
+      insert({key, stoi(value)});
+    } catch (exception& e) {
+      cout<<value[0]+0<< ' '<<e.what()<<endl;
+      return false;
+    }
   }
   return true;
 }

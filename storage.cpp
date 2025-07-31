@@ -10,7 +10,6 @@
 
 storageManager::storageManager() {
   this->tableName = "sens";
-  im.loadIndex("sens");
 }
 
 storageManager::~storageManager() {

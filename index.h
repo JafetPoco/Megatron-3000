@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+inline std::string trim(const std::string &s);
+
 class IndexManager {
 private:
   BPlusTree *tree = nullptr;
@@ -45,8 +47,9 @@ public:
 
     std::string serial;
     do {
-      serial += f.accessBlock();
-      cout<<"IM: "<<serial.size()<<' ';
+      string tmp = f.accessBlock();
+      trim(tmp);
+      serial += tmp;
     } while (f.nextBlock());
     f.close();
 
