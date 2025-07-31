@@ -73,5 +73,7 @@ void handle_file_command(const std::string &str);
 void handle_hashd_command(const std::string &str, Directory &d);
 
 void handle_file_list(const string& line);
+
+void handle_btree(const string& line);
 #endif // CLI_H
 

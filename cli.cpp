@@ -1,4 +1,5 @@
 #include <algorithm>
+#include "bptree2.h"
 #include "bufPool.h"
 #include "storage.h"
 #include "file.h"
@@ -97,6 +98,11 @@ int main_cli() {
 
     if (line.rfind("ls", 0) == 0) {
       handle_file_list(line);
+      continue;
+    }
+
+    if (line.rfind("btree", 0) == 0) {
+      handle_btree(line);
       continue;
     }
     // Extraer comando inicial
@@ -287,6 +293,13 @@ void handle_help(const std::string&) {
   std::cout << "  buffer read <n>               # Leer página/bloque en buffer\n";
   std::cout << "  buffer type                   # Mostrar estrategia de reemplazo\n";
   std::cout << "  buffer stats                  # Estadísticas del buffer\n\n";
+
+  std::cout << "B+ Tree:\n";
+  std::cout << "  .btree insert <clave> <pos>   # Insertar clave con posición\n";
+  std::cout << "  .btree delete <clave>         # Eliminar clave\n";
+  std::cout << "  .btree print                  # Mostrar árbol\n";
+  std::cout << "  .btree save                   # Serializar árbol (getSerialized)\n";
+  std::cout << "  .btree load <cadena>          # Cargar árbol serializado (readSerialized)\n\n";
 
   std::cout << "  schema addcsv archivo tabla   # Registrar esquema a partir de CSV\n";
   std::cout << "  schema print                  # Mostrar tablas registradas\n\n";
@@ -572,4 +585,64 @@ void handle_hashd_command(const std::string &str, Directory &d) {
 
 void handle_file_list(const string& line) {
   tableFile->showTable();
+}
+
+void handle_btree(const string &line) {
+  auto parts = split(line, ' ');
+  if (parts.size() < 2) {
+    cerr << "Uso: btree <insert|delete|print|load|save> [args...]\n";
+    return;
+  }
+
+  const string &cmd = to_lower(parts[1]);
+  BPlusTree* tree = stmg->getTree();
+
+  if (!tree) {
+    cout<<"No se cargo un b+tree\n";
+    return;
+  }
+
+  try {
+    if (cmd == "insert") {
+      if (parts.size() < 4) {
+        cerr << "Uso: btree insert <clave:int> <pos:int>\n";
+        return;
+      }
+      int key = stoi(parts[2]);
+      int pos = stoi(parts[3]);
+      tree->insert({key, pos});
+
+    } else if (cmd == "delete") {
+      if (parts.size() < 3) {
+        cerr << "Uso: btree delete <clave:int>\n";
+        return;
+      }
+      int key = stoi(parts[2]);
+      tree->remove(key);
+
+    } else if (cmd == "print") {
+      tree->print();
+
+    } else if (cmd == "save") {
+      cout << tree->getSerialized() << '\n';
+
+    } else if (cmd == "load") {
+      if (parts.size() < 3) {
+        cerr << "Uso: btree load <string_serializado>\n";
+        return;
+      }
+      string data = line.substr(line.find(parts[2])); // capture full serialized string
+      if (!tree->readSerialized(data)) {
+        cerr << "Error al cargar árbol serializado.\n";
+      }
+
+    } else {
+      cerr << "Comando btree no reconocido: " << cmd << '\n';
+    }
+
+  } catch (const std::invalid_argument &) {
+    cerr << "Error: argumentos inválidos (esperados enteros)\n";
+  } catch (const std::out_of_range &) {
+    cerr << "Error: número fuera de rango\n";
+  }
 }

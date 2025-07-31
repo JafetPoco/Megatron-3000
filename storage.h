@@ -11,7 +11,7 @@ class storageManager {
   Schema schm;
   IndexManager im;
 public:
-  storageManager() = default;
+  storageManager();
   ~storageManager();
   bool uploadCSV(string csvFilename, string tableName);
   bool load(string relationname);
@@ -23,5 +23,7 @@ public:
   void selectWhere(const string& col,const string& op, const string& val);
 
   void selectColumnsWhere(const vector<string>& cols,const string& col, const string& op, const string& val);
+
+  BPlusTree* getTree();
 };
 #endif

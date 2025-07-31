@@ -8,6 +8,11 @@
 #include <iostream>
 #include <memory>
 
+storageManager::storageManager() {
+  this->tableName = "sens";
+  im.loadIndex("sens");
+}
+
 storageManager::~storageManager() {
   im.persist();
 }
@@ -148,6 +153,7 @@ bool storageManager::load(string relationname) {
   }
   schm = schemas->getSchema(relationname);
   tableName = relationname;
+  im.loadIndex(relationname);
 
   //load btree
   // File tree(relationname+"_btree");
@@ -307,4 +313,8 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
   } while (table.nextBlock());
 
   table.close();
+}
+
+BPlusTree* storageManager::getTree() {
+  return this->im.getIndex();
 }

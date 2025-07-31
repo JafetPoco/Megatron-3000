@@ -32,19 +32,21 @@ public:
   // Carga el índice de disco; si ya estaba cargada la misma tabla, no hace
   // nada.
   void loadIndex(const std::string &tableName) {
+    cout<<"IM: Cargando indice "<<tableName<<'\n';
     if (tableName == curTable)
       return;
     delete tree;
     tree = new BPlusTree(16);
     curTable = tableName;
 
-    File f(tableName + "_btree");
+    File f(tableName + "tree");
     if (!f.isOpen())
       return;
 
     std::string serial;
     do {
       serial += f.accessBlock();
+      cout<<"IM: "<<serial.size()<<' ';
     } while (f.nextBlock());
     f.close();
 
