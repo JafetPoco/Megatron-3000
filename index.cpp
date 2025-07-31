@@ -44,7 +44,7 @@ void IndexManager::loadIndex(const std::string &tableName) {
 
   f.close();
 
-  cout<<serial<<endl<<endl;
+  // cout<<serial<<endl<<endl;
 
   if (!tree->readSerialized(serial)) {
     cerr << "[WARN] No se pudo deserializar índice de " << tableName << '\n';

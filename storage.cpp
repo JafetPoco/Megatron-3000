@@ -12,7 +12,7 @@
 
 storageManager::storageManager() {
   this->tableName = "sens";
-  im.loadIndex("sens");
+  // im.loadIndex("sens");
 }
 
 storageManager::~storageManager() {
@@ -408,6 +408,7 @@ void storageManager::selectwithindexcolumns(const std::vector<std::string> &cols
     int idx = getFieldIndex(name, schm);
     if (idx == -1) {
       std::cerr << "[WARN] Columna no encontrada: " << name << "\n";
+      return;
     } else {
       colIndexes.push_back(idx);
       std::cout << name << " | ";

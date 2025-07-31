@@ -304,12 +304,12 @@ void handle_help(const std::string &) {
 
   std::cout << "B+ Tree:\n";
   std::cout
-      << "  .btree insert <clave> <pos>   # Insertar clave con posición\n";
-  std::cout << "  .btree delete <clave>         # Eliminar clave\n";
-  std::cout << "  .btree print                  # Mostrar árbol\n";
+      << "  btree insert <clave> <pos>   # Insertar clave con posición\n";
+  std::cout << "  btree delete <clave>         # Eliminar clave\n";
+  std::cout << "  btree print                  # Mostrar árbol\n";
   std::cout
-      << "  .btree save                   # Serializar árbol (getSerialized)\n";
-  std::cout << "  .btree load <cadena>          # Cargar árbol serializado "
+      << "  btree save                   # Serializar árbol (getSerialized)\n";
+  std::cout << "  btree load <cadena>          # Cargar árbol serializado "
                "(readSerialized)\n\n";
 
   std::cout << "  schema addcsv archivo tabla   # Registrar esquema a partir "
