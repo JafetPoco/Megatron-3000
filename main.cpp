@@ -31,7 +31,7 @@ int main() {
   //disk->printDiskInfo();
   freeBlock = new FreeBlockManager("Megatron", disk->getTotalSectors()/disk->info().blockLength);
   tableFile = new TableFiles(); //carga si existe el disco
-  bufferPool = new Clock(5);
+  bufferPool = new Clock(100);
   schemas = new SchemaManager;
   stmg = new storageManager;
   if (!tableFile->findFile("schema") || !tableFile->findFile("elect")) {

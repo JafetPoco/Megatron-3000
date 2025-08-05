@@ -76,7 +76,7 @@ bool compare(const string &left, const string &op, const string &right,
 
 bool storageManager::uploadCSV(string csvfile, string tableName) {
   try {
-    cout << "Subiendo csv " << csvfile << " con nombre " << tableName << '\n';
+    cerr << "Subiendo csv " << csvfile << " con nombre " << tableName << '\n';
     schemas->uploadCsv(csvfile, tableName);
 
     // Escribimos los registros en disco
@@ -120,7 +120,7 @@ void storageManager::reset() {
 
 void storageManager::selectall() {
   if (!is_open()) {
-    cout << "No se abrio una tabla\n";
+    cerr << "No se abrio una tabla\n";
     return;
   }
   size_t size = schemas->getRecordSize(tableName);
@@ -128,11 +128,12 @@ void storageManager::selectall() {
   File table(tableName);
   string content = table.accessBlock();
   for (size_t i = 0; i < schm.fields.size(); ++i) {
-    cout << schm.fields[i].field_name;
+    cerr << schm.fields[i].field_name;
     if (i + 1 < schm.fields.size())
-      cout << " | ";
+      cerr << " ";
+      // cout << " | ";
   }
-  cout << '\n';
+  cerr << '\n';
   RecordManagerFixed rm(tableName);
   do {
     content = table.accessBlock();
@@ -140,7 +141,8 @@ void storageManager::selectall() {
     // cout<<recs.size()<<endl;
     for (auto &i : recs) {
       for (auto &f : i) {
-        cout << f << "|";
+        // cout << f << "|";
+        cout << f << " ";
       }
       cout << '\n';
     }
@@ -188,11 +190,12 @@ void storageManager::selectColumns(const vector<string> &cols) {
 
   // Imprimir encabezados
   for (size_t i = 0; i < indices.size(); ++i) {
-    std::cout << schm.fields[indices[i]].field_name;
+    std::cerr << schm.fields[indices[i]].field_name;
     if (i + 1 < indices.size())
-      std::cout << " | ";
+      std::cerr << " ";
+      // std::cout << " | ";
   }
-  std::cout << '\n';
+  std::cerr << '\n';
 
   // Abrir archivo y leer bloque por bloque
   File table(tableName, 'r');
@@ -210,7 +213,8 @@ void storageManager::selectColumns(const vector<string> &cols) {
       for (size_t i = 0; i < indices.size(); ++i) {
         std::cout << rec[indices[i]];
         if (i + 1 < indices.size())
-          std::cout << " | ";
+          std::cout << " ";
+          // std::cout << " | ";
       }
       std::cout << '\n';
     }
@@ -242,10 +246,10 @@ void storageManager::selectWhere(const std::string &col, const std::string &op,
 
   //header tabla
   for (size_t i = 0; i < schm.fields.size(); ++i) {
-    std::cout << schm.fields[i].field_name
-              << (i + 1 < schm.fields.size() ? " | " : "");
+    std::cerr << schm.fields[i].field_name
+              << (i + 1 < schm.fields.size() ? " " : "");
   }
-  std::cout << '\n';
+  std::cerr << '\n';
 
   do {
     std::string block = table.accessBlock();
@@ -253,7 +257,8 @@ void storageManager::selectWhere(const std::string &col, const std::string &op,
     for (auto &row : recs) {
       if (compare(trim(row[idx]), op, val, schm.fields[idx].type)) {
         for (auto &f : row) {
-          std::cout << (f) << " | ";
+          std::cout << (f) << " ";
+          // std::cout << (f) << " | ";
         }
         std::cout << '\n';
       }
@@ -296,10 +301,10 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
   RecordManagerFixed rm(tableName);
 
   for (size_t i = 0; i < colIndices.size(); ++i) {
-    std::cout << schm.fields[colIndices[i]].field_name
-              << (i + 1 < colIndices.size() ? " | " : "");
+    std::cerr << schm.fields[colIndices[i]].field_name
+              << (i + 1 < colIndices.size() ? " " : "");
   }
-  std::cout << '\n';
+  std::cerr << '\n';
 
   do {
     std::string block = table.accessBlock();
@@ -307,7 +312,8 @@ void storageManager::selectColumnsWhere(const std::vector<std::string> &cols,
     for (auto &row : recs) {
       if (compare(trim(row[whereIdx]), op, val, schm.fields[whereIdx].type)) {
         for (auto idx : colIndices) {
-          std::cout << (row[idx]) << " | ";
+          std::cout << (row[idx]) << " ";
+          // std::cout << (row[idx]) << " | ";
         }
         std::cout << '\n';
       }
@@ -342,24 +348,24 @@ void storageManager::selectwithindex(const std::string &col,
   }
   Value res = index->search(key);
   if (res.position == 0) {
-    std::cout << "[INFO] Clave no encontrada: " << key << "\n";
+    std::cerr << "[INFO] Clave no encontrada: " << key << "\n";
     return;
   }
   std::string content = bufferPool->requestPage(res.position, 'r').substr(4);
 
   RecordManagerFixed rm(this->tableName);
   std::vector<std::vector<std::string>> recs = rm.parseFixedData(content, schm);
-  cout<<"RECS size: "<<recs.size()<<endl;
+  cerr<<"RECS size: "<<recs.size()<<endl;
 
   for (size_t i = 0; i < schm.fields.size(); ++i) {
-    std::cout << schm.fields[i].field_name
+    std::cerr << schm.fields[i].field_name
               << (i + 1 < schm.fields.size() ? " | " : "\n");
   }
 
   for (const auto& row : recs) {
     if (row.size() > 0 && stoi(trim(row[0])) == stoi(trim(val))) {
       for (const auto& field : row) {
-        std::cout << field << " | ";
+        std::cout << field << " ";
       }
       std::cout << '\n';
       return;

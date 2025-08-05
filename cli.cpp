@@ -49,8 +49,8 @@ int main_cli() {
   // maximo de entradas en el historial
   stifle_history(15);
 
-  std::cout << "Megatron 3000 " << std::endl;
-  std::cout << "escribir \"help\" para ver los comandos disponibles"
+  std::cerr << "Megatron 3000 " << std::endl;
+  std::cerr << "escribir \"help\" para ver los comandos disponibles"
             << std::endl;
 
   while (true) {
@@ -154,19 +154,19 @@ void handle_select(const std::string &sql) {
   // Si no hay condición WHERE
   if (condicion.empty()) {
     if (selectAll) {
-      std::cout << "[EXEC] SELECT * FROM " << tabla << "\n";
+      std::cerr << "[EXEC] SELECT * FROM " << tabla << "\n";
       if (!stmg->load(tabla)) {
-        cout << "[EXEC] No existe la tabla " << tabla << endl;
+        cerr << "[EXEC] No existe la tabla " << tabla << endl;
         return;
       }
       stmg->selectall();
     } else {
-      std::cout << "[EXEC] SELECT ";
+      std::cerr << "[EXEC] SELECT ";
       for (size_t i = 0; i < columnas.size(); ++i)
         std::cout << columnas[i] << (i + 1 < columnas.size() ? ", " : "");
-      std::cout << " FROM " << tabla << "\n";
+      std::cerr << " FROM " << tabla << "\n";
       if (!stmg->load(tabla)) {
-        cout << "[EXEC] No existe la tabla " << tabla << endl;
+        cerr << "[EXEC] No existe la tabla " << tabla << endl;
         return;
       }
       stmg->selectColumns(columnas);
@@ -281,9 +281,6 @@ void handle_help(const std::string &) {
 
   std::cout << "SQL:\n";
   std::cout << "  SELECT columnas FROM tabla [WHERE condición];\n";
-  std::cout << "  DELETE FROM tabla [WHERE condición];\n";
-  std::cout
-      << "  INSERT INTO tabla (col1, col2, ...) VALUES (val1, val2, ...);\n";
   std::cout
       << "  addcsv archivo.csv tabla       # Importar CSV en una tabla\n\n";
 
@@ -359,10 +356,11 @@ void handle_disk_command(const std::string &str) {
         int block_id = std::stoi(parts[3]);
         std::cout << "[DISK] Abrir bloque " << block_id << "\n";
 
-        Block page(block_id);
+        // Block page(block_id);
 
-        std::cout << page.getData() << '\n';
+        // std::cout << page.getData() << '\n';
 
+        string& page = bufferPool->requestPage(block_id, 'r');
       } catch (const std::invalid_argument &e) {
         std::cerr << "Error: \"" << parts[3] << "\" no es un número válido.\n";
         return;

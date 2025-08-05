@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <iostream>
 #include <list>
 #include "bufPool.h"
@@ -180,7 +181,7 @@ void LRU::clearBuffer(){
 // Clock
 
 Clock::Clock(int numBuf) : nframe(numBuf) {
-  printf(BLUE "== INICIANDO BUFFER CON CLOCK ==\n" RESET);
+  fprintf(stderr, BLUE "== INICIANDO BUFFER CON CLOCK ==\n" RESET);
   nrequests = 0; 
   nhits = 0;
   nmiss = 0;
