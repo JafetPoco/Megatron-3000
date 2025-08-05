@@ -1,0 +1,1 @@
+select row_id, capital from sens
